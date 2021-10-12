@@ -14,7 +14,7 @@ Fönster skapat i Qt Designer som krävs för att köra kod just nu. Väldigt li
 
 ### 3Dbeam
 
-Exempel på en 3D-balk med endast två element. Är tänkt som bas för att bygga viss funktionalitet för balkar, främst initiellt. Renderar endast noder och element samt koordinataxlar i nuläget.
+Exempel på en 3D-balk med endast två element. Är tänkt som bas för att bygga viss funktionalitet för balkar, främst initiellt. Renderar endast noder och element samt koordinataxlar i nuläget. Calfem-modellen är i en separat fil i mappen.
 
 ### 3Dtruss
 
