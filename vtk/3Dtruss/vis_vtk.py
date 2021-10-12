@@ -17,19 +17,6 @@ from PyQt5.QtCore import *
 from PyQt5 import uic
 from PyQt5 import QtCore, QtGui, QtWidgets
 import PyQt5
-
-
-#import PyQt5
-
-from PyQt5.Qt import QApplication, QUrl, QDesktopServices
-
-import webbrowser
-
-
-#from PyQt5.QtWidgets import (
-#    QMainWindow, QApplication,
-#    QLabel, QToolBar, QAction, QStatusBar
-#)
 #from PyQt5.QtWidgets import QApplication, QMainWindow
 #from PyQt5 import QtGui
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -41,7 +28,7 @@ from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 """
 def vtk_initialize(self):
     # Load UI
-    uic.loadUi("../QtVTKMainWindow.ui", self)
+    uic.loadUi("QtVTKMainWindow.ui", self)
     
     # Create container/frame
     self.vl = QtWidgets.QVBoxLayout()
@@ -52,53 +39,14 @@ def vtk_initialize(self):
     
     # Create renderer & render window
     self.ren = vtk.vtkRenderer()
-    #self.ren.GetActiveCamera().SetViewAngle(90)
-    #self.ren.GetActiveCamera().SetEyeAngle(45)
-    self.renwin = self.vtkWidget.GetRenderWindow()
-    #self.renwin = self.vtkWidget
-    self.renwin.AddRenderer(self.ren)
-    self.iren = self.renwin.GetInteractor()
-    #self.vtkWidget.GetRenderWindow().AddRenderer(self.ren)
-    #self.iren = self.vtkWidget.GetRenderWindow().GetInteractor()
-    #self.iren.Render()
-    self.iren.SetRenderWindow(self.renwin)
-
-    # Rotate default camera
-    self.ren.GetActiveCamera().Azimuth(45)
-    self.ren.GetActiveCamera().Pitch(-45)
-    # Add gradient
-    self.ren.GradientBackgroundOn()
-
-
-
-    # ----- File buttons -----
-    # ----- Select buttons -----
-    # ----- View buttons -----
-
-    # Reset camera
-    self.actionReset_Camera.triggered.connect(lambda: reset_camera(self))
-
-    # Show axis
-    self.actionShow_Axis.triggered.connect(lambda: show_axis(self))
-
-    # Show grid
-    self.actionShow_Grid.triggered.connect(lambda: show_grid(self))
-
-    # Wireframe
-    self.actionWireframe.triggered.connect(lambda: show_wireframe(self))
-
-    # ----- Mode buttons -----
-    # ----- Help buttons -----
-    
-    # Documentation
-    #self.actionCALFEM_for_Python_documentation.triggered.connect(lambda: QDesktopServices.openUrl("https://calfem-for-python.readthedocs.io/en/latest/"))
-    self.actionCALFEM_for_Python_documentation.triggered.connect(lambda: webbrowser.open('https://calfem-for-python.readthedocs.io/en/latest/'))
+    self.vtkWidget.GetRenderWindow().AddRenderer(self.ren)
+    self.iren = self.vtkWidget.GetRenderWindow().GetInteractor()
     
     #self.defaultview = self.ren.GetActiveCamera().GetViewUp()
     #self.ren.GetActiveCamera().SetViewUp(1,1,1)
     
     
-    #self.reset.clicked.connect(lambda: reset_camera(self))
+    self.reset.clicked.connect(lambda: reset_camera(self))
     
     #self.reset.clicked.connect(reset_camera(self))
     
@@ -117,39 +65,25 @@ def vtk_initialize(self):
 """
     Functions to create VTK actors, mappers & color profiles
 """ 
-"""
-def vtk_mapper_objects(source):
+def vtk_mapper1(source):
+    # Create a mapper
     mapper = vtk.vtkPolyDataMapper()
     mapper.SetInputConnection(source.GetOutputPort())
     return mapper
 
-def vtk_mapper_lines(source):
+def vtk_mapper2(source):
+    # Create a mapper
     mapper = vtk.vtkPolyDataMapper()
     mapper.SetInputData(source)
     return mapper
 
 def vtk_actor(mapper):
+    # Create an actor
     actor = vtk.vtkActor()
     actor.SetMapper(mapper)
     actor.GetProperty().SetLineWidth(4)
-    return actor
-"""
-def vtk_actor_objects(source):
-    mapper = vtk.vtkPolyDataMapper()
-    mapper.SetInputConnection(source.GetOutputPort())
-    actor = vtk.vtkActor()
-    actor.SetMapper(mapper)
-    actor.GetProperty().SetLineWidth(4)
-    return actor
-
-def vtk_actor_lines(source):
-    mapper = vtk.vtkPolyDataMapper()
-    mapper.SetInputData(source)
-    actor = vtk.vtkActor()
-    actor.SetMapper(mapper)
-    actor.GetProperty().SetLineWidth(4)
-    return actor
-"""
+    return actor 
+    
 def vtk_colors(renderer):
     colors = vtk.vtkNamedColors()
     renderer.SetBackground(colors.GetColor3d("black"))
@@ -159,7 +93,7 @@ def vtk_widget(vl,render_window):
     vl.addWidget(vtk_widget)
     vtk_widget.Initialize()
     #vtk_widget.Start()
-"""
+
 
 
 
@@ -167,9 +101,7 @@ def vtk_widget(vl,render_window):
 """
     Function to create a widget showing axis of orientation in lower right corner
 """ 
-def MakeAxesActor(self, scale=None, xyzLabels=None):
-    scale = [1.0, 1.0, 1.0]
-    xyzLabels = ['X', 'Y', 'Z']
+def MakeAxesActor(scale, xyzLabels):
     axes = vtk.vtkAxesActor()
     axes.SetScale(scale[0], scale[1], scale[2])
     axes.SetShaftTypeToCylinder()
@@ -183,17 +115,10 @@ def MakeAxesActor(self, scale=None, xyzLabels=None):
     tprop.ItalicOn()
     tprop.ShadowOn()
     tprop.SetFontFamilyToTimes()
+    # Use the same text properties on the other two axes.
     axes.GetYAxisCaptionActor2D().GetCaptionTextProperty().ShallowCopy(tprop)
     axes.GetZAxisCaptionActor2D().GetCaptionTextProperty().ShallowCopy(tprop)
-
-    # Skapa orientation marker
-    self.om = vtk.vtkOrientationMarkerWidget()
-    self.om.SetOrientationMarker(axes)
-    self.om.SetViewport(0.8, 0, 1.0, 0.2)
-    self.om.SetInteractor(self.iren)
-    self.om.EnabledOn()
-    self.om.InteractiveOn()
-    #return axes
+    return axes
     
     
     
@@ -205,7 +130,7 @@ def MakeAxesActor(self, scale=None, xyzLabels=None):
 # Reset camera
 def reset_camera(self):
     print("reset camera")
-    # återställer zoom & position
+    
     self.ren.ResetCamera()
     #self.ren.GetActiveCamera().SetViewUp(self.defaultview)
     #self.ren.GetActiveCamera().SetViewUp(1,1,1)
@@ -214,13 +139,6 @@ def reset_camera(self):
     #self.ren.GetActiveCamera().SetRoll(0)
     #self.ren.GetActiveCamera().SetViewAngle(0)
     #self.ren.GetActiveCamera().Yaw(90)
-    #self.ren.GetActiveCamera().Azimuth(45)
-    #self.ren.GetActiveCamera().Pitch(-45)
-    #self.ren.GetActiveCamera().SetViewAngle(45)
-    #self.ren.GetActiveCamera().SetEyeAngle(45) # återställer zoom?
-    #self.ren.GetActiveCamera().SetFocalPoint(0,0,0)
-    #self.ren.GetActiveCamera().SetViewUp(-0.3,-0.3,-0)
-    #self.ren.GetActiveCamera().SetPosition(0,0,0)
     self.iren.Render()
     #self.ren.Transparent()
 
@@ -237,12 +155,9 @@ def show_grid():
     print("show grid")
     
 # Show xyz-axis
-def show_axis(self):
+def show_axis():
     print("show axis")
-    if self.om.EnabledOn():
-        self.om.EnabledOff()
-    else:
-        self.om.EnabledOn()
+    
     
 """
     Checkboxes, interaction modes
