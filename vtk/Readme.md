@@ -1,21 +1,46 @@
 # Readme
 
+Mapp för utveckling av visualiseringsverktyg i CALFEM för Python som bygger på *vtk* (Visualization ToolKit)
+
+Innan något kan köras så måste både *calfem-python* och *vtk* vara installerat i aktuellt python-env med hjälp av pip:
+
+- pip install calfem-python
+- pip install vtk
+
+------
+
 ### vis_vtk.py
 
-Innehåller funktioner som kopplar modellen till vtk. Denna är tänkt att främst använda vtk-funktioner för att man ska slippa göra detta i modellen man jobbar med.
+Huvudmodul för att göra allt relaterat till *vtk*. Innehåller funktioner som startar, kopplar modellen till samt interagerar med *vtk*.
+
+Denna är tänkt att vara uppbyggd så att användaren som jobbar med en FE-modell ska behöva använda så få *vtk*-funktioner som möjligt direkt, och på så sätt förenkla visualisering genom att inte ändra sättet man jobbar i CALFEM för mycket.
+
+En klass *MainWindow* interagerar med QtMainWindow.ui och en klass *beam* innehåller funktioner för visualisering av balkelement. Klasser för andra typer av element är tänkt att tillkomma här.
 
 ### core_beam_extensions.py
 
-Innehåller inget just nu, är tänkt att innehålla funktioner för att rita plotta tvärsnittskrafter eller liknande när det tillkommer.
+Innehåller inget just nu, är tänkt att innehålla funktioner för att möjliggöra plottning av tvärsnittskrafter eller liknande för balkar när det tillkommer.
 
 ### QtVTKMainWindow.ui
 
-Fönster skapat i Qt Designer som krävs för att köra kod just nu. Väldigt lite funktionalitet är inbyggd i den just nu (endast en frame för vtk att rendera samt en knapp för att återställa kameran) men är tänkt att byggas ut med funktionalitet.
+Fönster skapat i Qt Designer som krävs för att köra kod just nu. Väldigt lite funktionalitet är inbyggd i den just nu (endast en frame för *vtk* att rendera samt en knapp för att återställa kameran) men är tänkt att byggas ut med funktionalitet. Meny-objekten ger lite indikation på tänkt funktionalitet.
 
-### 3Dbeam
+Fönstret funkar nu att startas oberoende av en modell, för att testa import av modeller från MATLAB & VTK-filer.
+
+### empty.py
+
+En fil som endast innehåller vad som är nödvändigt för att öppna Qt-fönstret med VTK-renderaren. För att testa funktionalitet utan en modell.
+
+### 3Dbeam.py
 
 Exempel på en 3D-balk med endast två element. Är tänkt som bas för att bygga viss funktionalitet för balkar, främst initiellt. Renderar endast noder och element samt koordinataxlar i nuläget.
 
-### 3Dtruss
+Just nu används detta exempel för att implementera:
 
-Exempel på en fackverksbro av 3D-balkar och 3D-stänger. Är tänkt som bas för att bygga ut mer avancerad funktionalitet för balkar, stänger, och fjädrar senare. Fungerar inte alls i nuläget.
+- Filter, ett filter för odeformerad mesh & deformerad mesh testas initiellt.
+- Grundläggande interaktion med modellen *vtk*:s actor mode.
+- Olika sätt att redovisa spänningar
+
+### 3Dtruss.py
+
+Exempel på en fackverksbro av 3D-balkar och 3D-stänger. Är tänkt som bas för att bygga ut mer avancerad funktionalitet för balkar, stänger, och fjädrar senare. Fungerar inte i nuläget eftersom *vis_vtk.py* inte kan hantera diskontinuerlig geometri ännu.

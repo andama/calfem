@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>VTK Visualization Tool</string>
+   <string>CALFEM VTK Visualization Tool</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
@@ -152,6 +152,22 @@
     <property name="title">
      <string>View</string>
     </property>
+    <widget class="QMenu" name="menuGeometry">
+     <property name="title">
+      <string>Mesh...</string>
+     </property>
+     <addaction name="actionShow_Elements"/>
+     <addaction name="actionShow_Elements_2"/>
+     <addaction name="actionShow_Dofs"/>
+    </widget>
+    <widget class="QMenu" name="menuDeformed_Mesh">
+     <property name="title">
+      <string>Deformed Mesh...</string>
+     </property>
+     <addaction name="actionShow_Elements_3"/>
+     <addaction name="actionShow_Nodes"/>
+     <addaction name="actionShow_Dofs_2"/>
+    </widget>
     <addaction name="actionReset_Camera"/>
     <addaction name="separator"/>
     <addaction name="actionWireframe"/>
@@ -161,6 +177,9 @@
     <addaction name="actionShow_Grid"/>
     <addaction name="actionShow_Scale"/>
     <addaction name="actionShow_Boundary_Conditions"/>
+    <addaction name="separator"/>
+    <addaction name="menuGeometry"/>
+    <addaction name="menuDeformed_Mesh"/>
    </widget>
    <widget class="QMenu" name="menuMode">
     <property name="title">
@@ -182,11 +201,20 @@
     </property>
     <addaction name="actionCALFEM_for_Python_documentation"/>
     <addaction name="actionVTK_tool_Guide"/>
+    <addaction name="actionKeyboard_controls"/>
+   </widget>
+   <widget class="QMenu" name="menuAnimate">
+    <property name="title">
+     <string>Animate</string>
+    </property>
+    <addaction name="actionStart_Animation"/>
+    <addaction name="actionEdit_Parameters"/>
    </widget>
    <addaction name="menuTest"/>
    <addaction name="menuExport"/>
    <addaction name="menuTest2"/>
    <addaction name="menuMode"/>
+   <addaction name="menuAnimate"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -342,6 +370,51 @@
    </property>
    <property name="text">
     <string>Show Origin</string>
+   </property>
+  </action>
+  <action name="actionShow_Elements">
+   <property name="text">
+    <string>Show Elements</string>
+   </property>
+  </action>
+  <action name="actionShow_Elements_2">
+   <property name="text">
+    <string>Show Nodes</string>
+   </property>
+  </action>
+  <action name="actionShow_Dofs">
+   <property name="text">
+    <string>Show Dofs</string>
+   </property>
+  </action>
+  <action name="actionShow_Elements_3">
+   <property name="text">
+    <string>Show Elements</string>
+   </property>
+  </action>
+  <action name="actionShow_Nodes">
+   <property name="text">
+    <string>Show Nodes</string>
+   </property>
+  </action>
+  <action name="actionShow_Dofs_2">
+   <property name="text">
+    <string>Show Dofs</string>
+   </property>
+  </action>
+  <action name="actionKeyboard_controls">
+   <property name="text">
+    <string>Keyboard controls...</string>
+   </property>
+  </action>
+  <action name="actionStart_Animation">
+   <property name="text">
+    <string>Start Animation</string>
+   </property>
+  </action>
+  <action name="actionEdit_Parameters">
+   <property name="text">
+    <string>Edit Parameters...</string>
    </property>
   </action>
  </widget>
