@@ -8,18 +8,23 @@
 
 import sys
 #import vtk
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+#from PyQt5.QtWidgets import *
+#from PyQt5.QtCore import *
 #from PyQt5 import uic
 #from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import calfem.core as cfc
 import numpy as np
-sys.path.append('../')
-import vis_vtk as cfvv
-import core_beam_extensions as cfcb
+#from numpy import *
+#sys.path.append('../')
+import vis_pv as cfvp
+#import core_beam_extensions as cfcb
+#import PyQt5
+from PyQt5 import Qt
+#import vedo as v
 
 #import model
 
+#cfvv.MainWindow()
 
 #def model():
 K = np.zeros([18,18])
@@ -40,7 +45,10 @@ edof = np.array([
     [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 ])
 ex,ey,ez = cfc.coordxtr(edof,coord,dof)
-elements, nodes = cfvv.beam.set_geometry(edof,coord,dof)
+#elements, nodes = cfvv.beam.set_geometry(edof,coord,dof)
+#nodes = cfvm.beam3d.geometry(coord)
+#nodes, elements = cfvv.beam3d.geometry(edof,coord,dof)
+nodes, elements = cfvp.beam3d.geometry(edof,coord,dof)
 
 eo = np.array([-3, 4, 0])
 
@@ -70,10 +78,28 @@ for i in range(2):
 
 #    return coord, dof, edof
 
-        
+#t=np.linspace(0,2*np.pi,50)
+#u=np.cos(t)*np.pi
 
+#x,y,z = np.sin(u), np.cos(u), np.sin(t)
+
+#mlab.points3d(x,y,z)
+"""
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     ex = cfvv.MainWindow(elements,nodes)
     ex.show()
+    sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    app = Qt.QApplication(sys.argv)
+    window = cfvp.MainWindow(nodes,elements)
+    #app.aboutToQuit.connect(cfvv.MainWindow.onClose) # <-- connect the onClose event
+    app.exec_()
+"""
+if __name__ == '__main__':
+    #app = QtWidgets.QApplication(sys.argv)
+    app = Qt.QApplication(sys.argv)
+    #window = MyMainWindow()
+    window = cfvp.MainWindow(nodes,elements)
     sys.exit(app.exec_())

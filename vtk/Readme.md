@@ -7,6 +7,8 @@ Innan något kan köras så måste både *calfem-python* och *vtk* vara installe
 - pip install calfem-python
 - pip install vtk
 
+**Kan inte få odeformerad mesh att funka för att det inte finns enkelt sätt att orientera element i _vtk_. Därför funkar inte _3Dbeam.py_ & _3Dtruss.py_ som de ska. Se _vedo_ & _pyvista_ för fungerande exempel. Vidare utväckling kan komma att ske i _vedo_/_pyvista_**
+
 ------
 
 ### vis_vtk.py

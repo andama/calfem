@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Oct  7 14:08:07 2021
+CALFEM VTK
+
+Used to run VTK Visualization tool without a model
 
 @author: Andreas Åmand
 """
@@ -12,10 +14,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
 if __name__ == "__main__":
-    #beam = beam
     app = QApplication(sys.argv)
-    #ex = MainWindow().__init__(beam)
-    #MainWindow.vtk_actor(beam.coord)
     ex = cfvv.MainWindow()
     ex.show()
     sys.exit(app.exec_())
