@@ -68,6 +68,10 @@ for i in range(2):
 bcPrescr = np.array([1, 2, 3, 4, 7, 9, 13, 14, 15, 16])
 a, r = cfc.solveq(K, f, bcPrescr)
 
+print(a)
+
+def_nodes, def_elements = cfvv.beam3d.def_geometry(edof,coord,dof,a,1)
+
 ed = cfc.extractEldisp(edof,a)
 
 es = np.zeros((4,6))
@@ -92,6 +96,6 @@ if __name__ == "__main__":
 """
 if __name__ == "__main__":
     app = Qt.QApplication(sys.argv)
-    window = cfvv.MainWindow(nodes,elements)
+    window = cfvv.MainWindow(nodes,elements,def_nodes,def_elements)
     #app.aboutToQuit.connect(cfvv.MainWindow.onClose) # <-- connect the onClose event
     app.exec_()

@@ -5,7 +5,7 @@
 
 @author: Andreas Åmand
 """
-
+import os
 import sys
 #import vtk
 from PyQt5.QtWidgets import *
@@ -19,6 +19,8 @@ import vis_vedo as cfvv
 from PyQt5 import Qt
 #import core_beam_extensions as cfcb
 #from ui_form import UI_Form
+
+os.system('clear')
 
 #from vtkmodules.vtkCommonDataModel import (
 #    vtkCellArray,
@@ -491,13 +493,88 @@ edof = np.array([
     [37, 38, 39, 40, 41, 42, 79, 80, 81, 82, 83, 84]
 ])
 
-#ex,ey,ez = cfc.coordxtr(edof,coord,dof)
+nnode = np.size(coord, axis = 0)
+ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
+nel = np.size(edof, axis = 0)
+
+ex,ey,ez = cfc.coordxtr(edof,coord,dof)
+#print(nnode)
+#print(ndof)
+#print(nel)
 #elements, nodes = cfvv.beam.set_geometry(edof,coord,dof)
 nodes, elements = cfvv.beam3d.geometry(edof,coord,dof)
 
+eo = np.array([0, 0, 1])
+
+E = 210000000
+v = 0.3
+G = E/(2*(1+v))
+
+#HEA300
+A = 11250*0.000001 #m^2
+Iy = 63.1*0.000001 #m^4
+hy = 0.29*0.5 #m
+Iz = 182.6*0.000001 #m^4
+hz = 0.3*0.5 #m
+Kv = 0.856*0.000001 #m^4
+
+ep = [E, G, A, Iy, Iz, Kv]
+
+K = np.zeros([ndof,ndof])
+
+for i in range(nel):
+    Ke = cfc.beam3e(ex[i], ey[i], ez[i], eo, ep)
+    K = cfc.assem(edof[i],K,Ke)
+
+
+f = np.zeros([ndof,1])
+#f[20,0] = -3000
+#f[38,0] = -3000
+#f[62,0] = -3000
+#f[80,0] = -3000
+
+f[19,0] = -3000
+f[37,0] = -3000
+f[20,0] = 3000 # Punktlast i z-led
+f[38,0] = -3000 # Punktlast i z-led
+f[61,0] = -3000
+f[79,0] = -3000
+
+bcPrescr = np.array([1, 2, 3, 4, 5, 6, 19, 22, 23, 24, 37, 40, 41, 42, 43, 44, 45, 46, 47, 48, 61, 64, 65, 66, 79, 82, 83, 84])
+#bcPrescr = np.array([0, 1, 2, 3, 4, 5, 18, 21, 22, 23, 36, 39, 40, 41, 42, 43, 44, 45, 46, 47, 60, 63, 64, 65, 78, 81, 82, 83])
+a, r = cfc.solveq(K, f, bcPrescr)
+
+#def_nodes, def_elements = cfvv.beam3d.def_geometry(edof,coord,dof,a,5)
+
+ed = cfc.extractEldisp(edof,a)
+
+#n=13 # 13 points in a 3m long beam = 250mm long segments
+n=2
+
+es = np.zeros((nel*n,6))
+edi = np.zeros((nel*n,4))
+eci = np.zeros((nel*n,1))
+
+#es[0:n,:], edi[0:n,:], eci[0:n,:] = cfc.beam3s(ex[0],ey[0],ez[0],eo,ep,ed[0],[0,0,0,0],n)
+
+for i in range(29):
+    #ed[i] = cfc.extractEldisp(edof[i],a)
+    es[n*i:n*i+n,:], edi[n*i:n*i+n,:], eci[n*i:n*i+n,:] = cfc.beam3s(ex[i],ey[i],ez[i],eo,ep,ed[i],[0,0,0,0],n)
+
+#print(es)
+#print(edi)
+#print(eci)
+
+def_nodes, def_elements = cfvv.beam3d.def_geometry(edof,coord,dof,a,5)
+
+#normal_stresses = cfvv.beam3d.el_values(edof,es,edi,eci,E,v,A,Iy,Iz,hy,hz)
+
+cfvv.beam3d.el_values(edof,es,edi,eci,E,v,A,Iy,Iz,hy,hz)
+
 if __name__ == "__main__":
     app = Qt.QApplication(sys.argv)
-    window = cfvv.MainWindow(nodes,elements)
+    window = cfvv.MainWindow(nodes,elements,def_nodes,def_elements)
+    #window = cfvv.MainWindow(nodes,elements,def_nodes,def_elements)
     #app.aboutToQuit.connect(cfvv.MainWindow.onClose) # <-- connect the onClose event
     app.exec_()
 
