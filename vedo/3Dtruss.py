@@ -5,28 +5,18 @@
 
 @author: Andreas Åmand
 """
+
 import os
 import sys
-#import vtk
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-#from PyQt5 import uic
-#from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import calfem.core as cfc
 import numpy as np
-#sys.path.append('../')
 import vis_vedo as cfvv
 from PyQt5 import Qt
-#import core_beam_extensions as cfcb
-#from ui_form import UI_Form
 
 os.system('clear')
 
-#from vtkmodules.vtkCommonDataModel import (
-#    vtkCellArray,
-#    vtkLine,
-#    vtkPolyData
-#)
 
         
 """
@@ -427,6 +417,9 @@ edof = np.array([
     #[19, 20, 21, 40, 41, 42]
 ])
 """
+
+
+
 coord = np.array([
     [0, 0, 0],
     [3, 0, 0],
@@ -451,7 +444,7 @@ dof = np.array([
     [19, 20, 21, 22, 23, 24],
     [25, 26, 27, 28, 29, 30],
     [31, 32, 33, 34, 35, 36],
-    [37, 38, 39, 40, 41, 42], ###
+    [37, 38, 39, 40, 41, 42],
     [43, 44, 45, 46, 47, 48],
     [49, 50, 51, 52, 53, 54],
     [55, 56, 57, 58, 59, 60],
@@ -472,7 +465,7 @@ edof = np.array([
     [19, 20, 21, 22, 23, 24, 31, 32, 33, 34, 35, 36],
     [19, 20, 21, 22, 23, 24, 37, 38, 39, 40, 41, 42],
     [25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36],
-    [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42], ###
+    [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42], 
     [43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54],
     [49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60],
     [55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66],
@@ -498,11 +491,9 @@ ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
 nel = np.size(edof, axis = 0)
 
 ex,ey,ez = cfc.coordxtr(edof,coord,dof)
-#print(nnode)
-#print(ndof)
-#print(nel)
-#elements, nodes = cfvv.beam.set_geometry(edof,coord,dof)
-nodes, elements = cfvv.beam3d.geometry(edof,coord,dof)
+
+# Send data of undeformed geometry
+cfvv.beam3d.geometry(edof,coord,dof,0.02,0.2)
 
 eo = np.array([0, 0, 1])
 
@@ -510,79 +501,111 @@ E = 210000000
 v = 0.3
 G = E/(2*(1+v))
 
-#HEA300
-A = 11250*0.000001 #m^2
-Iy = 63.1*0.000001 #m^4
-hy = 0.29*0.5 #m
-Iz = 182.6*0.000001 #m^4
-hz = 0.3*0.5 #m
-Kv = 0.856*0.000001 #m^4
+#HEA300-beams
+A = 11250*0.000001      # m^2
+A_web = 2227*0.000001   # m^2
+Iy = 63.1*0.000001      # m^4
+hy = 0.29*0.5           # m
+Iz = 182.6*0.000001     # m^4
+hz = 0.3*0.5            # m
+Kv = 0.856*0.000001     # m^4
 
 ep = [E, G, A, Iy, Iz, Kv]
 
+#eq = np.zeros([nel,4])
+#eq[23] = [0,-2000,0,0]
+#eq[24] = [0,-2000,0,0]
+#eq[25] = [0,-2000,0,0]
+
 K = np.zeros([ndof,ndof])
+f = np.zeros([ndof,1])
 
 for i in range(nel):
+    #Ke,fe = cfc.beam3e(ex[i], ey[i], ez[i], eo, ep, eq[i])
     Ke = cfc.beam3e(ex[i], ey[i], ez[i], eo, ep)
+    
     K = cfc.assem(edof[i],K,Ke)
+    #f = cfc.assem(edof[i],f,fe)
 
 
-f = np.zeros([ndof,1])
-#f[20,0] = -3000
-#f[38,0] = -3000
-#f[62,0] = -3000
-#f[80,0] = -3000
 
+
+f[7,0] = -3000
+f[13,0] = -3000
 f[19,0] = -3000
-f[37,0] = -3000
-f[20,0] = 3000 # Punktlast i z-led
-f[38,0] = -3000 # Punktlast i z-led
+f[49,0] = -3000
+f[55,0] = -3000
 f[61,0] = -3000
-f[79,0] = -3000
+
+#f[19,0] = -3000
+#f[37,0] = -3000
+#f[20,0] = 3000 # Punktlast i z-led
+#f[38,0] = 500 # Punktlast i z-led
+#f[61,0] = -3000
+#f[79,0] = -3000
 
 bcPrescr = np.array([1, 2, 3, 4, 5, 6, 19, 22, 23, 24, 37, 40, 41, 42, 43, 44, 45, 46, 47, 48, 61, 64, 65, 66, 79, 82, 83, 84])
-#bcPrescr = np.array([0, 1, 2, 3, 4, 5, 18, 21, 22, 23, 36, 39, 40, 41, 42, 43, 44, 45, 46, 47, 60, 63, 64, 65, 78, 81, 82, 83])
-a, r = cfc.solveq(K, f, bcPrescr)
-
-#def_nodes, def_elements = cfvv.beam3d.def_geometry(edof,coord,dof,a,5)
+a,r = cfc.solveq(K, f, bcPrescr)
 
 ed = cfc.extractEldisp(edof,a)
 
-#n=13 # 13 points in a 3m long beam = 250mm long segments
-n=2
+# Number of points along the beam
+nseg=13 # 13 points in a 3m long beam = 250mm long segments
 
-es = np.zeros((nel*n,6))
-edi = np.zeros((nel*n,4))
-eci = np.zeros((nel*n,1))
 
-#es[0:n,:], edi[0:n,:], eci[0:n,:] = cfc.beam3s(ex[0],ey[0],ez[0],eo,ep,ed[0],[0,0,0,0],n)
+es = np.zeros((nel*nseg,6))
+edi = np.zeros((nel*nseg,4))
+eci = np.zeros((nel*nseg,1))
 
 for i in range(29):
-    #ed[i] = cfc.extractEldisp(edof[i],a)
-    es[n*i:n*i+n,:], edi[n*i:n*i+n,:], eci[n*i:n*i+n,:] = cfc.beam3s(ex[i],ey[i],ez[i],eo,ep,ed[i],[0,0,0,0],n)
+    #es[nseg*i:nseg*i+nseg,:], edi[nseg*i:nseg*i+nseg,:], eci[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex[i],ey[i],ez[i],eo,ep,ed[i],eq[i],nseg)
+    es[nseg*i:nseg*i+nseg,:], edi[nseg*i:nseg*i+nseg,:], eci[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex[i],ey[i],ez[i],eo,ep,ed[i],[0,0,0,0],nseg)
+    #es[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex[i],ey[i],ez[i],eo,ep,ed[i],[0,0,0,0],nseg)
 
-#print(es)
-#print(edi)
-#print(eci)
+N = es[:,0]
+Vy = es[:,1]
+Vz = es[:,2]
+T = es[:,3]
+My = es[:,4]
+Mz = es[:,5]
 
-def_nodes, def_elements = cfvv.beam3d.def_geometry(edof,coord,dof,a,5)
+normal_stresses = np.zeros((nel*nseg,1))
+shear_stresses_y = np.zeros((nel*nseg,1))
+shear_stresses_z = np.zeros((nel*nseg,1))
 
-#normal_stresses = cfvv.beam3d.el_values(edof,es,edi,eci,E,v,A,Iy,Iz,hy,hz)
+# Stress calculation based on element forces
+for i in range(nel*nseg):
+    # Calculate least favorable normal stress using Navier's formula
+    if N[i] < 0:
+        normal_stresses[i] = N[i]/A - np.absolute(My[i]/Iy*hz) - np.absolute(Mz[i]/Iz*hy)
+        #normal_stresses[i] = N[i]/A - My[i]/Iy*hz - Mz[i]/Iz*hy
+    else:
+        normal_stresses[i] = N[i]/A + np.absolute(My[i]/Iy*hz) + np.absolute(Mz[i]/Iz*hy)
+        #normal_stresses[i] = N[i]/A + My[i]/Iy*hz + Mz[i]/Iz*hy
 
-cfvv.beam3d.el_values(edof,es,edi,eci,E,v,A,Iy,Iz,hy,hz)
+    # Calculate shear stress in y-direction (Assuming only web taking shear stresses)
+    shear_stresses_y[i] = Vy[i]/A_web
 
+    # Calculate shear stress in y-direction (Assuming only flanges taking shear stresses)
+    shear_stresses_z[i] = Vz[i]/(A-A_web)
+
+    
+# Below the data for the undeformed mesh is sent, along with element values.
+# Normal stresses are sent by default, but comment it out and uncomment 
+# shear_stresses_y/shear_stresses_z to visualize them
+
+# Send data of deformed geometry & normal stresses as element values
+cfvv.beam3d.def_geometry(edof,coord,dof,a,normal_stresses,'Max normal stress',def_scale=5,nseg=nseg)
+
+# Send data of deformed geometry & normal stresses as element values
+#cfvv.beam3d.def_geometry(edof,coord,dof,a,shear_stresses_y,'Shear stress y',def_scale=5,nseg=nseg)
+
+# Send data of deformed geometry & normal stresses as element values
+#cfvv.beam3d.def_geometry(edof,coord,dof,a,shear_stresses_z,'Shear stress z',def_scale=5,nseg=nseg)
+
+
+#Start Calfem-vedo visualization
 if __name__ == "__main__":
     app = Qt.QApplication(sys.argv)
-    window = cfvv.MainWindow(nodes,elements,def_nodes,def_elements)
-    #window = cfvv.MainWindow(nodes,elements,def_nodes,def_elements)
-    #app.aboutToQuit.connect(cfvv.MainWindow.onClose) # <-- connect the onClose event
+    window = cfvv.MainWindow()
     app.exec_()
-
-
-"""
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    ex = cfvv.MainWindow(elements,nodes)
-    ex.show()
-    sys.exit(app.exec_())
-"""
