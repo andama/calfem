@@ -7,7 +7,7 @@
 """
 
 import os
-import sys
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import calfem.core as cfc
@@ -493,7 +493,8 @@ nel = np.size(edof, axis = 0)
 ex,ey,ez = cfc.coordxtr(edof,coord,dof)
 
 # Send data of undeformed geometry
-cfvv.beam3d.geometry(edof,coord,dof,0.02,0.2)
+#beamdraw_geometry = cfvv.beam3d()
+cfvv.beam3d.draw_geometry(edof,coord,dof,0.02,0.2)
 
 eo = np.array([0, 0, 1])
 
@@ -595,17 +596,16 @@ for i in range(nel*nseg):
 # shear_stresses_y/shear_stresses_z to visualize them
 
 # Send data of deformed geometry & normal stresses as element values
-cfvv.beam3d.def_geometry(edof,coord,dof,a,normal_stresses,'Max normal stress',def_scale=5,nseg=nseg)
+#cfvv.beam3d.draw_displaced_geometry(edof,coord,dof,a,normal_stresses,'Max normal stress',def_scale=5,nseg=nseg)
 
 # Send data of deformed geometry & normal stresses as element values
-#cfvv.beam3d.def_geometry(edof,coord,dof,a,shear_stresses_y,'Shear stress y',def_scale=5,nseg=nseg)
+#cfvv.beam3d.draw_displaced_geometry(edof,coord,dof,a,shear_stresses_y,'Shear stress y',def_scale=5,nseg=nseg)
 
 # Send data of deformed geometry & normal stresses as element values
-#cfvv.beam3d.def_geometry(edof,coord,dof,a,shear_stresses_z,'Shear stress z',def_scale=5,nseg=nseg)
+#cfvv.beam3d.draw_displaced_geometry(edof,coord,dof,a,shear_stresses_z,'Shear stress z',def_scale=5,nseg=nseg)
 
+
+#cfvv.beam3d(edof,coord,dof,a,normal_stresses,'Max normal stress',nseg=nseg)
 
 #Start Calfem-vedo visualization
-if __name__ == "__main__":
-    app = Qt.QApplication(sys.argv)
-    window = cfvv.MainWindow()
-    app.exec_()
+cfvv.show_and_wait()

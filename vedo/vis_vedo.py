@@ -7,6 +7,41 @@ Contains all the functions for 3D visualization in CALFEM using VTK
 @author: Andreas Åmand
 """
 
+"""
+# -*- coding: utf-8 -*-
+
+class BeamViz:
+    def __init__(self):
+        self.elements
+        self.nodes
+        ...
+
+    def init_vedo_geometry(self):
+        ...
+    def render_geometry(self):
+        ...
+
+class BeamVizWindow(Qt.QMainWindow):
+    def __init__(self):
+        self.beam_viz = BeamViz()
+        ...
+
+    def draw_geometry(self):
+        self.beam_viz.render_geometry(...)
+
+    def draw_displaced_geometry(self):
+        self.beam_viz.render_geometry(...)
+
+def draw_geometry(...):
+    viz_window = BeamVizWindow(...)
+    viz_window.draw_geometry(...)
+
+def draw_displaced_geometry(...):
+    viz_window = BeamVizWindow(...)
+    viz_window.draw_displaced_geometry(...)
+
+"""
+
 import numpy as np
 import vedo as v
 import sys
@@ -15,11 +50,16 @@ from PyQt5 import uic
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 
+class data:
+    beam_3D_nodes = None
+    beam_3D_elements = None
+    beam_3D_def_nodes = None
+    beam_3D_def_elements = None
+    beam_3D_el_values = None
 
-class beamdata:
-    beam3d_stresses = None
-    def_coord = None
-
+    solid_3D_mesh = None
+    solid_3D_def_mesh = None
+    solid_3D_el_values = None
 
 
 class tools:
@@ -40,20 +80,48 @@ class tools:
 class MainWindow(Qt.QMainWindow):
     
     def __init__(self):
-        Qt.QMainWindow.__init__(self)
+        """
+        self.beam3d = beam3d()
+        self.solid3d = solid3d()
+        
+        self.beam_elements = self.beam3d.elements
+        print(self.beam_elements)
+        self.beam_nodes = self.beam3d.nodes
+        self.beam_displaced_elements = self.beam3d.displaced_elements
+        self.beam_displaced_nodes = self.beam3d.displaced_nodes
+        self.beam_element_values = self.beam3d.element_values
+        
         
         elements = beamdata.elements
         nodes = beamdata.nodes
         def_elements = beamdata.def_elements
         def_nodes = beamdata.def_nodes
         el_values = beamdata.el_values[:, 0]
+        """
 
-        self.initialize(def_elements)
+        beam_3D_nodes = data.beam_3D_nodes
+        beam_3D_elements = data.beam_3D_elements
+        beam_3D_def_nodes = data.beam_3D_def_nodes
+        beam_3D_def_elements = data.beam_3D_def_elements
+        beam_3D_el_values = data.beam_3D_el_values
 
-        self.render_geometry(nodes,elements)
-        self.render_geometry(def_nodes,def_elements)
+        solid_3D_mesh = data.solid_3D_mesh
+        solid_3D_def_mesh = data.solid_3D_def_mesh
+        solid_3D_el_values = data.solid_3D_el_values
 
-    def initialize(self,def_elements):
+
+        Qt.QMainWindow.__init__(self)
+        
+        #self.initialize(def_elements)
+        self.initialize()
+        #self.render_beam_geometry(beam_3D_nodes,beam_3D_elements)
+        #self.render_beam_geometry(beam_3D_def_nodes,beam_3D_def_elements)
+        self.render_solid_geometry(solid_3D_mesh)
+        self.render_solid_geometry(solid_3D_def_mesh)
+        #self.render_geometry(nodes,elements)
+        #self.render_geometry(def_nodes,def_elements)
+
+    def initialize(self):
         uic.loadUi("QtVTKMainWindow.ui", self)
         self.frame = Qt.QFrame()
         self.layout = Qt.QVBoxLayout()
@@ -62,7 +130,8 @@ class MainWindow(Qt.QMainWindow):
         # Create renderer and add the vedo objects and callbacks
         self.vp = v.Plotter(qtWidget=self.vtkWidget,bg2="blackboard",bg="black",axes=4)
 
-        self.vp.show(def_elements, axes=1, viewup='y')
+        #self.vp.show(def_elements, axes=1, viewup='y')
+        self.vp.show(axes=1, viewup='y')
 
         #self.vp.addGlobalAxes(8)
 
@@ -72,15 +141,21 @@ class MainWindow(Qt.QMainWindow):
 
         self.show()
 
-    def render_geometry(self,nodes,elements):
+    def render_beam_geometry(self,beam_nodes,beam_elements):
         
-        nnode = np.size(nodes, axis = 0)
+        nnode = np.size(beam_nodes, axis = 0)
         for i in range(nnode):
-            self.vp += nodes[i]
+            self.vp += beam_nodes[i]
 
-        nel = np.size(elements, axis = 0)
+        nel = np.size(beam_elements, axis = 0)
         for i in range(nel):
-            self.vp += elements[i]
+            self.vp += beam_elements[i]
+
+    def render_solid_geometry(self,solid_mesh):
+
+        #nel = np.size(elements, axis = 0)
+        for i in range(1):
+            self.vp += solid_mesh
 
     def onClose(self):
         printc("..calling onClose")
@@ -89,16 +164,28 @@ class MainWindow(Qt.QMainWindow):
 
 
 class beam3d:
-    def geometry(edof,coord,dof,scale,alpha):
+    #def __init__(self,edof,coord,dof,a,el_values,label,nseg):
+    """
+    def __init__(self):
+        #self.MainWindow = MainWindow():
+        #self.elements
+        #self.nodes = []
+        self.displaced_elements = []
+        self.displaced_nodes = []
+        self.element_values = []
+    """
+
+    def draw_geometry(edof,coord,dof,scale=0.2,alpha=1):
         
         nnode = np.size(coord, axis = 0)
+        #nodes = []
         nodes = []
         for i in range(nnode):
             nodes.append(v.Sphere().scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha))
 
         nel = np.size(edof, axis = 0)
+        #elements = []
         elements = []
-
         
         res = 4
         for i in range(nel):
@@ -110,10 +197,12 @@ class beam3d:
 
             elements.append(tube)
 
-        beamdata.nodes = nodes
-        beamdata.elements = elements
+        #self.MainWindow.beam_nodes = nodes
+        #self.MainWindow.beam_nodes = elements
+        data.beam_3D_nodes = nodes
+        data.beam_3D_elements = elements
 
-    def def_geometry(edof,coord,dof,a,el_values,label,scale=0.02,alpha=1,def_scale=1,nseg=2):
+    def draw_displaced_geometry(edof,coord,dof,a,el_values,label,scale=0.02,alpha=1,def_scale=1,nseg=2):
 
         ndof = np.size(a, axis = 0)
         ncoord = np.size(coord, axis = 0)
@@ -131,7 +220,7 @@ class beam3d:
 
             def_nodes.append(v.Sphere().scale(1.5*scale).pos([x,y,z]).alpha(alpha))
 
-        beamdata.def_coord = def_coord
+        #beamdata.def_coord = def_coord
 
         nel = np.size(edof, axis = 0)
         def_elements = []
@@ -230,8 +319,47 @@ class beam3d:
 
 
                 
+        #self.MainWindow.beam_displaced_nodes = def_nodes
+        #self.MainWindow.beam_displaced_elements = def_elements
+        #self.MainWindow.beam_element_values = el_values
+        data.beam_3D_def_nodes = def_nodes
+        data.beam_3D_def_elements = def_elements
+        data.beam_3D_el_values = el_values
 
-        beamdata.def_nodes = def_nodes
-        beamdata.def_elements = def_elements
-        beamdata.el_values = el_values
+
+class solid3d:
+    """
+    def __init__(self):
+        self.mesh = []
+        self.displaced_mesh = []
+    """
+
+    def draw_geometry(edof,coord,dof,scale,alpha):
+        mesh = v.mesh.Mesh([coord,[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
+        data.solid_3D_mesh = mesh
+
+    def draw_displaced_geometry(edof,coord,dof,a,el_values,label,scale=0.02,alpha=1,def_scale=1,nseg=2):
+        ncoord = np.size(coord, axis = 0)
+        def_nodes = []
+        def_coord = np.zeros([ncoord,3])
+
+        for i in range(0, ncoord):
+            a_dx, a_dy, a_dz = tools.get_a_from_coord(i,6,a,def_scale)
+
+            x = coord[i,0]+a_dx
+            y = coord[i,1]+a_dy
+            z = coord[i,2]+a_dz
+
+            def_coord[i] = [x,y,z]
+
+            #def_nodes.append(v.Sphere().scale(1.5*scale).pos([x,y,z]).alpha(alpha))
+            
+        mesh = v.mesh.Mesh([def_coord,[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
+        data.solid_3D_def_mesh = mesh
+
+#Start Calfem-vedo visualization
+def show_and_wait():
+    app = Qt.QApplication(sys.argv)
+    window = MainWindow()
+    app.exec_()
 
