@@ -150,7 +150,8 @@ nel = np.size(edof, axis = 0)
 ex,ey,ez = cfc.coordxtr(edof,coord,dof)
 
 # Send data of undeformed geometry
-cfvv.solid3d.draw_geometry(edof,coord,dof,0.02,1)
+#cfvv.solid3d.draw_geometry(edof,coord,dof,0.02,1)
+cfvv.draw_geometry(edof,coord,dof,0.02,1,export=False)
 
 ep = [2]
 
