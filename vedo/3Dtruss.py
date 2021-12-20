@@ -494,7 +494,8 @@ ex,ey,ez = cfc.coordxtr(edof,coord,dof)
 
 # Send data of undeformed geometry
 #beamdraw_geometry = cfvv.beam3d()
-cfvv.beam3d.draw_geometry(edof,coord,dof,0.02,0.2)
+#cfvv.beam3d.draw_geometry(edof,coord,dof,0.02,0.2)
+cfvv.draw_geometry(edof,coord,dof,1,alpha=0.2)
 
 eo = np.array([0, 0, 1])
 
@@ -597,6 +598,7 @@ for i in range(nel*nseg):
 
 # Send data of deformed geometry & normal stresses as element values
 #cfvv.beam3d.draw_displaced_geometry(edof,coord,dof,a,normal_stresses,'Max normal stress',def_scale=5,nseg=nseg)
+cfvv.draw_displaced_geometry(edof,coord,dof,a,normal_stresses,1,label='Max normal stress',nseg=nseg)
 
 # Send data of deformed geometry & normal stresses as element values
 #cfvv.beam3d.draw_displaced_geometry(edof,coord,dof,a,shear_stresses_y,'Shear stress y',def_scale=5,nseg=nseg)

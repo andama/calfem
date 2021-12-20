@@ -25,6 +25,6 @@ coord = solid_data['coord']
 dof = solid_data['dof']
 
 #cfvv.solid3d.draw_geometry(edof,coord,dof,0.02,1)
-cfvv.draw_geometry(edof,coord,dof,0.02,1)
+cfvv.draw_geometry(edof,coord,dof,2)
 
 cfvv.show_and_wait()

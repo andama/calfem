@@ -151,7 +151,8 @@ ex,ey,ez = cfc.coordxtr(edof,coord,dof)
 
 # Send data of undeformed geometry
 #cfvv.solid3d.draw_geometry(edof,coord,dof,0.02,1)
-cfvv.draw_geometry(edof,coord,dof,0.02,1,export=False)
+#cfvv.draw_geometry(edof,coord,dof,0.02,1,export=False)
+cfvv.draw_geometry(edof,coord,dof,2)
 
 ep = [2]
 

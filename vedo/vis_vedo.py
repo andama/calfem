@@ -7,41 +7,6 @@ Contains all the functions for 3D visualization in CALFEM using VTK
 @author: Andreas Åmand
 """
 
-"""
-# -*- coding: utf-8 -*-
-
-class BeamViz:
-    def __init__(self):
-        self.elements
-        self.nodes
-        ...
-
-    def init_vedo_geometry(self):
-        ...
-    def render_geometry(self):
-        ...
-
-class BeamVizWindow(Qt.QMainWindow):
-    def __init__(self):
-        self.beam_viz = BeamViz()
-        ...
-
-    def draw_geometry(self):
-        self.beam_viz.render_geometry(...)
-
-    def draw_displaced_geometry(self):
-        self.beam_viz.render_geometry(...)
-
-def draw_geometry(...):
-    viz_window = BeamVizWindow(...)
-    viz_window.draw_geometry(...)
-
-def draw_displaced_geometry(...):
-    viz_window = BeamVizWindow(...)
-    viz_window.draw_displaced_geometry(...)
-
-"""
-
 import numpy as np
 import vedo as v
 #import polyscope as p
@@ -49,19 +14,6 @@ import sys
 from PyQt5 import Qt
 from PyQt5 import uic
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-
-"""
-class data:
-    beam_3D_nodes = None
-    beam_3D_elements = None
-    beam_3D_def_nodes = None
-    beam_3D_def_elements = None
-    beam_3D_el_values = None
-
-    solid_3D_mesh = None
-    solid_3D_def_mesh = None
-    solid_3D_el_values = None
-"""
 
 class tools:
     def get_coord_from_edof(edof_row,dof):
@@ -76,51 +28,42 @@ class tools:
         dz = a[coord_row_num*num_of_deformations+2]*scale
         return dx, dy, dz
 
+def init_app():
+    global vedo_app
+    vedo_app = Qt.QApplication.instance()
 
+    if vedo_app is None:
+        print("No QApplication instance found. Creating one.")
+        # if it does not exist then a QApplication is created
+        vedo_app = Qt.QApplication(sys.argv)
+    else:
+        print("QApplication instance found.")
+
+    return vedo_app
+
+class VedoPlotWindow:
+    __instance = None
+    @staticmethod 
+    def intance():
+        """ Static access method. """
+        if VedoPlotWindow.__instance == None:
+            VedoPlotWindow()
+
+        return VedoPlotWindow.__instance
+
+    def __init__(self):
+        """ Virtually private constructor. """
+        if VedoPlotWindow.__instance != None:
+            raise Exception("This class is a singleton!")
+        else:
+            VedoPlotWindow.__instance = self
+            self.plot_window = VedoMainWindow()
 
 class VedoMainWindow(Qt.QMainWindow):
     
     def __init__(self):
-        """
-        self.beam3d = beam3d()
-        self.solid3d = solid3d()
-        
-        self.beam_elements = self.beam3d.elements
-        print(self.beam_elements)
-        self.beam_nodes = self.beam3d.nodes
-        self.beam_displaced_elements = self.beam3d.displaced_elements
-        self.beam_displaced_nodes = self.beam3d.displaced_nodes
-        self.beam_element_values = self.beam3d.element_values
-        
-        
-        elements = beamdata.elements
-        nodes = beamdata.nodes
-        def_elements = beamdata.def_elements
-        def_nodes = beamdata.def_nodes
-        el_values = beamdata.el_values[:, 0]
-        
-
-        beam_3D_nodes = data.beam_3D_nodes
-        beam_3D_elements = data.beam_3D_elements
-        beam_3D_def_nodes = data.beam_3D_def_nodes
-        beam_3D_def_elements = data.beam_3D_def_elements
-        beam_3D_el_values = data.beam_3D_el_values
-
-        solid_3D_mesh = data.solid_3D_mesh
-        solid_3D_def_mesh = data.solid_3D_def_mesh
-        solid_3D_el_values = data.solid_3D_el_values
-        """
-
         Qt.QMainWindow.__init__(self)
-        
-        #self.initialize(def_elements)
         self.initialize()
-        #self.render_beam_geometry(beam_3D_nodes,beam_3D_elements)
-        #self.render_beam_geometry(beam_3D_def_nodes,beam_3D_def_elements)
-        #self.render_solid_geometry(solid_3D_mesh)
-        #self.render_solid_geometry(solid_3D_def_mesh)
-        #self.render_geometry(nodes,elements)
-        #self.render_geometry(def_nodes,def_elements)
 
     def initialize(self):
         uic.loadUi("QtVTKMainWindow.ui", self)
@@ -128,17 +71,9 @@ class VedoMainWindow(Qt.QMainWindow):
         self.layout = Qt.QVBoxLayout()
         self.vtkWidget = QVTKRenderWindowInteractor(self.frame)
 
-        #p.set_program_name("vedo using polyscope")
-        #p.set_up_dir("z_up")
-        #p.init()
-
         # Create renderer and add the vedo objects and callbacks
-        self.plotter = v.Plotter(qtWidget=self.vtkWidget,bg2="blackboard",bg="black",axes=4)
-
-        #self.vp.show(def_elements, axes=1, viewup='y')
+        self.plotter = v.Plotter(qtWidget=self.vtkWidget,bg="black",bg2="blackboard",axes=4)
         self.plotter.show(axes=1, viewup='y')
-
-        #self.vp.addGlobalAxes(8)
 
         self.layout.addWidget(self.vtkWidget)
         self.frame.setLayout(self.layout)
@@ -146,21 +81,21 @@ class VedoMainWindow(Qt.QMainWindow):
 
         self.show()
 
-    def render_beam_geometry(self,beam_nodes,beam_elements):
+    def render_beam_geometry(self,nodes,elements):
         
-        nnode = np.size(beam_nodes, axis = 0)
+        nnode = np.size(nodes, axis = 0)
         for i in range(nnode):
-            self.plotter += beam_nodes[i]
+            self.plotter += nodes[i]
 
-        nel = np.size(beam_elements, axis = 0)
+        nel = np.size(elements, axis = 0)
         for i in range(nel):
-            self.plotter += beam_elements[i]
+            self.plotter += elements[i]
 
-    def render_solid_geometry(self,solid_mesh):
+    def render_solid_geometry(self,mesh):
 
         #nel = np.size(elements, axis = 0)
         for i in range(1):
-            self.plotter += solid_mesh
+            self.plotter += mesh[i]
             #ps_mesh = p.register_surface_mesh("My vedo mesh",solid_mesh.points(),solid_mesh.faces(),color=[0.5,0,0],smooth_shade=False)
 
         #ps_mesh.add_scalar_quantity("heights", solid_mesh.points()[:,2], defined_on='vertices')
@@ -171,48 +106,54 @@ class VedoMainWindow(Qt.QMainWindow):
         self.vtkWidget.close()
 
 
+def draw_geometry(edof,coord,dof,element_type,alpha=1,export=None):
+    #Element types: 1: beam, 2: Solid
+    # beam scale = 0.02/0.2
 
-class beam3d:
-    #def __init__(self,edof,coord,dof,a,el_values,label,nseg):
-    """
-    def __init__(self):
-        #self.MainWindow = MainWindow():
-        #self.elements
-        #self.nodes = []
-        self.displaced_elements = []
-        self.displaced_nodes = []
-        self.element_values = []
-    """
+    app = init_app()
+    plot_window = VedoPlotWindow.intance().plot_window
 
-    def draw_geometry(edof,coord,dof,scale=0.2,alpha=1):
-        
+    if element_type == 1:
+        scale = 0.02
         nnode = np.size(coord, axis = 0)
-        #nodes = []
         nodes = []
+
         for i in range(nnode):
             nodes.append(v.Sphere().scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha))
 
         nel = np.size(edof, axis = 0)
-        #elements = []
         elements = []
         
         res = 4
         for i in range(nel):
             coord1,coord2 = tools.get_coord_from_edof(edof[i,:],dof)
-
             tube = v.Cylinder([[coord[coord1,0],coord[coord1,1],coord[coord1,2]],[coord[coord2,0],coord[coord2,1],coord[coord2,2]]],r=scale,res=res).alpha(alpha)
-
-            #tube = v.Cylinder(height=h/scale,res=res).scale(scale).pos([x,y,z]).orientation([dx,dy,dz]).alpha(alpha)
-
             elements.append(tube)
 
-        #self.MainWindow.beam_nodes = nodes
-        #self.MainWindow.beam_nodes = elements
-        data.beam_3D_nodes = nodes
-        data.beam_3D_elements = elements
+        #if export is not None:
+        #    v.io.write(mesh, export+".vtk")
 
-    def draw_displaced_geometry(edof,coord,dof,a,el_values,label,scale=0.02,alpha=1,def_scale=1,nseg=2):
+        plot_window.render_beam_geometry(nodes,elements)
 
+    elif element_type == 2:
+        meshes = []
+        mesh = v.Mesh([coord,[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
+        meshes.append(mesh)
+
+        if export is not None:
+            v.io.write(mesh, export+".vtk")
+
+        plot_window.render_solid_geometry(meshes)
+
+def draw_displaced_geometry(edof,coord,dof,a,el_values,element_type,label,scale=0.02,alpha=1,def_scale=1,nseg=2):
+    #Element types: 1: beam, 2: Solid
+    # beam scale = 0.02/0.2
+
+    app = init_app()
+    plot_window = VedoPlotWindow.intance().plot_window
+
+    if element_type == 1:
+        scale = 0.02
         ndof = np.size(a, axis = 0)
         ncoord = np.size(coord, axis = 0)
         def_nodes = []
@@ -326,91 +267,11 @@ class beam3d:
 
                 tube.cmap("jet", el_values_array, on="points", vmin=vmin, vmax=vmax).addScalarBar(label)
 
+        plot_window.render_beam_geometry(def_nodes,def_elements)
 
-                
-        #self.MainWindow.beam_displaced_nodes = def_nodes
-        #self.MainWindow.beam_displaced_elements = def_elements
-        #self.MainWindow.beam_element_values = el_values
-        data.beam_3D_def_nodes = def_nodes
-        data.beam_3D_def_elements = def_elements
-        data.beam_3D_el_values = el_values
+    elif element_type == 2:
+        print("solid")
 
-
-def init_app():
-    global vedo_app
-    vedo_app = Qt.QApplication.instance()
-
-    if vedo_app is None:
-        print("No QApplication instance found. Creating one.")
-        # if it does not exist then a QApplication is created
-        vedo_app = Qt.QApplication(sys.argv)
-    else:
-        print("QApplication instance found.")
-
-    return vedo_app
-
-class VedoPlotWindow:
-    __instance = None
-    @staticmethod 
-    def intance():
-        """ Static access method. """
-        if VedoPlotWindow.__instance == None:
-            VedoPlotWindow()
-
-        return VedoPlotWindow.__instance
-
-    def __init__(self):
-        """ Virtually private constructor. """
-        if VedoPlotWindow.__instance != None:
-            raise Exception("This class is a singleton!")
-        else:
-            VedoPlotWindow.__instance = self
-            self.plot_window = VedoMainWindow()
-
-def draw_geometry(edof,coord,dof,scale,alpha,export=False):
-    mesh = v.Mesh([coord,[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
-
-    if export==True:
-        v.io.write(mesh, "solid.vtk")
-        #print(export)
-
-    app = init_app()
-    plot_window = VedoPlotWindow.intance().plot_window
-    plot_window.render_solid_geometry(mesh)
-"""
-class solid3d:
-    
-    #def __init__(self):
-    #    self.mesh = []
-    #    self.displaced_mesh = []
-    
-
-    def draw_geometry(edof,coord,dof,scale,alpha):
-        app = init_app()
-        plot_window = VedoPlotWindow.intance().plot_window
-        mesh = v.mesh.Mesh([coord,[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
-        plot_window.render_solid_geometry(mesh)
-        #data.solid_3D_mesh = mesh
-
-    def draw_displaced_geometry(edof,coord,dof,a,el_values,label,scale=0.02,alpha=1,def_scale=1,nseg=2):
-        ncoord = np.size(coord, axis = 0)
-        def_nodes = []
-        def_coord = np.zeros([ncoord,3])
-
-        for i in range(0, ncoord):
-            a_dx, a_dy, a_dz = tools.get_a_from_coord(i,6,a,def_scale)
-
-            x = coord[i,0]+a_dx
-            y = coord[i,1]+a_dy
-            z = coord[i,2]+a_dz
-
-            def_coord[i] = [x,y,z]
-
-            #def_nodes.append(v.Sphere().scale(1.5*scale).pos([x,y,z]).alpha(alpha))
-            
-        mesh = v.Mesh([def_coord,[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
-        data.solid_3D_def_mesh = mesh
-"""
 #Start Calfem-vedo visualization
 def show_and_wait():
     #app = Qt.QApplication(sys.argv)
