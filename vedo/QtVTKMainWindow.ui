@@ -121,7 +121,7 @@
      <x>0</x>
      <y>0</y>
      <width>1440</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="defaultUp">
@@ -185,8 +185,10 @@
     <property name="title">
      <string>Mode</string>
     </property>
-    <addaction name="actionActor_Mode"/>
-    <addaction name="actionJoystick_Mode"/>
+    <addaction name="actionDefault"/>
+    <addaction name="actionTrackball"/>
+    <addaction name="actionActor"/>
+    <addaction name="actionSelection"/>
    </widget>
    <widget class="QMenu" name="menuExport">
     <property name="title">
@@ -194,6 +196,8 @@
     </property>
     <addaction name="actionExport_Matlab_data"/>
     <addaction name="actionExport_VTK_data"/>
+    <addaction name="separator"/>
+    <addaction name="actionShow_browser"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -250,32 +254,32 @@
     <bool>true</bool>
    </property>
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
     <string>Show Grid</string>
    </property>
   </action>
-  <action name="actionActor_Mode">
+  <action name="actionActor">
    <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>Actor Mode</string>
+    <string>Actor</string>
    </property>
   </action>
-  <action name="actionJoystick_Mode">
+  <action name="actionDefault">
    <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>Joystick Mode</string>
+    <string>Default</string>
    </property>
   </action>
   <action name="actionExport_Matlab_data">
@@ -415,6 +419,21 @@
   <action name="actionEdit_Parameters">
    <property name="text">
     <string>Edit Parameters...</string>
+   </property>
+  </action>
+  <action name="actionShow_browser">
+   <property name="text">
+    <string>Show browser</string>
+   </property>
+  </action>
+  <action name="actionTrackball">
+   <property name="text">
+    <string>Trackball</string>
+   </property>
+  </action>
+  <action name="actionSelection">
+   <property name="text">
+    <string>Selection</string>
    </property>
   </action>
  </widget>

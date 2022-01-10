@@ -1,0 +1,322 @@
+clear
+clc
+
+d=0.1;
+
+ncoord_x = 100+1;
+ncoord_y = 8+1;
+ncoord_z = 6+1;
+
+ncoord_init = ncoord_x*ncoord_y*ncoord_z;
+
+coord = zeros(ncoord_init,3);
+row = 1;
+for z = 0:ncoord_z-1
+    for y = 0:ncoord_y-1
+        for x = 0:ncoord_x-1
+            coord(row,:) = [x*d,y*d,z*d];
+            row = row+1;
+        end
+    end
+end
+
+ncoord = size(coord,1);
+
+dof = zeros(ncoord,3);
+
+it = 1;
+for row = 1:ncoord
+    for col = 1:3
+        dof(row,col) = it;
+        it = it + 1;
+    end
+end
+
+ndof = size(dof,1)*size(dof,2);
+
+
+
+nel_x = (ncoord_x-1);
+nel_y = (ncoord_y-1);
+nel_z = (ncoord_z-1);
+
+edof = zeros(nel_x*nel_y*nel_z,8*3+1);
+bc = zeros(ncoord_y*ncoord_z*2*3,2);
+
+x_step = 1;
+y_step = ncoord_x;
+z_step = (y_step)*ncoord_y;
+
+it = 1;
+bc_it = 1;
+node = 1;
+
+for col = 0:nel_z-1
+    node = 1+z_step*col;
+    for row = 0:nel_y-1
+        for el = 0:nel_x-1
+            edof(it,1) = it;
+            edof(it,2:4) = dof(node,:);
+            if el == 0
+                bc(bc_it,1) = dof(node,1);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,2);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,3);
+                bc_it = bc_it + 1;
+            end
+        
+            node = node+x_step;
+            edof(it,5:7) = dof(node,:);
+            if el == nel_x-1
+                bc(bc_it,1) = dof(node,1);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,2);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,3);
+                bc_it = bc_it + 1;
+            end
+        
+            node = node+y_step;
+            edof(it,8:10) = dof(node,:);
+            if el == nel_x-1
+                bc(bc_it,1) = dof(node,1);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,2);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,3);
+                bc_it = bc_it + 1;
+            end
+        
+            node = node-x_step;
+            edof(it,11:13) = dof(node,:);
+            if el == 0
+                bc(bc_it,1) = dof(node,1);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,2);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,3);
+                bc_it = bc_it + 1;
+            end
+            
+            node = node+z_step-y_step;
+            edof(it,14:16) = dof(node,:);
+            if el == 0
+                bc(bc_it,1) = dof(node,1);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,2);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,3);
+                bc_it = bc_it + 1;
+            end
+        
+            node = node+x_step;
+            edof(it,17:19) = dof(node,:);
+            if el == nel_x-1
+                bc(bc_it,1) = dof(node,1);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,2);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,3);
+                bc_it = bc_it + 1;
+            end
+        
+            node = node+y_step;
+            edof(it,20:22) = dof(node,:);
+            if el == nel_x-1
+                bc(bc_it,1) = dof(node,1);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,2);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,3);
+                bc_it = bc_it + 1;
+            end
+        
+            node = node-x_step;
+            edof(it,23:25) = dof(node,:);
+            if el == 0
+                bc(bc_it,1) = dof(node,1);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,2);
+                bc_it = bc_it + 1;
+                bc(bc_it,1) = dof(node,3);
+                bc_it = bc_it + 1;
+            end
+
+            if el == nel_x-1
+                node = node-z_step-y_step+2;
+            else
+                node = node+x_step-y_step-z_step;
+            end
+            
+            it = it+1;
+
+        end
+    end
+end
+
+
+
+
+nnode = size(coord,1);
+nel = size(edof,1);
+
+[ex,ey,ez] = coordxtr(edof,coord,dof,8);
+
+
+ep = [2];
+
+E = 210000000;
+v = 0.3;
+D = hooke(4,E,v);
+
+g=9.82;
+rho = 7850; %kg/m^3
+
+
+eq = [0; -g*rho; 0];
+f = zeros(ndof,1);
+
+K = zeros(ndof);
+for i=(1:nel)
+    [Ke,fe] = soli8e(ex(i,:), ey(i,:), ez(i,:), ep, D, eq);
+    [K,f] = assem(edof(i,:), K, Ke, f, fe);
+end
+
+a = solveq(K, f, bc);
+
+ed = extract(edof,a);
+
+es = zeros(ep*ep*ep,6,nel);
+et = zeros(ep*ep*ep,6,nel);
+eci = zeros(ep*ep*ep,3,nel);
+
+for i=(1:nel)
+    [es(:,:,i),et(:,:,i),eci(:,:,i)] = soli8s(ex(i,:),ey(i,:),ez(i,:),ep,D,ed(i,:));
+    %es(:,:,i) = soli8s(ex(i,:),ey(i,:),ez(i,:),ep,D,ed(i,:));
+end
+es(:,:,1)
+
+eci(:,:,1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ngp=ep(1)*ep(1)*ep(1);
+
+g1=0.577350269189626; w1=1;
+gp(:,1)=[-1; 1; 1;-1;-1; 1; 1;-1]*g1; w(:,1)=[ 1; 1; 1; 1; 1; 1; 1; 1]*w1;
+gp(:,2)=[-1;-1; 1; 1;-1;-1; 1; 1]*g1; w(:,2)=[ 1; 1; 1; 1; 1; 1; 1; 1]*w1;
+gp(:,3)=[-1;-1;-1;-1; 1; 1; 1; 1]*g1; w(:,3)=[ 1; 1; 1; 1; 1; 1; 1; 1]*w1;
+
+wp=w(:,1).*w(:,2).*w(:,3);
+xsi=gp(:,1);  eta=gp(:,2); zet=gp(:,3);  r2=ngp*3;
+
+N(:,1)=(1-xsi).*(1-eta).*(1-zet)/8;  N(:,5)=(1-xsi).*(1-eta).*(1+zet)/8;
+N(:,2)=(1+xsi).*(1-eta).*(1-zet)/8;  N(:,6)=(1+xsi).*(1-eta).*(1+zet)/8;
+N(:,3)=(1+xsi).*(1+eta).*(1-zet)/8;  N(:,7)=(1+xsi).*(1+eta).*(1+zet)/8;
+N(:,4)=(1-xsi).*(1+eta).*(1-zet)/8;  N(:,8)=(1-xsi).*(1+eta).*(1+zet)/8;
+
+m = zeros(8);
+
+for i = (1:8)
+    for j = (1:8)
+        m(i,j) = (rho*d*d*d/8)*(1+(1/3)*xsi(i)*xsi(j))*(1+(1/3)*eta(i)*eta(j))*(1+(1/3)*zet(i)*zet(j));
+    
+        %m(i,4) = rho;
+        %m(i+1,5) = rho;
+        %m(i+3,6) = rho;
+    end
+end
+
+
+% m(1,1) = (8*rho*d*d*d)/216;
+% m(2,2) = m(1,1);
+% m(3,3) = m(1,1);
+% m(4,4) = m(1,1);
+% m(5,5) = m(1,1);
+% m(6,6) = m(1,1);
+% m(7,7) = m(1,1);
+% m(8,8) = m(1,1);
+% m(1,2) = (4*rho*d*d*d)/216;
+% m(1,3) = (2*rho*d*d*d)/216;
+% m(1,7) = (rho*d*d*d)/216;
+
+Me = zeros(3*8);
+
+%m = zeros(3*8);
+iter_i = 1;
+iter_j = 1;
+for i = (1:3:3*8)
+    
+    iter_j = 1;
+    for j = (1:3:3*8)
+        
+        Me(i,j) = m(iter_i,iter_j);
+        Me(i+1,j+1) = m(iter_i,iter_j);
+        Me(i+2,j+2) = m(iter_i,iter_j);
+        iter_j = iter_j+1;
+    end
+    iter_i = iter_i+1;
+end
+%m(1,1) = rho;
+%m(2,2) = rho;
+%m(3,3) = rho;
+
+
+M = zeros(ndof);
+for i=(1:nel)
+    M = assem(edof(i,:), M, Me);
+end
+
+b = bc(:,1);
+
+[L,X] = eigen(K,M,b);
+
+ns = zeros(8,6,nel);
+
+calc = inv( (transpose(N) * N) ) * transpose(N);
+
+for i = (1:nel)
+    %sigma_xx = calc*es(:,1,i);
+    %sigma_yy = calc*es(:,2,i);
+    %sigma_zz = calc*es(:,3,i);
+    %sigma_xy = calc*es(:,4,i);
+    %sigma_xz = calc*es(:,5,i);
+    %sigma_yz = calc*es(:,6,i);
+
+    ns(:,1,i) = calc*es(:,1,i);
+    ns(:,2,i) = calc*es(:,2,i);
+    ns(:,3,i) = calc*es(:,3,i);
+    ns(:,4,i) = calc*es(:,4,i);
+    ns(:,5,i) = calc*es(:,5,i);
+    ns(:,6,i) = calc*es(:,6,i);
+
+    %ns(:,1,i) = sigma_xx
+
+    %for j = (1:length(gp(:,1)))
+    %for j = (1:6)
+        %N(:,j)
+        %sigma = es(j,:,i);
+        %ns(j,:,i)
+    %sigma_xx = es(:,j,i);
+    %sigma_yy = es(:,j,i);
+    %end
+end
+
+save('exv4.mat','coord','dof','edof','a','ed','es','et','eci','ns','L','X')
+
+
+%function N1(ed)
