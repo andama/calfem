@@ -175,7 +175,7 @@ for row in range(ncoord):
     #for col in dofs:
     #    dof[row,col] = it;
     #    it = it + 1;
-    dof[row] = row;
+    dof[row] = row+1;
 
 
 ndof = np.size(dof,0)*np.size(dof,1);
@@ -315,10 +315,11 @@ for col in range(nel_z):
 
 
 #edof = np.delete(edof,0,1)
+edof = np.int_(edof)
 
-
-
-
+#print(coord[0,:])
+#print(dof)
+#print(edof[0,:])
 
 
 
@@ -331,7 +332,7 @@ cfvv.draw_geometry(edof,coord,dof,3,scale=0.002)
 
 
 #Start Calfem-vedo visualization
-cfvv.render()
+cfvv.show_and_wait()
 
 
 ex,ey,ez = cfc.coordxtr(edof,coord,dof)
@@ -346,37 +347,51 @@ ep = [2]
 k = 4
 D = np.ones([3,3])*k
 
-print(D)
-print(ex)
+#print(D)
+#print(ex)
+bcPrescr = np.array([1,2,3,4,5,56,57,58,59,60,111,112,113,114,115,166,167,168,169,170,221,222,223,224,225])
+#bcPrescr = np.array([1,2,3,4,5,56,57,58,59,60,111,112,113,114,115,147,166,167,168,169,170,221,222,223,224,225])
+#bcPrescr = np.array([[1],[2],[3],[4],[5],[56],[57],[58],[59],[60],[111],[112],[113],[114],[115],[166],[167],[168],[169],[170],[221],[222],[223],[224],[225]])
+#bc = np.array([147, 30])
+#bc = np.zeros((1,26))
+#bc[:,15] = 30
+print(bcPrescr)
+#print(bc)
 
-bcPrescr = np.array([0,1,2,3,4,55,56,57,58,59,110,111,112,113,114,165,166,167,168,169,220,221,222,223,224])
+K = np.int_(np.zeros((ndof,ndof)))
 
-bc = np.array([147, 30])
+f = np.zeros([ndof,1])
+eq = np.zeros([ndof,1])
 
-K = np.zeros((ndof,ndof))
+eq[41] = 1000
 
 print(edof[0,:])
 #Ke = cfc.flw3i8e(ex, ey, ez, ep, D)
 #K = cfc.assem(edof,K,Ke)
 for i in range(nel):
-    Ke = cfc.flw3i8e(ex[i], ey[i], ez[i], ep, D)
+    Ke, fe = cfc.flw3i8e(ex[i], ey[i], ez[i], ep, D, eq[i])
     #print(Ke)
-    K = cfc.assem(edof[i,:],K,Ke)
+    #print(edof[i,:])
+    #print(K)
+    #print(i)
+    K,f = cfc.assem(edof[i,:],K,Ke,f,fe)
     #Ke = cfc.flw3i8e(ex[i,:], ey[i,:], ez[i,:], ep, D)
     #print(Ke)
     #K = cfc.assem(edof[i,:],K,Ke)
 
-f = np.zeros([ndof,1])
+#f = np.zeros([ndof,1])
 #f[7,0] = -3000
 
 #bcPrescr = np.array([1,2,3,4,5,6,13,14,15,16,17,18])
-T = cfc.solveq(K, f, bcPrescr, bc)
+T = cfc.solveq(K, f, bcPrescr)
 
 ed = cfc.extractEldisp(edof,T)
 
-print(ed)
+#print(ed)
 
 [es,et,eci] = cfc.flw3i8e(ex, ey, ez, ep, D, ed)
+
+
 
 
 """

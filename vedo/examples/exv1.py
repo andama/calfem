@@ -67,5 +67,4 @@ cfvv.draw_displaced_geometry(edof,coord,dof,1,a,offset=[0,0.1,0])
 #cfvv.draw_displaced_geometry(edof,coord,dof,5,a,scale=0.5,alpha=0.5)
 
 #Start Calfem-vedo visualization
-#cfvv.show_and_wait()
-cfvv.render()
+cfvv.show_and_wait()

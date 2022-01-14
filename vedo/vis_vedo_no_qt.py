@@ -11,7 +11,7 @@ Module for 3D visualization in CALFEM using Vedo (https://vedo.embl.es/)
 import numpy as np
 import vedo as v
 import sys
-import webbrowser
+#import webbrowser
 from scipy.io import loadmat
 
 # Examples using this module:
@@ -126,13 +126,17 @@ class VedoMainWindow():
     
     def __init__(self):
         v.settings.immediateRendering = False
-        self.plotter = v.Plotter(title='CALFEM vedo visualization tool')
-        self.plotters = 0
-        self.plotter.addHoverLegend(useInfo=True,s=1.25,maxlength=96)
-        self.plotter.addCallback('mouse click', self.click)
-        self.silcont = [None]
-        self.click_msg = v.Text2D("", pos="bottom-center", bg='auto', alpha=0.1, font='Calco')
-        self.plotter.add(self.click_msg)
+        self.plotter = []
+        self.plotter.append(v.Plotter(title='CALFEM vedo visualization tool',bg='black',axes=4,offscreen=True))
+        #self.plotter = v.Plotter(title='CALFEM vedo visualization tool',bg='black',axes=4)
+        self.n = 0
+        self.fig = 0
+        self.plotter[self.n].addHoverLegend(useInfo=True,s=1.25,maxlength=96)
+        #self.plotter.addHoverLegend(useInfo=True,s=1.25,maxlength=96)
+        #self.plotter[self.n].addCallback('mouse click', self.click)
+        #self.silcont = [None]
+        #self.click_msg = v.Text2D("", pos="bottom-center", bg='auto', alpha=0.1, font='Calco')
+        #self.plotter[self.n].add(self.click_msg)
 
     def click(self,evt):
         if evt.isAssembly: # endast för testning ifall en assembly skapas
@@ -146,22 +150,34 @@ class VedoMainWindow():
         else: return
 
     def render(self,bg):
-        if self.plotters > 0:
-            for i in range(self.plotters):
-                self.plotter.background(c1=bg, at=i)
-            self.plotter.render(resetcam=True)
-            v.interactive().close()
+        if self.n > 0:
+            for i in range(self.n):
+                #print("renderer "+i)
+                self.plotter[i].show(resetcam=True,axes=4)#.interactive().close()
+                v.interactive().close()
+                #self.plotter[i].close()
+                #self.plotter = []
+                #self.plotter.append(v.Plotter(title='CALFEM vedo visualization tool'))
+            #self.plotter = v.Plotter(title='CALFEM vedo visualization tool')
+            #for i in range(self.plotters):
+            #    self.plotter.background(c1=bg, at=i)
+            #self.plotter.show(resetcam=True,axes=4)
+            #self.plotter.render(resetcam=True)
+            #v.interactive().close()
         else:
-            self.plotter.show(resetcam=True,axes=4,bg=bg).close()
-        
-    def render_geometry(self,meshes,nodes=None,merge=False,window=0):
+            self.plotter[self.n].show(resetcam=True,axes=4).interactive().close()
+            #self.plotter.show(resetcam=True,axes=4).close()
+    
+    # Döp om till create/add geometry eller liknande
+    def add_geometry(self,meshes,nodes=None,merge=False,window=0):
 
         # Mesh/elements plotted, possibly merged for correct numbering
         if merge == True:
             mesh = v.merge(meshes,flag=True)
             #mesh = v.Assembly(meshes)
-            #self.plotter += mesh
-            self.plotter.add(mesh,at=window)
+            #self.plotter[self.n] += mesh
+            self.plotter[self.n].add(mesh)
+            #self.plotter.add(mesh,at=self.fig)
 
             #mesh.clean()
             #mesh.computeNormals().clean().lw(0.1)
@@ -176,8 +192,9 @@ class VedoMainWindow():
         else:
             nel = np.size(meshes, axis = 0)
             for i in range(nel):
-                #self.plotter += meshes[i]
-                self.plotter.add(meshes[i],at=window)
+                #self.plotter[self.n] += meshes[i]
+                self.plotter[self.n].add(meshes[i])
+                #self.plotter.add(meshes[i],at=self.fig)
 
                 #pids = meshes[i].boundaries(returnPointIds=True)
                 #bpts = meshes[i].points()[pids]
@@ -192,8 +209,9 @@ class VedoMainWindow():
         if nodes is not None:
             nnode = np.size(nodes, axis = 0)
             for i in range(nnode):
-                #self.plotter += nodes[i]
-                self.plotter.add(nodes[i],at=window)
+                #self.plotter[self.n] += nodes[i]
+                self.plotter[self.n].add(nodes[i])
+                #self.plotter.add(nodes[i],at=self.fig)
 
 
 
@@ -220,8 +238,9 @@ def add_scalar_bar(
     nel = np.size(meshes, axis = 0)
     for i in range(nel):
         #scalar_bar = v.addons.addScalarBar(meshes[i],title=label,pos=pos,horizontal=True,titleFontSize=font_size,c=color)
-        scalar_bar = v.addons.addScalarBar(meshes[i],title=label,pos=pos,horizontal=True,titleFontSize=font_size,useAlpha=False,c=color)
-    plot_window.plotter.add(scalar_bar,at=window)
+        scalar_bar = v.addons.addScalarBar(meshes[i],title=label,pos=pos,horizontal=True,titleFontSize=font_size,useAlpha=False)
+    plot_window.plotter[plot_window.n].add(scalar_bar)
+    #plot_window.plotter.add(scalar_bar,at=plot_window.fig)
 
 # Add text to a renderer
 def add_text(
@@ -234,8 +253,9 @@ def add_text(
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
     #msg = v.Text2D(text, pos=pos, c=color)
-    msg = v.Text2D(text, pos=pos, alpha=1, c=color)
-    plot_window.plotter.add(msg,at=window)
+    msg = v.Text2D(text, pos=pos, alpha=1)
+    plot_window.plotter[plot_window.n].add(msg)
+    #plot_window.plotter.add(msg,at=plot_window.fig)
 
 """
 # Add legend to a renderer
@@ -304,7 +324,6 @@ def draw_geometry(
     nseg=2,
     render_nodes=True,
     color=None,
-    window=0,
     merge=False,
     t=None
     ):
@@ -322,7 +341,7 @@ def draw_geometry(
         elements = []
 
         for i in range(nel):
-            coord1,coord2 = tools.get_coord_from_edof(edof[i,:],dof,element_type)
+            coord1,coord2 = get_coord_from_edof(edof[i,:],dof,element_type)
 
             #print(coord[coord1,0])
             #print(coord[coord2,0])
@@ -333,10 +352,10 @@ def draw_geometry(
 
         #print(elements,nodes)
         if render_nodes == True:
-            nodes = tools.get_node_elements(coord,scale,alpha)
-            plot_window.render_geometry(elements,nodes)
+            nodes = get_node_elements(coord,scale,alpha)
+            plot_window.add_geometry(elements,nodes)
         else:
-            plot_window.render_geometry(elements)
+            plot_window.add_geometry(elements)
 
         return elements
 
@@ -359,7 +378,7 @@ def draw_geometry(
         el_values_array = np.zeros((1,4*res))[0,:]
 
         for i in range(nel):
-            coord1,coord2 = tools.get_coord_from_edof(edof[i,:],dof,element_type)
+            coord1,coord2 = get_coord_from_edof(edof[i,:],dof,element_type)
 
             bar = v.Cylinder([[coord[coord1,0],coord[coord1,1],coord[coord1,2]],[coord[coord2,0],coord[coord2,1],coord[coord2,2]]],r=scale,res=res,c=color).alpha(alpha)
             elements.append(bar)
@@ -390,10 +409,10 @@ def draw_geometry(
             else:
                 bar.info = f"Bar nr. {i}"
         if render_nodes == True:
-            nodes = tools.get_node_elements(coord,scale,alpha)
-            plot_window.render_geometry(elements,nodes)
+            nodes = get_node_elements(coord,scale,alpha)
+            plot_window.add_geometry(elements,nodes)
         else:
-            plot_window.render_geometry(elements)
+            plot_window.add_geometry(elements)
 
         return elements
 
@@ -415,7 +434,7 @@ def draw_geometry(
         vmin, vmax = np.min(el_values), np.max(el_values)
         #print(coord)
         for i in range(nel):
-            coords = tools.get_coord_from_edof(edof[i,:],dof,4)
+            coords = get_coord_from_edof(edof[i,:],dof,4)
 
 
             mesh = v.Mesh([coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
@@ -448,10 +467,10 @@ def draw_geometry(
         #    v.io.write(mesh, export+".vtk")
 
         if render_nodes == True:
-            nodes = tools.get_node_elements(coord,scale,alpha)
-            plot_window.render_geometry(meshes,nodes)
+            nodes = get_node_elements(coord,scale,alpha)
+            plot_window.add_geometry(meshes,nodes)
         else:
-            plot_window.render_geometry(meshes)
+            plot_window.add_geometry(meshes)
 
         return meshes
 
@@ -477,7 +496,7 @@ def draw_geometry(
         el_values_array = np.zeros((1,4*res))[0,:]
 
         for i in range(nel):
-            coord1,coord2 = tools.get_coord_from_edof(edof[i,:],dof,5)
+            coord1,coord2 = get_coord_from_edof(edof[i,:],dof,5)
 
             if nseg > 2:
                 steps = np.float32(1/(nseg-1))
@@ -557,10 +576,10 @@ def draw_geometry(
         #    v.io.write(mesh, export+".vtk")
 
         if render_nodes == True:
-            nodes = tools.get_node_elements(coord,scale,alpha)
-            plot_window.render_geometry(elements,nodes)
+            nodes = get_node_elements(coord,scale,alpha)
+            plot_window.add_geometry(elements,nodes)
         else:
-            plot_window.render_geometry(elements)
+            plot_window.add_geometry(elements)
 
         return elements
     
@@ -582,7 +601,7 @@ def draw_geometry(
         vmin, vmax = np.min(el_values), np.max(el_values)
         #print(coord)
         for i in range(nel):
-            coords = tools.get_coord_from_edof(edof[i,:],dof,6)
+            coords = get_coord_from_edof(edof[i,:],dof,6)
             #print(coords)
             #print(coord[coords,:])
 
@@ -648,10 +667,10 @@ def draw_geometry(
         #    v.io.write(mesh, export+".vtk")
 
         if render_nodes == True:
-            nodes = tools.get_node_elements(coord,scale,alpha)
-            plot_window.render_geometry(meshes,nodes)
+            nodes = get_node_elements(coord,scale,alpha)
+            plot_window.add_geometry(meshes,nodes)
         else:
-            plot_window.render_geometry(meshes)
+            plot_window.add_geometry(meshes)
 
         return meshes
 
@@ -694,7 +713,6 @@ def draw_displaced_geometry(
     render_nodes=True,
     color='white',
     offset = [0, 0, 0],
-    window=0,
     merge=False,
     t=None
     ):
@@ -716,17 +734,17 @@ def draw_displaced_geometry(
         elements = []
 
         for i in range(nel):
-            coord1,coord2 = tools.get_coord_from_edof(edof[i,:],dof,element_type)
+            coord1,coord2 = get_coord_from_edof(edof[i,:],dof,element_type)
 
             spring = v.Spring([coord[coord1,0],0,0],[coord[coord2,0],0,0],r=scale*1.5).alpha(alpha)
             spring.info = f"Spring nr. {i}"
             elements.append(spring)
 
         if render_nodes == True:
-            nodes = tools.get_node_elements(coord,scale,alpha)
-            plot_window.render_geometry(elements,nodes)
+            nodes = get_node_elements(coord,scale,alpha)
+            plot_window.add_geometry(elements,nodes)
         else:
-            plot_window.render_geometry(elements)
+            plot_window.add_geometry(elements)
 
         return elements
 
@@ -750,7 +768,7 @@ def draw_displaced_geometry(
             #    y = coord[i,1]
             #    z = coord[i,2]
             #else:
-            a_dx, a_dy, a_dz = tools.get_a_from_coord(i,6,a,def_scale)
+            a_dx, a_dy, a_dz = get_a_from_coord(i,6,a,def_scale)
 
             x = coord[i,0]+a_dx
             y = coord[i,1]+a_dy
@@ -770,7 +788,7 @@ def draw_displaced_geometry(
         el_values_array = np.zeros((1,4*res))[0,:]
 
         for i in range(nel):
-            coord1,coord2 = tools.get_coord_from_edof(edof[i,:],dof,element_type)
+            coord1,coord2 = get_coord_from_edof(edof[i,:],dof,element_type)
 
 
             bar = v.Cylinder([[def_coord[coord1,0],def_coord[coord1,1],def_coord[coord1,2]],[def_coord[coord2,0],def_coord[coord2,1],def_coord[coord2,2]]],r=scale,res=res,c=color).alpha(alpha)
@@ -799,9 +817,9 @@ def draw_displaced_geometry(
                 bar.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
 
         if render_nodes == True:
-            plot_window.render_geometry(def_elements,def_nodes)
+            plot_window.add_geometry(def_elements,def_nodes)
         else:
-            plot_window.render_geometry(def_elements)
+            plot_window.add_geometry(def_elements)
 
         return def_elements
 
@@ -843,7 +861,7 @@ def draw_displaced_geometry(
             #    y = coord[i,1]
             #    z = coord[i,2]
             #else:
-            a_dx, a_dy, a_dz = tools.get_a_from_coord(i,3,a,def_scale)
+            a_dx, a_dy, a_dz = get_a_from_coord(i,3,a,def_scale)
 
             x = coord[i,0]+a_dx
             y = coord[i,1]+a_dy
@@ -858,7 +876,7 @@ def draw_displaced_geometry(
         
         vmin, vmax = np.min(el_values), np.max(el_values)
         for i in range(nel):
-            coords = tools.get_coord_from_edof(edof[i,:],dof,4)
+            coords = get_coord_from_edof(edof[i,:],dof,4)
 
             mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
             mesh.info = f"Mesh nr. {i}"
@@ -893,10 +911,10 @@ def draw_displaced_geometry(
         #    v.io.write(mesh, export+".vtk")
 
         if render_nodes == True:
-            nodes = tools.get_node_elements(coord,scale,alpha)
-            plot_window.render_geometry(meshes,nodes,window=window)
+            nodes = get_node_elements(coord,scale,alpha)
+            plot_window.add_geometry(meshes,nodes)
         else:
-            plot_window.render_geometry(meshes,window=window)
+            plot_window.add_geometry(meshes)
 
         return meshes
 
@@ -924,7 +942,7 @@ def draw_displaced_geometry(
             #    y = coord[i,1]
             #    z = coord[i,2]
             #else:
-            a_dx, a_dy, a_dz = tools.get_a_from_coord(i,6,a,def_scale)
+            a_dx, a_dy, a_dz = get_a_from_coord(i,6,a,def_scale)
 
             x = coord[i,0]+a_dx
             y = coord[i,1]+a_dy
@@ -943,7 +961,7 @@ def draw_displaced_geometry(
         el_values_array = np.zeros((1,4*res))[0,:]
 
         for i in range(nel):
-            coord1,coord2 = tools.get_coord_from_edof(edof[i,:],dof,5)
+            coord1,coord2 = get_coord_from_edof(edof[i,:],dof,5)
 
             if nseg > 2:
                 steps = np.float32(1/(nseg-1))
@@ -1019,9 +1037,9 @@ def draw_displaced_geometry(
                     beam.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
 
         if render_nodes == True:
-            plot_window.render_geometry(def_elements,def_nodes,merge=merge)
+            plot_window.add_geometry(def_elements,def_nodes,merge=merge)
         else:
-            plot_window.render_geometry(def_elements,merge=merge)
+            plot_window.add_geometry(def_elements,merge=merge)
 
         return def_elements
 
@@ -1097,7 +1115,7 @@ def animate(
 
 
         for i in range(0, ncoord):
-            a_dx, a_dy, a_dz = tools.get_a_from_coord(i,3,a,def_scale)
+            a_dx, a_dy, a_dz = get_a_from_coord(i,3,a,def_scale)
 
             x_step = a_dx/(steps-1)
             y_step = a_dy/(steps-1)
@@ -1116,7 +1134,7 @@ def animate(
         
         vmin, vmax = np.min(el_values), np.max(el_values)
         for i in range(nel):
-            coords = tools.get_coord_from_edof(edof[i,:],dof,4)
+            coords = get_coord_from_edof(edof[i,:],dof,4)
             for j in range(steps):
                 mesh = v.Mesh([def_coord[coords,:,j],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
                 meshes[i,j] = mesh
@@ -1136,7 +1154,7 @@ def animate(
             for i in range(nel):
                 #plot_window.plotter.show(meshes[i,j])
                 #v.interactive()
-                plot_window.render_geometry(meshes[:,j])
+                plot_window.add_geometry(meshes[:,j])
 
 
 
@@ -1238,64 +1256,63 @@ class animations():
 
 
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
-# Tools, used in this file but can be accessed by a user as well (see exv4a.py)
+# Tools, used in this file but can be accessed by a user as well (see exv4a.py/exv4b.py)
 
-class tools:
-    def get_coord_from_edof(edof_row,dof,element_type):
-        if element_type == 1 or element_type == 2 or element_type == 5:
-            edof_row1,edof_row2 = np.split(edof_row,2)
-            coord1 = int(np.where(np.all(edof_row1==dof,axis=1))[0])
-            coord2 = int(np.where(np.all(edof_row2==dof,axis=1))[0])
-            return coord1, coord2
-        elif element_type == 3 or element_type == 4:
-            edof_row1,edof_row2,edof_row3,edof_row4,edof_row5,edof_row6,edof_row7,edof_row8 = np.split(edof_row,8)
-            coord1 = int(np.where(np.all(edof_row1==dof,axis=1))[0])
-            coord2 = int(np.where(np.all(edof_row2==dof,axis=1))[0])
-            coord3 = int(np.where(np.all(edof_row3==dof,axis=1))[0])
-            coord4 = int(np.where(np.all(edof_row4==dof,axis=1))[0])
-            coord5 = int(np.where(np.all(edof_row5==dof,axis=1))[0])
-            coord6 = int(np.where(np.all(edof_row6==dof,axis=1))[0])
-            coord7 = int(np.where(np.all(edof_row7==dof,axis=1))[0])
-            coord8 = int(np.where(np.all(edof_row8==dof,axis=1))[0])
-            coords = np.array([coord1, coord2, coord3, coord4, coord5, coord6, coord7, coord8])
-            return coords
-        elif element_type == 6:
-            edof_row1,edof_row2,edof_row3,edof_row4 = np.split(edof_row,4)
-            coord1 = int(np.where(np.all(edof_row1==dof,axis=1))[0])
-            coord2 = int(np.where(np.all(edof_row2==dof,axis=1))[0])
-            coord3 = int(np.where(np.all(edof_row3==dof,axis=1))[0])
-            coord4 = int(np.where(np.all(edof_row4==dof,axis=1))[0])
-            coords = np.array([coord1, coord2, coord3, coord4])
-            return coords
+def get_coord_from_edof(edof_row,dof,element_type):
+    if element_type == 1 or element_type == 2 or element_type == 5:
+        edof_row1,edof_row2 = np.split(edof_row,2)
+        coord1 = int(np.where(np.all(edof_row1==dof,axis=1))[0])
+        coord2 = int(np.where(np.all(edof_row2==dof,axis=1))[0])
+        return coord1, coord2
+    elif element_type == 3 or element_type == 4:
+        edof_row1,edof_row2,edof_row3,edof_row4,edof_row5,edof_row6,edof_row7,edof_row8 = np.split(edof_row,8)
+        coord1 = int(np.where(np.all(edof_row1==dof,axis=1))[0])
+        coord2 = int(np.where(np.all(edof_row2==dof,axis=1))[0])
+        coord3 = int(np.where(np.all(edof_row3==dof,axis=1))[0])
+        coord4 = int(np.where(np.all(edof_row4==dof,axis=1))[0])
+        coord5 = int(np.where(np.all(edof_row5==dof,axis=1))[0])
+        coord6 = int(np.where(np.all(edof_row6==dof,axis=1))[0])
+        coord7 = int(np.where(np.all(edof_row7==dof,axis=1))[0])
+        coord8 = int(np.where(np.all(edof_row8==dof,axis=1))[0])
+        coords = np.array([coord1, coord2, coord3, coord4, coord5, coord6, coord7, coord8])
+        return coords
+    elif element_type == 6:
+        edof_row1,edof_row2,edof_row3,edof_row4 = np.split(edof_row,4)
+        coord1 = int(np.where(np.all(edof_row1==dof,axis=1))[0])
+        coord2 = int(np.where(np.all(edof_row2==dof,axis=1))[0])
+        coord3 = int(np.where(np.all(edof_row3==dof,axis=1))[0])
+        coord4 = int(np.where(np.all(edof_row4==dof,axis=1))[0])
+        coords = np.array([coord1, coord2, coord3, coord4])
+        return coords
 
-    def get_a_from_coord(coord_row_num,num_of_deformations,a,scale=1):
-        dx = a[coord_row_num*num_of_deformations]*scale
-        dy = a[coord_row_num*num_of_deformations+1]*scale
-        dz = a[coord_row_num*num_of_deformations+2]*scale
-        return dx, dy, dz
+def get_a_from_coord(coord_row_num,num_of_deformations,a,scale=1):
+    dx = a[coord_row_num*num_of_deformations]*scale
+    dy = a[coord_row_num*num_of_deformations+1]*scale
+    dz = a[coord_row_num*num_of_deformations+2]*scale
+    return dx, dy, dz
 
-    def get_node_elements(coord,scale,alpha,t=None):
-        nnode = np.size(coord, axis = 0)
-        ncoord = np.size(coord, axis = 1)
-        nodes = []
-        for i in range(nnode):
-            if ncoord == 3:
-                node = v.Sphere(c='white').scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
-                node.info = f"Node nr. {i}"
-                nodes.append(node)
-            elif ncoord == 2:
-                node = v.Sphere(c='white').scale(1.5*scale).pos([coord[i,0],coord[i,1],0]).alpha(alpha)
-                node.info = f"Node nr. {i}"
-                nodes.append(node)
-            #elif ncoord == 2 and t is not None:
-            #    node = v.Sphere(c='white').scale(1.5*scale).pos([coord[i,0],coord[i,1],0]).alpha(alpha)
-            #    node.info = f"Node nr. {i}"
-            #    nodes.append(node)
-            elif ncoord == 1:
-                node = v.Sphere(c='white').scale(1.5*scale).pos([coord[i,0],0,0]).alpha(alpha)
-                node.info = f"Node nr. {i}"
-                nodes.append(node)
-        return nodes
+def get_node_elements(coord,scale,alpha,t=None):
+    nnode = np.size(coord, axis = 0)
+    ncoord = np.size(coord, axis = 1)
+    nodes = []
+    for i in range(nnode):
+        if ncoord == 3:
+            node = v.Sphere(c='white').scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
+            node.info = f"Node nr. {i}"
+            nodes.append(node)
+        elif ncoord == 2:
+            node = v.Sphere(c='white').scale(1.5*scale).pos([coord[i,0],coord[i,1],0]).alpha(alpha)
+            node.info = f"Node nr. {i}"
+            nodes.append(node)
+        #elif ncoord == 2 and t is not None:
+        #    node = v.Sphere(c='white').scale(1.5*scale).pos([coord[i,0],coord[i,1],0]).alpha(alpha)
+        #    node.info = f"Node nr. {i}"
+        #    nodes.append(node)
+        elif ncoord == 1:
+            node = v.Sphere(c='white').scale(1.5*scale).pos([coord[i,0],0,0]).alpha(alpha)
+            node.info = f"Node nr. {i}"
+            nodes.append(node)
+    return nodes
 
 
 
@@ -1312,18 +1329,59 @@ def set_windows(n):
 
     del(plot_window.plotter)
 
-    plot_window.plotter = v.Plotter(title='CALFEM vedo visualization tool',N=n,axes=4)
-    plot_window.plotters = n
-    plot_window.click_msg = []
-    for i in range(n):
+    plot_window.plotter = v.Plotter(title='CALFEM vedo visualization tool',N=n,bg='black',axes=4,sharecam=False)
+    plot_window.n = n
+    plot_window.plotter.addHoverLegend(useInfo=True,s=1.25,maxlength=96)
+    #plot_window.click_msg = []
+    #for i in range(n):
         #plot_window.plotter.addGlobalAxes(4,at=i)
-        plot_window.plotter.addHoverLegend(useInfo=True,s=1.25,maxlength=96,at=i)
+        #plot_window.plotter.addHoverLegend(useInfo=True,s=1.25,maxlength=96,at=i)
         #plot_window.plotter.addCallback('mouse click', plot_window.click)
         #plot_window.click_msg.append(v.Text2D("", pos="bottom-center", bg='auto', alpha=0.1, font='Calco'))
         #plot_window.plotter.add(plot_window.click_msg[i],at=i)
 
+def show(mesh):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+"""
+def figure(fig):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    if fig < 1:
+        print("Please give a positive integer (> 0)")
+        sys.exit()
+    else:
+        plot_window.fig = fig - 1
+
+    #v.show(mesh,)
+# Choose what figure is bo be plotted to (fig. 1 -> n=0, fig. 2 -> n=1 etc...)
+"""
+def figure(fig=None):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    if fig == None:
+        plot_window.n = plot_window.n + 1
+        plot_window.plotter.append(v.Plotter(title=f'Figure {fig} - CALFEM vedo visualization tool',bg='black',axes=4,offscreen=True))
+        #plot_window.plotter[plot_window.n].addHoverLegend(useInfo=True,s=1.25,maxlength=96)
+        #plot_window.plotter.append(v.Plotter(title='CALFEM vedo visualization tool'))
+    elif fig < 1:
+        print("Please give a positive integer")
+        sys.exit()
+    else:
+        plot_window.n = fig - 1
+        plotters = np.size(plot_window.plotter,0)
+        print(plotters)
+        if plotters < fig:
+            for i in range(fig):
+                plot_window.plotter.append(v.Plotter(title=f'Figure {i} - CALFEM vedo visualization tool',bg='black',axes=4,offscreen=True))
+                #plot_window.plotter[i].addHoverLegend(useInfo=True,s=1.25,maxlength=96)
+
+
+
 # Start Calfem-vedo visualization
-def render(bg='black'):
+def show_and_wait(bg='black'):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
     plot_window.render(bg)

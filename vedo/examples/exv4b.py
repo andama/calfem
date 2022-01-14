@@ -22,7 +22,7 @@ from scipy.io import loadmat
 
 
 
-solid_data = loadmat('3Dsolid.mat')
+solid_data = loadmat('exv4.mat')
 
 edof = solid_data['edof']
 edof = np.delete(edof,0,1)
@@ -45,10 +45,10 @@ nel = np.size(edof, axis = 0)
 mode_a = np.zeros((nel, 1))
 y = np.zeros(8)
 for i in range(nel):
-	coords = cfvv.tools.get_coord_from_edof(edof[i,:],dof,4)
+	coords = cfvv.get_coord_from_edof(edof[i,:],dof,4)
 	X[coords,0]
 	for j in range(8):
-		x = cfvv.tools.get_a_from_coord(coords[j],3,X[:,0])
+		x = cfvv.get_a_from_coord(coords[j],3,X[:,0])
 		y[j] = np.sqrt(x[0]**2 + x[1]**2 + x[2]**2)
 
 	mode_a[i,:] = np.average(y)
@@ -81,6 +81,5 @@ cfvv.animate(edof,coord,dof,4,mode_a,10,def_scale=scalefact)
 
 
 #Start Calfem-vedo visualization
-cfvv.render()
-#cfvv.show_and_wait()
+cfvv.show_and_wait()
 

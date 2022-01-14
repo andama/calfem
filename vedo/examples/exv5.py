@@ -146,7 +146,7 @@ for row in range(nel_y):
 
 #print(edof)
 
-
+edof = np.int_(edof)
 
 
 #print(ex)
@@ -157,7 +157,7 @@ cfvv.draw_geometry(edof,coord,dof,6,t=t,scale=0.002)
 
 
 #Start Calfem-vedo visualization
-cfvv.render()
+cfvv.show_and_wait()
 
 
 nnode = np.size(coord, axis = 0)
@@ -176,12 +176,18 @@ ex, ey = cfc.coordxtr(edof,coord,dof)
 
 print(ex[0])
 
-K = np.zeros([ndof,ndof])
-f = np.zeros([ndof,1])
+K = np.int_(np.zeros((ndof,ndof)))
+#K = np.zeros([ndof,ndof])
+f = np.int_(np.zeros((ndof,1)))
+
+print(f)
 
 for i in range(nel):
     Ke, fe = cfc.platre(ex[i], ey[i], ep, D, eq)
-    K, f = cfc.assem(edof[i],K,Ke,f,fe)
+    print(fe)
+    #print(edof[i,:])
+    #print(K)
+    K, f = cfc.assem(edof[i,:],K,Ke,f,fe)
 
 
 
