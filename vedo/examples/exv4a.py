@@ -156,7 +156,7 @@ for i in range(0, nel):
 
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 
-#cfvv.set_windows(4) # 4 plotting windows
+cfvv.set_figures(4) # 4 plotting windows
 
 cfvv.figure(1)
 # Fist plot, undeformed mesh

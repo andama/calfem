@@ -125,18 +125,33 @@ class VedoPlotWindow:
 class VedoMainWindow():
     
     def __init__(self):
-        v.settings.immediateRendering = False
-        self.plotter = []
-        self.plotter.append(v.Plotter(title='CALFEM vedo visualization tool',bg='black',axes=4,offscreen=True))
-        #self.plotter = v.Plotter(title='CALFEM vedo visualization tool',bg='black',axes=4)
+        # Variables to keep track of no. plotters
         self.n = 0
         self.fig = 0
-        self.plotter[self.n].addHoverLegend(useInfo=True,s=1.25,maxlength=96)
+
+        # List of plotters
+        self.plotters = []
+        plotter = v.Plotter(bg='black')
+        self.plotters.append(plotter)
+        #self.plotter = v.Plotter(title='CALFEM vedo visualization tool',bg='black',axes=4)
+
+        # Hover legend
+        self.plotters[self.n].addHoverLegend(useInfo=True,s=1.25,maxlength=96)
         #self.plotter.addHoverLegend(useInfo=True,s=1.25,maxlength=96)
+
+        
+
+        # Mouse click callback
         #self.plotter[self.n].addCallback('mouse click', self.click)
         #self.silcont = [None]
         #self.click_msg = v.Text2D("", pos="bottom-center", bg='auto', alpha=0.1, font='Calco')
         #self.plotter[self.n].add(self.click_msg)
+
+        # Global settings
+        v.settings.immediateRendering = False
+        v.settings.renderLinesAsTubes = True
+        v.settings.allowInteraction = True
+        #v.settings.useSSAO         = True
 
     def click(self,evt):
         if evt.isAssembly: # endast för testning ifall en assembly skapas
@@ -150,11 +165,43 @@ class VedoMainWindow():
         else: return
 
     def render(self,bg):
+        opts = dict(axes=4, interactive=False, resetcam=True)
         if self.n > 0:
-            for i in range(self.n):
-                #print("renderer "+i)
-                self.plotter[i].show(resetcam=True,axes=4)#.interactive().close()
-                v.interactive().close()
+            
+            #for i in range(self.n+1):
+            ts = [f"Figure {i+1} - CALFEM vedo visualization tool" for i in range(self.n+1)]
+            for i in range(self.n+1):
+                print("Rendering, plotter ",i+1)
+
+                #print("n: ",self.n)
+                #print("fig: ",self.fig)
+
+                # Seg. fault verkar orsakats här
+                #plotter = self.plotters[i]
+                #self.plotters[i].resetCamera()
+                #self.plotters[i].render(resetcam=True)
+                self.plotters[i].show(**opts, title=ts[i])
+                #self.plotters[i].render()
+                
+                #self.plotters[i].show()
+                #plotter = self.plotters[i]
+                #plotter.resetCamera()
+                #plotter.show(title=f'Figure {i+1} - CALFEM vedo visualization tool')
+                #plotter.close()
+            #v.interactive()
+            #for i in range(self.n+1):
+                
+                #plotter = self.plotters[i]
+                #plotter.close()
+            #plotter.show().close()
+            #v.interactive().close()
+            #v.addGlobalAxes(4)
+
+            v.interactive().close()
+            #sys.exit()
+
+
+
                 #self.plotter[i].close()
                 #self.plotter = []
                 #self.plotter.append(v.Plotter(title='CALFEM vedo visualization tool'))
@@ -165,7 +212,7 @@ class VedoMainWindow():
             #self.plotter.render(resetcam=True)
             #v.interactive().close()
         else:
-            self.plotter[self.n].show(resetcam=True,axes=4).interactive().close()
+            self.plotters[self.fig].show(resetcam=True,axes=4,title='CALFEM vedo visualization tool',bg='black').interactive().close()
             #self.plotter.show(resetcam=True,axes=4).close()
     
     # Döp om till create/add geometry eller liknande
@@ -176,7 +223,7 @@ class VedoMainWindow():
             mesh = v.merge(meshes,flag=True)
             #mesh = v.Assembly(meshes)
             #self.plotter[self.n] += mesh
-            self.plotter[self.n].add(mesh)
+            self.plotters[self.fig].add(mesh,resetcam=True,render=False)
             #self.plotter.add(mesh,at=self.fig)
 
             #mesh.clean()
@@ -190,10 +237,11 @@ class VedoMainWindow():
             #self.plotter += pts
             #self.plotter += labels
         else:
+            print("Adding geometry, figure ",self.fig+1)
             nel = np.size(meshes, axis = 0)
             for i in range(nel):
                 #self.plotter[self.n] += meshes[i]
-                self.plotter[self.n].add(meshes[i])
+                self.plotters[self.fig].add(meshes[i],resetcam=True,render=False)
                 #self.plotter.add(meshes[i],at=self.fig)
 
                 #pids = meshes[i].boundaries(returnPointIds=True)
@@ -210,7 +258,7 @@ class VedoMainWindow():
             nnode = np.size(nodes, axis = 0)
             for i in range(nnode):
                 #self.plotter[self.n] += nodes[i]
-                self.plotter[self.n].add(nodes[i])
+                self.plotters[self.fig].add(nodes[i],resetcam=True,render=False)
                 #self.plotter.add(nodes[i],at=self.fig)
 
 
@@ -239,7 +287,7 @@ def add_scalar_bar(
     for i in range(nel):
         #scalar_bar = v.addons.addScalarBar(meshes[i],title=label,pos=pos,horizontal=True,titleFontSize=font_size,c=color)
         scalar_bar = v.addons.addScalarBar(meshes[i],title=label,pos=pos,horizontal=True,titleFontSize=font_size,useAlpha=False)
-    plot_window.plotter[plot_window.n].add(scalar_bar)
+    plot_window.plotters[plot_window.fig].add(scalar_bar)
     #plot_window.plotter.add(scalar_bar,at=plot_window.fig)
 
 # Add text to a renderer
@@ -254,7 +302,7 @@ def add_text(
     plot_window = VedoPlotWindow.instance().plot_window
     #msg = v.Text2D(text, pos=pos, c=color)
     msg = v.Text2D(text, pos=pos, alpha=1)
-    plot_window.plotter[plot_window.n].add(msg)
+    plot_window.plotters[plot_window.fig].add(msg)
     #plot_window.plotter.add(msg,at=plot_window.fig)
 
 """
@@ -1323,15 +1371,24 @@ def get_node_elements(coord,scale,alpha,t=None):
 # Functions for rendering
 
 # If multiple renderers are used
-def set_windows(n):
+def set_figures(n):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
-    del(plot_window.plotter)
+    del(plot_window.plotters)
+    plot_window.plotters = []
 
-    plot_window.plotter = v.Plotter(title='CALFEM vedo visualization tool',N=n,bg='black',axes=4,sharecam=False)
-    plot_window.n = n
-    plot_window.plotter.addHoverLegend(useInfo=True,s=1.25,maxlength=96)
+    for i in range(n):
+        plotter = v.Plotter(bg='black')
+        plot_window.plotters.append(plotter)
+
+    print("Setting no. figures: ",np.size(plot_window.plotters,0))
+
+    #del(plot_window.plotter)
+
+    #plot_window.plotter = v.Plotter(title='CALFEM vedo visualization tool',N=n,bg='black',axes=4,sharecam=False)
+    plot_window.n = n - 1
+    #plot_window.plotter.addHoverLegend(useInfo=True,s=1.25,maxlength=96)
     #plot_window.click_msg = []
     #for i in range(n):
         #plot_window.plotter.addGlobalAxes(4,at=i)
@@ -1339,7 +1396,7 @@ def set_windows(n):
         #plot_window.plotter.addCallback('mouse click', plot_window.click)
         #plot_window.click_msg.append(v.Text2D("", pos="bottom-center", bg='auto', alpha=0.1, font='Calco'))
         #plot_window.plotter.add(plot_window.click_msg[i],at=i)
-
+"""
 def show(mesh):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
@@ -1353,6 +1410,8 @@ def figure(fig):
         sys.exit()
     else:
         plot_window.fig = fig - 1
+
+    print("Selecting figure ",fig)
 
     #v.show(mesh,)
 # Choose what figure is bo be plotted to (fig. 1 -> n=0, fig. 2 -> n=1 etc...)
@@ -1377,7 +1436,7 @@ def figure(fig=None):
             for i in range(fig):
                 plot_window.plotter.append(v.Plotter(title=f'Figure {i} - CALFEM vedo visualization tool',bg='black',axes=4,offscreen=True))
                 #plot_window.plotter[i].addHoverLegend(useInfo=True,s=1.25,maxlength=96)
-
+"""
 
 
 # Start Calfem-vedo visualization
