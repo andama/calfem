@@ -156,44 +156,52 @@ for i in range(0, nel):
 
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 
-cfvv.set_figures(4) # 4 plotting windows
+#cfvv.set_figures(4) # 4 plotting windows
 
 cfvv.figure(1)
 # Fist plot, undeformed mesh
+cfvv.draw_geometry(edof,coord,dof,4,scale=0.002)
 cfvv.add_text('Undeformed mesh')
-mesh = cfvv.draw_geometry(edof,coord,dof,4,scale=0.002)
+#cfvv.show(mesh)
 
 
 
 cfvv.figure(2)
 # Second plot, first mode from eigenvalue analysis
-cfvv.add_text('Eigenvalue analysis: first mode')
 scalefact = 100 #deformation scale factor
 mode_mesh = cfvv.draw_displaced_geometry(edof,coord,dof,4,X[:,0],mode_a,def_scale=scalefact,scale=0.002,render_nodes=False,merge=True)
 #cfvv.show(mode_mesh)
+cfvv.add_text('Eigenvalue analysis: first mode')
 cfvv.add_text(f'Frequency: {Freq[0]} Hz',pos='top-right')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
-cfvv.add_scalar_bar(mode_mesh,'Tot. el. displacement')
+cfvv.add_scalar_bar('Tot. el. displacement')
+
 
 
 
 cfvv.figure(3)
 # Third plot, deformed mesh with element stresses
-cfvv.add_text('Static analysis: only self-weight')
+
 scalefact = 5 #deformation scale factor
-def_mesh = cfvv.draw_displaced_geometry(edof,coord,dof,4,a,von_mises_elements,def_scale=scalefact,scale=0.002,render_nodes=False,merge=True)
+cfvv.draw_displaced_geometry(edof,coord,dof,4,a,von_mises_elements,def_scale=scalefact,scale=0.002,render_nodes=False,merge=True)
+#cfvv.show(def_mesh1)
+cfvv.add_scalar_bar('von Mises in elements')
+cfvv.add_text('Static analysis: only self-weight')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
-cfvv.add_scalar_bar(def_mesh,'von Mises in elements')
+
 
 
 
 cfvv.figure(4)
 # Fourth plot, deformed mesh with nodal stresses
-cfvv.add_text('Static analysis: only self-weight')
 #mesh = cfvv.draw_geometry(edof,coord,dof,4,alpha=0.2,scale=0.002,render_nodes=False,window=3)
-def_mesh = cfvv.draw_displaced_geometry(edof,coord,dof,4,a,von_mises_nodes,def_scale=scalefact,scale=0.002,render_nodes=False,merge=True)
+cfvv.draw_displaced_geometry(edof,coord,dof,4,a,von_mises_nodes,def_scale=scalefact,scale=0.002,render_nodes=False,merge=True)
+#cfvv.show(def_mesh2)
+cfvv.add_scalar_bar('von Mises at nodes')
+cfvv.add_text('Static analysis: only self-weight')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
-cfvv.add_scalar_bar(def_mesh,'von Mises at nodes')
+
+
 
 
 
