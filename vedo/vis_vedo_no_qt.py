@@ -129,6 +129,7 @@ class VedoMainWindow():
         self.n = 0
         self.fig = 0
         self.meshes = [[]]
+        self.nodes = [[]]
         self.msg = [[]]
 
 
@@ -153,9 +154,11 @@ class VedoMainWindow():
 
         # Global settings
         v.settings.immediateRendering = False
-        v.settings.renderLinesAsTubes = True
+        #v.settings.renderLinesAsTubes = True
         v.settings.allowInteraction = True
-        #v.settings.useSSAO         = True
+        v.settings.useFXAA = True
+        v.settings.useSSAO         = True
+        v.settings.visibleGridEdges = True
 
     def click(self,evt):
         if evt.isAssembly: # endast för testning ifall en assembly skapas
@@ -174,13 +177,14 @@ class VedoMainWindow():
         #print(len(self.meshes[0]))
         for i in range(self.fig+1):
             opts = dict(axes=4, interactive=False, new=True, bg='k', title=f'Figure {i+1} - CALFEM vedo visualization tool')
-            plt = v.show(self.meshes[i], **opts)
+            plt = v.show(self.meshes[i], self.nodes[i], **opts).addHoverLegend(useInfo=True,s=1.25,maxlength=96)
+            #plt.addCallback('mouse click', plot_window.click)
             print('Figure text: ',self.msg[i])
             for j in range(len(self.msg[i])):
                 plt.add(self.msg[i][j])
 
 
-
+        v.interactive()
 
 
 
@@ -194,7 +198,7 @@ class VedoMainWindow():
                 opts = dict(axes=4, interactive=False, new=True, bg='k', title=f'Figure {i+1} - CALFEM vedo visualization tool')
                 plt = v.show(self.meshes[i,:], **opts)
         """
-        v.interactive()
+        
         #sys.exit()
 
 
@@ -309,7 +313,7 @@ def add_scalar_bar(
     pos=[0.75,0.05],
     font_size=24,
     color='white',
-    window=0
+    size=(3000, 50)
     ):
 
     app = init_app()
@@ -317,7 +321,7 @@ def add_scalar_bar(
 
     fig = plot_window.fig
     #print(plot_window.meshes[fig])
-    plot_window.meshes[fig][0].addScalarBar(title=label, pos=pos, titleFontSize=font_size, horizontal=True, useAlpha=False)
+    plot_window.meshes[fig][0].addScalarBar(title=label, size=size, pos=pos, titleFontSize=font_size, horizontal=True, useAlpha=False)
 
 
 
@@ -337,8 +341,7 @@ def add_scalar_bar(
 def add_text(
     text,
     color='white',
-    pos='top-middle',
-    window=0
+    pos='top-middle'
     ):
 
     app = init_app()
@@ -517,7 +520,7 @@ def draw_geometry(
             coords = get_coord_from_edof(edof[i,:],dof,4)
 
 
-            mesh = v.Mesh([coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
+            mesh = v.Mesh([coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
             mesh.info = f"Mesh nr. {i}"
             meshes.append(mesh)
 
@@ -557,16 +560,16 @@ def draw_geometry(
             #plot_window.meshes = np.append(meshes, nodes, axis=0)
             #plot_window.meshes.extend(meshes)
             plot_window.meshes[plot_window.fig].extend(meshes)
-            plot_window.meshes[plot_window.fig].extend(nodes)
+            plot_window.nodes[plot_window.fig].extend(nodes)
             #plot_window.meshes.extend(nodes)
             #print("Meshes are ",np.size(plot_window.meshes, axis=0),"X",np.size(plot_window.meshes, axis=1))
-            print("Adding mesh to figure ",plot_window.fig)
+            print("Adding mesh to figure ",plot_window.fig+1)
         else:
             #plot_window.add_geometry(meshes)
             #plot_window.meshes.extend(meshes)
             plot_window.meshes[plot_window.fig].extend(meshes)
             #print("Meshes are ",np.size(plot_window.meshes, axis=0),"X",np.size(plot_window.meshes, axis=1))
-            print("Adding mesh to figure ",plot_window.fig)
+            print("Adding mesh to figure ",plot_window.fig+1)
         #return meshes
 
     elif element_type == 5:
@@ -923,7 +926,7 @@ def draw_displaced_geometry(
         for i in range(nel):
             coords = get_coord_from_edof(edof[i,:],dof,4)
 
-            mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
+            mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
             mesh.info = f"Mesh nr. {i}"
             meshes.append(mesh)
 
@@ -964,16 +967,16 @@ def draw_displaced_geometry(
             #plot_window.add_geometry(meshes,nodes)
             #plot_window.meshes.extend(meshes)
             plot_window.meshes[plot_window.fig].extend(meshes)
-            plot_window.meshes[plot_window.fig].extend(nodes)
+            plot_window.nodes[plot_window.fig].extend(nodes)
             #plot_window.meshes.extend(nodes)
             #print("Meshes are ",np.size(plot_window.meshes, axis=0),"X",np.size(plot_window.meshes, axis=1))
-            print("Adding mesh to figure ",plot_window.fig)
+            print("Adding mesh to figure ",plot_window.fig+1)
         else:
             #plot_window.add_geometry(meshes)
             plot_window.meshes[plot_window.fig].extend(meshes)
             #plot_window.meshes.extend(meshes)
             #print("Meshes are ",np.size(plot_window.meshes, axis=0),"X",np.size(plot_window.meshes, axis=1))
-            print("Adding mesh to figure ",plot_window.fig)
+            print("Adding mesh to figure ",plot_window.fig+1)
         
 
 
@@ -1415,6 +1418,7 @@ def figure(fig):
     print("Selecting figure ",fig)
     if fig > 1:
         plot_window.meshes.append([])
+        plot_window.nodes.append([])
 
     #v.show(mesh,)
 # Choose what figure is bo be plotted to (fig. 1 -> n=0, fig. 2 -> n=1 etc...)

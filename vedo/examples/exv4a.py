@@ -172,7 +172,7 @@ scalefact = 100 #deformation scale factor
 mode_mesh = cfvv.draw_displaced_geometry(edof,coord,dof,4,X[:,0],mode_a,def_scale=scalefact,scale=0.002,render_nodes=False,merge=True)
 #cfvv.show(mode_mesh)
 cfvv.add_text('Eigenvalue analysis: first mode')
-cfvv.add_text(f'Frequency: {Freq[0]} Hz',pos='top-right')
+cfvv.add_text(f'Frequency: {round(Freq[0],2)} Hz',pos='top-right')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
 cfvv.add_scalar_bar('Tot. el. displacement')
 
@@ -185,10 +185,10 @@ cfvv.figure(3)
 scalefact = 5 #deformation scale factor
 cfvv.draw_displaced_geometry(edof,coord,dof,4,a,von_mises_elements,def_scale=scalefact,scale=0.002,render_nodes=False,merge=True)
 #cfvv.show(def_mesh1)
-cfvv.add_scalar_bar('von Mises in elements')
+
 cfvv.add_text('Static analysis: only self-weight')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
-
+cfvv.add_scalar_bar('von Mises in elements')
 
 
 
