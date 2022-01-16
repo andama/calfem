@@ -126,30 +126,19 @@ class VedoMainWindow():
     
     def __init__(self):
         # Variables to keep track of no. plotters
-        self.n = 0
+        #self.n = 0
         self.fig = 0
         self.meshes = [[]]
         self.nodes = [[]]
         self.msg = [[]]
-
-
-
-        # List of plotters
-        #self.plotters = []
-        #plotter = v.Plotter(bg='black')
-        #self.plotters.append(plotter)
-        #self.plotter = v.Plotter(title='CALFEM vedo visualization tool',bg='black',axes=4)
-
-        # Hover legend
-        #self.plotters[self.n].addHoverLegend(useInfo=True,s=1.25,maxlength=96)
-        #self.plotter.addHoverLegend(useInfo=True,s=1.25,maxlength=96)
-
-        
+        self.proj = [[]]
+        self.plt = []
+        self.rulers = [[]]
 
         # Mouse click callback
         #self.plotter[self.n].addCallback('mouse click', self.click)
-        #self.silcont = [None]
-        #self.click_msg = v.Text2D("", pos="bottom-center", bg='auto', alpha=0.1, font='Calco')
+        self.silcont = [None]
+        self.click_msg = v.Text2D("", pos="bottom-center", bg='auto', alpha=0.1, font='Calco',c='white')
         #self.plotter[self.n].add(self.click_msg)
 
         # Global settings
@@ -161,146 +150,49 @@ class VedoMainWindow():
         v.settings.visibleGridEdges = True
 
     def click(self,evt):
-        if evt.isAssembly: # endast för testning ifall en assembly skapas
-            print('assembly')
-            self.click_msg.text(evt.actor.info)
-        elif evt.actor:
-            sil = evt.actor.silhouette().lineWidth(6).c('red5')
-            self.click_msg.text(evt.actor.info)
-            self.plotter.remove(self.silcont.pop()).add(sil)
-            self.silcont.append(sil)
-        else: return
+        #if evt.isAssembly: # endast för testning ifall en assembly skapas
+        #    print('assembly')
+        #    self.click_msg.text(evt.actor.info)
+        if evt.actor:
+            #sil = evt.actor.silhouette().lineWidth(6).c('red5')
+            self.click_msg.text(evt.actor.name)
+            #self.plt[evt.title].remove(self.silcont.pop()).add(sil)
+            #evt.interactor.add(sil)
+            #evt.interactor.pop()
+            #.remove(self.silcont.pop())
+            #.add(sil)
+            #self.plotter.remove(self.silcont.pop()).add(sil)
+            #self.silcont.append(sil)
+        else:
+            self.click_msg.text()
+            return
 
     def render(self):
-        #v.render()
-        #print(self.meshes)
-        #print(len(self.meshes[0]))
+
         for i in range(self.fig+1):
             opts = dict(axes=4, interactive=False, new=True, bg='k', title=f'Figure {i+1} - CALFEM vedo visualization tool')
-            plt = v.show(self.meshes[i], self.nodes[i], **opts).addHoverLegend(useInfo=True,s=1.25,maxlength=96)
-            #plt.addCallback('mouse click', plot_window.click)
+            plt = v.show(self.meshes[i], self.nodes[i], self.click_msg, **opts)#
+            plt.addCallback('mouse click', self.click)
+            #plt += self.click_msg#.addHoverLegend(useInfo=True,s=1.25,maxlength=96)
             print('Figure text: ',self.msg[i])
-            for j in range(len(self.msg[i])):
-                plt.add(self.msg[i][j])
+            print('Projections: ',self.proj[i])
+            self.plt.append(plt)
 
+            if self.msg[i]:
+                for j in range(len(self.msg[i])):
+                    plt.add(self.msg[i][j])
+                    #plt += self.msg[i][j]
+                    #plt.add(self.click_msg)
+
+            if self.proj[i]:
+                for j in range(len(self.proj[i])):
+                    plt.add(self.proj[i][j])
+
+            if self.rulers[i]:
+                for j in range(len(self.rulers[i])):
+                    plt.add(self.rulers[i][j])
 
         v.interactive()
-
-
-
-        """
-        if self.fig == 0:
-            for i in range(self.fig+1):
-                opts = dict(axes=4, interactive=False, new=True, bg='k', title=f'Figure {i+1} - CALFEM vedo visualization tool')
-                plt = v.show(self.meshes[i], **opts)
-        else:
-            for i in range(self.fig+1):
-                opts = dict(axes=4, interactive=False, new=True, bg='k', title=f'Figure {i+1} - CALFEM vedo visualization tool')
-                plt = v.show(self.meshes[i,:], **opts)
-        """
-        
-        #sys.exit()
-
-
-        """
-        opts = dict(axes=4, interactive=False, resetcam=True)
-        if self.n > 0:
-            
-            #for i in range(self.n+1):
-            ts = [f"Figure {i+1} - CALFEM vedo visualization tool" for i in range(self.n+1)]
-            for i in range(self.n+1):
-                print("Rendering, plotter ",i+1)
-
-                #print("n: ",self.n)
-                #print("fig: ",self.fig)
-
-                # Seg. fault verkar orsakats här
-                #plotter = self.plotters[i]
-                #self.plotters[i].resetCamera()
-                #self.plotters[i].render(resetcam=True)
-                self.plotters[i].show(**opts, title=ts[i]).interactive()
-                #self.plotters[i].render()
-                
-                #self.plotters[i].show()
-                #plotter = self.plotters[i]
-                #plotter.resetCamera()
-                #plotter.show(title=f'Figure {i+1} - CALFEM vedo visualization tool')
-                #plotter.close()
-            #v.interactive()
-            #for i in range(self.n+1):
-                
-                #plotter = self.plotters[i]
-                #plotter.close()
-            #plotter.show().close()
-            v.close()
-            #v.addGlobalAxes(4)
-
-            #v.interactive().close()
-            #sys.exit()
-
-
-
-                #self.plotter[i].close()
-                #self.plotter = []
-                #self.plotter.append(v.Plotter(title='CALFEM vedo visualization tool'))
-            #self.plotter = v.Plotter(title='CALFEM vedo visualization tool')
-            #for i in range(self.plotters):
-            #    self.plotter.background(c1=bg, at=i)
-            #self.plotter.show(resetcam=True,axes=4)
-            #self.plotter.render(resetcam=True)
-            #v.interactive().close()
-        else:
-            self.plotters[self.fig].show(resetcam=True,axes=4,title='CALFEM vedo visualization tool',bg='black').interactive().close()
-            #self.plotter.show(resetcam=True,axes=4).close()
-        """
-
-    def add_geometry(self,meshes,nodes=None,merge=False,window=0):
-
-        # Mesh/elements plotted, possibly merged for correct numbering
-        if merge == True:
-            mesh = v.merge(meshes,flag=True)
-            #mesh = v.Assembly(meshes)
-            #self.plotter[self.n] += mesh
-            #self.plotters[self.fig].add(mesh,resetcam=True,render=False)
-            #self.plotter.add(mesh,at=self.fig)
-
-            #mesh.clean()
-            #mesh.computeNormals().clean().lw(0.1)
-            #pids = mesh.boundaries(returnPointIds=True)
-            #bpts = mesh.points()[pids]
-
-            #pts = v.Points(bpts, r=1, c='red')
-            #labels = mesh.labels('id', scale=0.02).c('w')
-
-            #self.plotter += pts
-            #self.plotter += labels
-        else:
-            print("Adding geometry, figure ",self.fig+1)
-            nel = np.size(meshes, axis = 0)
-            #for i in range(nel):
-                #self.plotter[self.n] += meshes[i]
-                #self.plotters[self.fig].add(meshes[i],resetcam=True,render=False)
-                #self.plotter.add(meshes[i],at=self.fig)
-
-                #pids = meshes[i].boundaries(returnPointIds=True)
-                #bpts = meshes[i].points()[pids]
-
-                #pts = v.Points(bpts, r=1, c='red')
-                #labels = meshes[i].labels('id', scale=0.02).c('w')
-
-                #self.plotter += pts
-                #self.plotter += labels
-
-        # Optional nodes
-        if nodes is not None:
-            nnode = np.size(nodes, axis = 0)
-            #for i in range(nnode):
-                #self.plotter[self.n] += nodes[i]
-                #self.plotters[self.fig].add(nodes[i],resetcam=True,render=False)
-                #self.plotter.add(nodes[i],at=self.fig)
-
-
-
 
 
 
@@ -315,27 +207,11 @@ def add_scalar_bar(
     color='white',
     size=(3000, 50)
     ):
-
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
     fig = plot_window.fig
-    #print(plot_window.meshes[fig])
     plot_window.meshes[fig][0].addScalarBar(title=label, size=size, pos=pos, titleFontSize=font_size, horizontal=True, useAlpha=False)
-
-
-
-
-    #mesh = v.merge(meshes,flag=True)
-    #scalar_bar = v.addons.addScalarBar(mesh,title=label,pos=pos)
-    #nel = np.size(meshes, axis = 0)
-    #for i in range(nel):
-        #scalar_bar = v.addons.addScalarBar(meshes[i],title=label,pos=pos,horizontal=True,titleFontSize=font_size,c=color)
-        #scalar_bar = v.addons.ScalarBar(meshes[i],title=label,pos=pos,horizontal=True,titleFontSize=font_size,useAlpha=False)
-    #scalar_bar = v.addons.addScalarBar(plot_window.meshes[plot_window.fig],title=label,pos=pos,horizontal=True,titleFontSize=font_size,useAlpha=False)
-    #plot_window.plotters[plot_window.fig].add(scalar_bar)
-    #plot_window.meshes[plot_window.fig] += [scalar_bar]
-    #plot_window.plotter.add(scalar_bar,at=plot_window.fig)
 
 # Add text to a renderer
 def add_text(
@@ -343,18 +219,16 @@ def add_text(
     color='white',
     pos='top-middle'
     ):
-
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
-    plot_window.msg.append([])
+    #while len(plot_window.msg) < plot_window.fig + 1:
+        
 
-    #msg = v.Text2D(text, pos=pos, c=color)
+    #plot_window.msg.append([])
+
     msg = v.Text2D(text, pos=pos, alpha=1, c=color)
     plot_window.msg[plot_window.fig] += [msg]
-    #plot_window.meshes[plot_window.fig].extend(msg)
-    #plot_window.plotters[plot_window.fig].add(msg)
-    #plot_window.plotter.add(msg,at=plot_window.fig)
 
 """
 # Add legend to a renderer
@@ -375,27 +249,72 @@ def add_legend(meshes,window=0):
 
 
 
-"""
 # Add silhouette with measurements to a renderer
-def add_silouette(text,color,pos=[0,1],window=0):
+def add_projection(color='white',plane='xy',offset=0,rulers=False):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
-    #mesh = v.merge(meshes,flag=True)
+    
 
-    #legend_box = v.addons.LegendBox(meshes,pos='top-left')
-    #msg = v.Text2D(text, pos=pos, c=color, bg='r9', alpha=0.8)
-    msg = v.Text2D(text, pos=pos, c=color)
+    print("Size of projections: ",len(plot_window.proj))
+    #while len(plot_window.proj) < plot_window.fig + 1:
+        
+    #if rulers == True:
+        #while len(plot_window.rulers) < plot_window.fig + 1:
+            
+    print("Size of projections after loop: ",len(plot_window.proj))
 
-    #nel = np.size(meshes, axis = 0)
-    #for i in range(nel):
-    #    scalar_bar = v.addons.LegendBox(meshes[i],pos='top-left')
-    #plot_window.render_addon(msg,window=window)
-    plot_window.plotter.add(msg,at=window)
-"""
+    if plane == 'xy':
+        assem = v.merge(plot_window.meshes[plot_window.fig])
+        proj = assem.projectOnPlane('z').z(offset).silhouette('2d').c(color)
+        plot_window.proj[plot_window.fig] += [proj]
+        if rulers == True:
+            ruler = v.addons.RulerAxes(proj, xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='', xpad=0.1, ypad=0.1, zpad=0, font='Normografo', s=None, italic=0, units='m', c=color, alpha=1, lw=1, precision=3, labelRotation=0, axisRotation=0, xycross=True)
+            plot_window.rulers[plot_window.fig] += [ruler]
+        """
+        for i in range(len(plot_window.meshes[plot_window.fig])):
+            proj = plot_window.meshes[plot_window.fig][i].clone().projectOnPlane('z').c(color).z(offset)
+            plot_window.proj[plot_window.fig] += [proj]
+        """
+        #plot_window.meshes[plot_window.fig][0].addShadow(plane='x')
+    elif plane == 'xz':
+        assem = v.merge(plot_window.meshes[plot_window.fig])
+        proj = assem.projectOnPlane('y').y(offset).silhouette('2d').c(color)
+        plot_window.proj[plot_window.fig] += [proj]
+        if rulers == True:
+            ruler = v.addons.RulerAxes(proj, xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='', xpad=0.1, ypad=0, zpad=0.1, font='Normografo', s=None, italic=0, units='m', c=color, alpha=1, lw=1, precision=3, labelRotation=0, axisRotation=0, xycross=True)
+            plot_window.rulers[plot_window.fig] += [ruler]
+    elif plane == 'yz':
+        assem = v.merge(plot_window.meshes[plot_window.fig])
+        proj = assem.projectOnPlane('x').x(offset).silhouette('2d').c(color)
+        plot_window.proj[plot_window.fig] += [proj]
+        if rulers == True:
+            ruler = v.addons.RulerAxes(proj, xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='', xpad=0, ypad=0.1, zpad=0.1, font='Normografo', s=None, italic=0, units='m', c=color, alpha=1, lw=1, precision=3, labelRotation=0, axisRotation=0, xycross=True)
+            plot_window.rulers[plot_window.fig] += [ruler]
+    else:
+        print("Please choose a plane to project to. Set plane to 'xy', 'xz' or 'yz'")
+        sys.exit()
+
+    
+
+    #plot_window.proj.append([])
+
+    #plot_window.proj[plot_window.fig] += [proj]
 
 
 
+def add_rulers(xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='', alpha=1):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    #while len(plot_window.rulers) < plot_window.fig + 1:
+        #plot_window.rulers.append([])
+
+    assem = v.merge(plot_window.meshes[plot_window.fig])
+
+    ruler = v.addons.RulerAxes(assem, xtitle=xtitle, ytitle=ytitle, ztitle=ztitle, xlabel=xlabel, ylabel=ylabel, zlabel=zlabel, xpad=0.1, ypad=0.1, zpad=0.1, font='Normografo', s=None, italic=0, units='m', c=(1,1,1), alpha=alpha, lw=1, precision=3, labelRotation=0, axisRotation=0, xycross=False)
+
+    plot_window.rulers[plot_window.fig] += [ruler]
 
 
 
@@ -416,7 +335,6 @@ def draw_geometry(
     dof,
     element_type,
     el_values=None,
-    label=None,
     colormap='jet',
     scale=0.02,
     alpha=1,
@@ -425,7 +343,6 @@ def draw_geometry(
     color=None,
     merge=False,
     t=None,
-    title=None
     ):
 
     app = init_app()
@@ -453,9 +370,12 @@ def draw_geometry(
         #print(elements,nodes)
         if render_nodes == True:
             nodes = get_node_elements(coord,scale,alpha)
-            plot_window.add_geometry(elements,nodes)
+            #plot_window.add_geometry(elements,nodes)
+            plot_window.meshes[plot_window.fig].extend(elements)
+            plot_window.nodes[plot_window.fig].extend(nodes)
         else:
-            plot_window.add_geometry(elements)
+            #plot_window.add_geometry(elements)
+            plot_window.meshes[plot_window.fig].extend(elements)
 
         return elements
 
@@ -503,9 +423,12 @@ def draw_geometry(
                 bar.info = f"Bar nr. {i}"
         if render_nodes == True:
             nodes = get_node_elements(coord,scale,alpha)
-            plot_window.add_geometry(elements,nodes)
+            #plot_window.add_geometry(elements,nodes)
+            plot_window.meshes[plot_window.fig].extend(elements)
+            plot_window.nodes[plot_window.fig].extend(nodes)
         else:
-            plot_window.add_geometry(elements)
+            #plot_window.add_geometry(elements)
+            plot_window.meshes[plot_window.fig].extend(elements)
 
         return elements
 
@@ -521,7 +444,8 @@ def draw_geometry(
 
 
             mesh = v.Mesh([coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
-            mesh.info = f"Mesh nr. {i}"
+            #mesh.info = f"Mesh nr. {i}"
+            mesh.name = f"Mesh nr. {i+1}"
             meshes.append(mesh)
 
             if el_values is not None and np.size(el_values, axis = 1) == 1:
@@ -532,10 +456,10 @@ def draw_geometry(
                 el_values_array[3] = el_values[i]
                 el_values_array[4] = el_values[i]
                 el_values_array[5] = el_values[i]
-                if title is not None:
-                    mesh.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax).addScalarBar(title=title,horizontal=True,useAlpha=False,titleFontSize=16)
-                else:
-                    mesh.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax)
+                #if title is not None:
+                #    mesh.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax).addScalarBar(title=title,horizontal=True,useAlpha=False,titleFontSize=16)
+                #else:
+                mesh.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax)
             elif el_values is not None and np.size(el_values, axis = 1) > 1:
                 el_values_array = np.zeros((1,8))[0,:]
                 el_values_array[0] = el_values[i,0]
@@ -546,10 +470,10 @@ def draw_geometry(
                 el_values_array[5] = el_values[i,5]
                 el_values_array[6] = el_values[i,6]
                 el_values_array[7] = el_values[i,7]
-                if title is not None:
-                    mesh.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax).addScalarBar(title=title,horizontal=True,useAlpha=False,titleFontSize=16)
-                else:
-                    mesh.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
+                #if title is not None:
+                #    mesh.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax).addScalarBar(title=title,horizontal=True,useAlpha=False,titleFontSize=16)
+                #else:
+                mesh.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
         #if export is not None:
         #    v.io.write(mesh, export+".vtk")
 
@@ -665,9 +589,12 @@ def draw_geometry(
 
         if render_nodes == True:
             nodes = get_node_elements(coord,scale,alpha)
-            plot_window.add_geometry(elements,nodes)
+            #plot_window.add_geometry(elements,nodes)
+            plot_window.meshes[plot_window.fig].extend(elements)
+            plot_window.nodes[plot_window.fig].extend(nodes)
         else:
-            plot_window.add_geometry(elements)
+            #plot_window.add_geometry(elements)
+            plot_window.meshes[plot_window.fig].extend(elements)
 
         return elements
 
@@ -745,9 +672,12 @@ def draw_geometry(
 
         if render_nodes == True:
             nodes = get_node_elements(coord,scale,alpha)
-            plot_window.add_geometry(meshes,nodes)
+            #plot_window.add_geometry(meshes,nodes)
+            plot_window.meshes[plot_window.fig].extend(meshes)
+            plot_window.nodes[plot_window.fig].extend(nodes)
         else:
-            plot_window.add_geometry(meshes)
+            #plot_window.add_geometry(meshes)
+            plot_window.meshes[plot_window.fig].extend(meshes)
 
         return meshes
 
@@ -781,7 +711,6 @@ def draw_displaced_geometry(
     element_type,
     a,
     el_values=None,
-    label=None,
     colormap='jet',
     scale=0.02,
     alpha=1,
@@ -792,13 +721,11 @@ def draw_displaced_geometry(
     offset = [0, 0, 0],
     merge=False,
     t=None,
-    title=None
     ):
  
 
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
-    #animations = animations().instance()
 
     if element_type == 1:
         ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
@@ -820,11 +747,14 @@ def draw_displaced_geometry(
 
         if render_nodes == True:
             nodes = get_node_elements(coord,scale,alpha)
-            plot_window.add_geometry(elements,nodes)
+            #plot_window.add_geometry(elements,nodes)
+            plot_window.meshes[plot_window.fig].extend(elements)
+            plot_window.nodes[plot_window.fig].extend(nodes)
         else:
-            plot_window.add_geometry(elements)
+            #plot_window.add_geometry(elements)
+            plot_window.meshes[plot_window.fig].extend(elements)
 
-        return elements
+        #return elements
 
     elif element_type == 2:
         ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
@@ -887,11 +817,14 @@ def draw_displaced_geometry(
                 bar.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
 
         if render_nodes == True:
-            plot_window.add_geometry(def_elements,def_nodes)
+            #plot_window.add_geometry(def_elements,def_nodes)
+            plot_window.meshes[plot_window.fig].extend(def_elements)
+            plot_window.nodes[plot_window.fig].extend(def_nodes)
         else:
-            plot_window.add_geometry(def_elements)
+            #plot_window.add_geometry(def_elements)
+            plot_window.meshes[plot_window.fig].extend(def_elements)
 
-        return def_elements
+        #return def_elements
 
     elif element_type == 3:
         print("Displaced mesh for flow elements is not supported")
@@ -927,7 +860,8 @@ def draw_displaced_geometry(
             coords = get_coord_from_edof(edof[i,:],dof,4)
 
             mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
-            mesh.info = f"Mesh nr. {i}"
+            mesh.flag().color('m')
+            mesh.name = f"Mesh nr. {i+1}"
             meshes.append(mesh)
 
             
@@ -940,10 +874,10 @@ def draw_displaced_geometry(
                 el_values_array[3] = el_values[i]
                 el_values_array[4] = el_values[i]
                 el_values_array[5] = el_values[i]
-                if title is not None:
-                    mesh.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax).addScalarBar(title=title,horizontal=True,useAlpha=False,titleFontSize=16)
-                else:
-                    mesh.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax)
+                #if title is not None:
+                #    mesh.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax).addScalarBar(title=title,horizontal=True,useAlpha=False,titleFontSize=16)
+                #else:
+                mesh.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax)
             elif el_values is not None and np.size(el_values, axis = 1) > 1:
                 el_values_array = np.zeros((1,8))[0,:]
                 el_values_array[0] = el_values[i,0]
@@ -954,13 +888,16 @@ def draw_displaced_geometry(
                 el_values_array[5] = el_values[i,5]
                 el_values_array[6] = el_values[i,6]
                 el_values_array[7] = el_values[i,7]
-                if title is not None:
-                    mesh.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax).addScalarBar(title=title,horizontal=True,useAlpha=False,titleFontSize=16)
-                else:
-                    mesh.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
+                #if title is not None:
+                #    mesh.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax).addScalarBar(title=title,horizontal=True,useAlpha=False,titleFontSize=16)
+                #else:
+                mesh.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
 
         #if export is not None:
         #    v.io.write(mesh, export+".vtk")
+
+        #if merge == True:
+        #    meshes = v.merge(meshes)
 
         if render_nodes == True:
             nodes = get_node_elements(coord,scale,alpha)
@@ -1089,11 +1026,14 @@ def draw_displaced_geometry(
                     beam.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
 
         if render_nodes == True:
-            plot_window.add_geometry(def_elements,def_nodes,merge=merge)
+            plot_window.meshes[plot_window.fig].extend(def_elements)
+            plot_window.nodes[plot_window.fig].extend(def_nodes)
+            #plot_window.add_geometry(def_elements,def_nodes,merge=merge)
         else:
-            plot_window.add_geometry(def_elements,merge=merge)
+            plot_window.meshes[plot_window.fig].extend(def_elements)
+            #plot_window.add_geometry(def_elements,merge=merge)
 
-        return def_elements
+        #return def_elements
 
     elif element_type == 6:
         print("Displaced mesh for plate elements is not supported")
@@ -1365,45 +1305,8 @@ def get_node_elements(coord,scale,alpha,t=None):
 
 
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
-# Functions for rendering
+# Functions for handling rendering
 
-# If multiple renderers are used
-def set_figures(n):
-    app = init_app()
-    plot_window = VedoPlotWindow.instance().plot_window
-
-    del(plot_window.plotters)
-    plot_window.plotters = []
-
-    for i in range(n):
-        plotter = v.Plotter(bg='black')
-        plot_window.plotters.append(plotter)
-
-    print("Setting no. figures: ",np.size(plot_window.plotters,0))
-
-    #del(plot_window.plotter)
-
-    #plot_window.plotter = v.Plotter(title='CALFEM vedo visualization tool',N=n,bg='black',axes=4,sharecam=False)
-    plot_window.n = n - 1
-    #plot_window.plotter.addHoverLegend(useInfo=True,s=1.25,maxlength=96)
-    #plot_window.click_msg = []
-    #for i in range(n):
-        #plot_window.plotter.addGlobalAxes(4,at=i)
-        #plot_window.plotter.addHoverLegend(useInfo=True,s=1.25,maxlength=96,at=i)
-        #plot_window.plotter.addCallback('mouse click', plot_window.click)
-        #plot_window.click_msg.append(v.Text2D("", pos="bottom-center", bg='auto', alpha=0.1, font='Calco'))
-        #plot_window.plotter.add(plot_window.click_msg[i],at=i)
-
-def show(mesh):
-    app = init_app()
-    plot_window = VedoPlotWindow.instance().plot_window
-
-    fig = plot_window.fig
-
-    opts = dict(axes=4, interactive=False, new=True, bg='k', title=f'Figure {fig+1} - CALFEM vedo visualization tool')
-    plt = v.show(mesh, **opts)
-
-    plot_window.plotters.append(plt)
 
 def figure(fig):
     app = init_app()
@@ -1417,33 +1320,15 @@ def figure(fig):
 
     print("Selecting figure ",fig)
     if fig > 1:
-        plot_window.meshes.append([])
-        plot_window.nodes.append([])
+        while len(plot_window.meshes) < plot_window.fig + 1:
+            #plot_window.proj.append([])
+            plot_window.meshes.append([])
+            plot_window.nodes.append([])
 
-    #v.show(mesh,)
-# Choose what figure is bo be plotted to (fig. 1 -> n=0, fig. 2 -> n=1 etc...)
-"""
-def figure(fig=None):
-    app = init_app()
-    plot_window = VedoPlotWindow.instance().plot_window
+            plot_window.msg.append([])
+            plot_window.proj.append([])
+            plot_window.rulers.append([])
 
-    if fig == None:
-        plot_window.n = plot_window.n + 1
-        plot_window.plotter.append(v.Plotter(title=f'Figure {fig} - CALFEM vedo visualization tool',bg='black',axes=4,offscreen=True))
-        #plot_window.plotter[plot_window.n].addHoverLegend(useInfo=True,s=1.25,maxlength=96)
-        #plot_window.plotter.append(v.Plotter(title='CALFEM vedo visualization tool'))
-    elif fig < 1:
-        print("Please give a positive integer")
-        sys.exit()
-    else:
-        plot_window.n = fig - 1
-        plotters = np.size(plot_window.plotter,0)
-        print(plotters)
-        if plotters < fig:
-            for i in range(fig):
-                plot_window.plotter.append(v.Plotter(title=f'Figure {i} - CALFEM vedo visualization tool',bg='black',axes=4,offscreen=True))
-                #plot_window.plotter[i].addHoverLegend(useInfo=True,s=1.25,maxlength=96)
-"""
 
 
 # Start Calfem-vedo visualization
