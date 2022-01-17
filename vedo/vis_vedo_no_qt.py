@@ -137,7 +137,7 @@ class VedoMainWindow():
 
         # Mouse click callback
         #self.plotter[self.n].addCallback('mouse click', self.click)
-        self.silcont = [None]
+        #self.silcont = [None]
         self.click_msg = v.Text2D("", pos="bottom-center", bg='auto', alpha=0.1, font='Calco',c='white')
         #self.plotter[self.n].add(self.click_msg)
 
@@ -178,19 +178,19 @@ class VedoMainWindow():
             print('Projections: ',self.proj[i])
             self.plt.append(plt)
 
-            if self.msg[i]:
-                for j in range(len(self.msg[i])):
-                    plt.add(self.msg[i][j])
+            #if self.msg[i]:
+            for j in range(len(self.msg[i])):
+                plt.add(self.msg[i][j])
                     #plt += self.msg[i][j]
                     #plt.add(self.click_msg)
 
-            if self.proj[i]:
-                for j in range(len(self.proj[i])):
-                    plt.add(self.proj[i][j])
+            #if self.proj[i]:
+            for j in range(len(self.proj[i])):
+                plt.add(self.proj[i][j])
 
-            if self.rulers[i]:
-                for j in range(len(self.rulers[i])):
-                    plt.add(self.rulers[i][j])
+            #if self.rulers[i]:
+            for j in range(len(self.rulers[i])):
+                plt.add(self.rulers[i][j])
 
         v.interactive()
 
@@ -230,26 +230,7 @@ def add_text(
     msg = v.Text2D(text, pos=pos, alpha=1, c=color)
     plot_window.msg[plot_window.fig] += [msg]
 
-"""
-# Add legend to a renderer
-def add_legend(meshes,window=0):
-    app = init_app()
-    plot_window = VedoPlotWindow.instance().plot_window
-
-    #mesh = v.merge(meshes,flag=True)
-
-    legend_box = v.addons.LegendBox(meshes,pos='top-left')
-
-    #nel = np.size(meshes, axis = 0)
-    #for i in range(nel):
-    #    scalar_bar = v.addons.LegendBox(meshes[i],pos='top-left')
-    #plot_window.render_addon(legend_box,window=window)
-    plot_window.plotter.add(legend_box,at=window)
-"""
-
-
-
-# Add silhouette with measurements to a renderer
+# Add silhouette with or without measurements to a renderer
 def add_projection(color='white',plane='xy',offset=0,rulers=False):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
@@ -301,8 +282,7 @@ def add_projection(color='white',plane='xy',offset=0,rulers=False):
 
     #plot_window.proj[plot_window.fig] += [proj]
 
-
-
+#Add measurements to a renderer
 def add_rulers(xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='', alpha=1):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
@@ -340,7 +320,8 @@ def draw_geometry(
     alpha=1,
     nseg=2,
     render_nodes=True,
-    color=None,
+    color='white',
+    offset = [0, 0, 0],
     merge=False,
     t=None,
     ):
@@ -494,7 +475,7 @@ def draw_geometry(
             plot_window.meshes[plot_window.fig].extend(meshes)
             #print("Meshes are ",np.size(plot_window.meshes, axis=0),"X",np.size(plot_window.meshes, axis=1))
             print("Adding mesh to figure ",plot_window.fig+1)
-        #return meshes
+        return meshes
 
     elif element_type == 5:
         ncoord = np.size(coord, axis = 0)
@@ -754,7 +735,7 @@ def draw_displaced_geometry(
             #plot_window.add_geometry(elements)
             plot_window.meshes[plot_window.fig].extend(elements)
 
-        #return elements
+        return elements
 
     elif element_type == 2:
         ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
@@ -824,7 +805,7 @@ def draw_displaced_geometry(
             #plot_window.add_geometry(def_elements)
             plot_window.meshes[plot_window.fig].extend(def_elements)
 
-        #return def_elements
+        return def_elements
 
     elif element_type == 3:
         print("Displaced mesh for flow elements is not supported")
@@ -1033,7 +1014,7 @@ def draw_displaced_geometry(
             plot_window.meshes[plot_window.fig].extend(def_elements)
             #plot_window.add_geometry(def_elements,merge=merge)
 
-        #return def_elements
+        return def_elements
 
     elif element_type == 6:
         print("Displaced mesh for plate elements is not supported")
@@ -1065,15 +1046,18 @@ def animate(
     element_type,
     a,
     steps,
-    def_scale=1
+    def_scale=1,
+    alpha=1
     ):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
-    
+    v.settings.immediateRendering = True
 
-    t = np.arange(0, 1+1/(steps-1), 1/(steps-1))
-    print(t)
+    camera = dict(viewAngle=30)
+
+    timesteps = np.arange(0, 1+1/(steps), 1/(steps))
+    print(timesteps)
     #print(start)
     #print(end)
     #print(steps)
@@ -1087,46 +1071,87 @@ def animate(
 
     #t = np.arange(0.0, 10.0, dt)
 
-    pb = v.ProgressBar(0, len(t), c="b")
+    #pb = v.ProgressBar(0, len(t), c="b")
 
 
-    if element_type == 5:
+    if element_type == 4:
         ncoord = np.size(coord, axis = 0)
+        nel = np.size(edof, axis = 0)
 
         def_coord = np.zeros([ncoord,3])
-        def_coord = np.zeros((ncoord,3,steps))
+        #def_coord = np.zeros((ncoord,3,steps))
 
 
+        meshes = []
 
 
-        for i in range(0, ncoord):
-            a_dx, a_dy, a_dz = get_a_from_coord(i,3,a,def_scale)
-
-            x_step = a_dx/(steps-1)
-            y_step = a_dy/(steps-1)
-            z_step = a_dz/(steps-1)
-
-            for j in range(0, steps):
-
-                x = coord[i,0]+x_step*j
-                y = coord[i,1]+y_step*j
-                z = coord[i,2]+z_step*j
-
-                def_coord[i,:,j] = [x,y,z]
-
-        meshes = np.empty(nel,steps)
-        nel = np.size(edof, axis = 0)
-        
-        vmin, vmax = np.min(el_values), np.max(el_values)
         for i in range(nel):
             coords = get_coord_from_edof(edof[i,:],dof,4)
-            for j in range(steps):
-                mesh = v.Mesh([def_coord[coords,:,j],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
-                meshes[i,j] = mesh
-            #mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
+
+
+            mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
             #mesh.info = f"Mesh nr. {i}"
-            #meshes.append(mesh)
+            #mesh.name = f"Mesh nr. {i+1}"
+            meshes.append(mesh)
+
+        mesh = v.merge(meshes)
+
+        #plt = v.show(mesh, axes=4, interactive=0)
+
+        plt = v.Plotter(axes=4, interactive=0)
+
+        plt.show(mesh)
+
+
+
+
+
+        for t in timesteps:
+
+            for i in range(0, ncoord):
+                a_dx, a_dy, a_dz = get_a_from_coord(i,3,a,def_scale)
+
+                a_dx = t*a_dx
+                a_dy = t*a_dy
+                a_dz = t*a_dz
+
+                x_step = a_dx/(steps)
+                y_step = a_dy/(steps)
+                z_step = a_dz/(steps)
+
+                for j in range(0, steps):
+
+                    x = coord[i,0]+x_step*j
+                    y = coord[i,1]+y_step*j
+                    z = coord[i,2]+z_step*j
+
+                    def_coord[i,:] = [x,y,z]
+
             
+            meshes = []
+            
+            
+            #vmin, vmax = np.min(el_values), np.max(el_values)
+            for i in range(nel):
+                coords = get_coord_from_edof(edof[i,:],dof,4)
+
+                mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
+                meshes.append(mesh)
+                #for j in range(steps):
+                    #mesh = v.Mesh([def_coord[coords,:,j],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
+                    #meshes[i,j] = mesh
+                #mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
+                #mesh.info = f"Mesh nr. {i}"
+                #meshes.append(mesh)
+            mesh = v.merge(meshes)
+            plt.clear()
+            plt += mesh
+            plt.render(resetcam=True)
+            #plt.show(mesh)
+            
+
+
+        v.interactive().close()
 
         #mesh = v.merge(meshes,flag=True)
 
@@ -1135,11 +1160,12 @@ def animate(
 
         #plot_window.render_geometry(meshes,window=window)
 
-        for j in pb.range():
-            for i in range(nel):
+        #for j in pb.range():
+            #for i in range(nel):
+
                 #plot_window.plotter.show(meshes[i,j])
                 #v.interactive()
-                plot_window.add_geometry(meshes[:,j])
+                #plot_window.add_geometry(meshes[:,j])
 
 
 
@@ -1226,11 +1252,60 @@ class animations():
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 # Functions for importing/exporting
 
-#def import(file,list=None):
-    #data = loadmat(file+'.mat')
+def import_mat(file,list=None):
+    data = {}
+    loadmat(file, data, variable_names=list)
 
-#def export(mesh,file):
-    #v.io.write(mesh, file+".vtk")
+    if list == None:
+        keys = ['__header__', '__version__', '__globals__']
+        for key in keys:
+            data.pop(key)
+        return data
+    else:
+
+        #print(data)
+
+        ret = dict.fromkeys(list,None)
+        #print(ret)
+
+        #for i in range(len(list)):
+        for key,val in ret.items():
+            x = data[key]
+            if key == 'edof' or key == 'Edof' or key == 'EDOF':
+                x = np.delete(x,0,1)
+            #print(x)
+            yield x
+
+    #return data
+
+    #for i in range(len(data.keys()[:])):
+    #    print(i)
+
+    #print(data.keys())
+
+    #globals().update((k, v) for k, v in d.iteritems()
+
+    #return data.keys()
+
+    #for key,val in data.items():
+        #exec(key + '=val')
+        #print(data.get(key))
+        #globals()[key] = val
+        #return(globals()[key] = val) #exec(key + '=val')
+        #exec(key + '=val')
+        #return key
+        #print(f'Entry {i}: ',data[key])
+        #i = np.array([])
+        #return i
+
+    #print(L)
+
+def export_vtk(file, meshes):
+    #print(meshes)
+    mesh = v.merge(meshes)
+    #for i in range(len(meshes)):
+        #print(meshes[i])
+    v.io.write(mesh, file+".vtk")
 
 
 

@@ -18,24 +18,24 @@ import numpy as np
 #import vis_vedo as cfvv
 import vis_vedo_no_qt as cfvv
 from PyQt5 import Qt
-from scipy.io import loadmat
+#from scipy.io import loadmat
 
+edof,coord,dof,a,es,ns,L,X = cfvv.import_mat('exv4',['edof','coord','dof','a','es','ns','L','X'])
 
+#solid_data = loadmat('exv4.mat')
 
-solid_data = loadmat('exv4.mat')
-
-edof = solid_data['edof']
-edof = np.delete(edof,0,1)
-coord = solid_data['coord']
-dof = solid_data['dof']
-a = solid_data['a']
-ed = solid_data['ed']
-es = solid_data['es']
-et = solid_data['et']
-eci = solid_data['eci']
-ns = solid_data['ns']
-L = solid_data['L']
-X = solid_data['X']
+#edof = solid_data['edof']
+#edof = np.delete(edof,0,1)
+#coord = solid_data['coord']
+#dof = solid_data['dof']
+#a = solid_data['a']
+#ed = solid_data['ed']
+#es = solid_data['es']
+#et = solid_data['et']
+#eci = solid_data['eci']
+#ns = solid_data['ns']
+#L = solid_data['L']
+#X = solid_data['X']
 
 
 ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
@@ -73,7 +73,7 @@ cfvv.add_text(f'Frequency: {Freq[0]} Hz',pos='top-right')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
 #cfvv.add_scalar_bar(mode_mesh,'Tot. el. displacement',window=1)
 
-cfvv.animate(edof,coord,dof,4,mode_a,10,def_scale=scalefact)
+cfvv.animate(edof,coord,dof,4,X[:,0],10,def_scale=scalefact)
 
 
 

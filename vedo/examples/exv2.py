@@ -64,7 +64,8 @@ edof_beams = np.array([
     [13, 14, 15, 16, 17, 18, 31, 32, 33, 34, 35, 36],
     [19, 20, 21, 22, 23, 24, 37, 38, 39, 40, 41, 42],
     [25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36],
-    [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42], 
+    [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42],
+
     [43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54],
     [49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60],
     [55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66],
@@ -74,6 +75,7 @@ edof_beams = np.array([
     [61, 62, 63, 64, 65, 66, 79, 80, 81, 82, 83, 84],
     [67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78],
     [73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84],
+
     [1,  2,  3,  4,  5,  6,  43, 44, 45, 46, 47, 48],
     [7,  8,  9,  10, 11, 12, 49, 50, 51, 52, 53, 54],
     [13, 14, 15, 16, 17, 18, 55, 56, 57, 58, 59, 60],
@@ -86,7 +88,32 @@ nel_beams = np.size(edof_beams, axis = 0)
 
 ex_beams,ey_beams,ez_beams = cfc.coordxtr(edof_beams,coord,dof)
 
-eo = np.array([0, 0, 1])
+eo = np.array([
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+    [0, 0, 1],
+
+    [-1, 0, 0],
+    [-1, 0, 0],
+    [-1, 0, 0],
+    [-1, 0, 0]
+    ])
 
 E = 210000000               # Pa
 v = 0.3
@@ -126,14 +153,14 @@ for i in range(nel_beams):
     #Ke = cfc.beam3e(ex_beams[i], ey_beams[i], ez_beams[i], eo, ep_beams)
     """
     if i < 18:
-        Ke = cfc.beam3e(ex_beams[i], ey_beams[i], ez_beams[i], eo, ep_beams)
+        Ke = cfc.beam3e(ex_beams[i], ey_beams[i], ez_beams[i], eo[i], ep_beams)
         K = cfc.assem(edof_beams[i],K,Ke)
     else:
-        Ke, fe = cfc.beam3e(ex_beams[i], ey_beams[i], ez_beams[i], eo, ep_beams,eq)
+        Ke, fe = cfc.beam3e(ex_beams[i], ey_beams[i], ez_beams[i], eo[i], ep_beams,eq)
         K, f = cfc.assem(edof_beams[i],K,Ke,f,fe)
 # FRÅGA JONAS OM NEDAN
-f = -np.absolute(f)
-print(f)
+#f = -np.absolute(f)
+#print(f)
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 
 edof_bars = np.array([
@@ -230,9 +257,9 @@ for i in range(nel_beams):
     #es[nseg*i:nseg*i+nseg,:], edi[nseg*i:nseg*i+nseg,:], eci[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex[i],ey[i],ez[i],eo,ep,ed[i],eq[i],nseg)
     
     if i < 18:
-        es_beams[nseg*i:nseg*i+nseg,:], edi_beams[nseg*i:nseg*i+nseg,:], eci_beams[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex_beams[i],ey_beams[i],ez_beams[i],eo,ep_beams,ed_beams[i],[0,0,0,0],nseg)
+        es_beams[nseg*i:nseg*i+nseg,:], edi_beams[nseg*i:nseg*i+nseg,:], eci_beams[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex_beams[i],ey_beams[i],ez_beams[i],eo[i],ep_beams,ed_beams[i],[0,0,0,0],nseg)
     else:
-        es_beams[nseg*i:nseg*i+nseg,:], edi_beams[nseg*i:nseg*i+nseg,:], eci_beams[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex_beams[i],ey_beams[i],ez_beams[i],eo,ep_beams,ed_beams[i],eq,nseg)
+        es_beams[nseg*i:nseg*i+nseg,:], edi_beams[nseg*i:nseg*i+nseg,:], eci_beams[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex_beams[i],ey_beams[i],ez_beams[i],eo[i],ep_beams,ed_beams[i],eq,nseg)
     #es[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex[i],ey[i],ez[i],eo,ep,ed[i],[0,0,0,0],nseg)
 
 N_beams = es_beams[:,0]
@@ -263,13 +290,15 @@ shear_stresses_z = np.zeros(nel_beams*nseg)
 # Stress calculation based on element forces
 for i in range(nel_beams*nseg):
     # Calculate least favorable normal stress using Navier's formula
+    #normal_stresses_beams[i] = N_beams[i]/A_beams + np.absolute(My[i]/Iy*hz) + np.absolute(Mz[i]/Iz*hy)
+    
     if N_beams[i] < 0:
         normal_stresses_beams[i] = N_beams[i]/A_beams - np.absolute(My[i]/Iy*hz) - np.absolute(Mz[i]/Iz*hy)
         #normal_stresses[i] = N[i]/A - My[i]/Iy*hz - Mz[i]/Iz*hy
     else:
         normal_stresses_beams[i] = N_beams[i]/A_beams + np.absolute(My[i]/Iy*hz) + np.absolute(Mz[i]/Iz*hy)
         #normal_stresses[i] = N[i]/A + My[i]/Iy*hz + Mz[i]/Iz*hy
-
+    
     # Calculate shear stress in y-direction (Assuming only web taking shear stresses)
     shear_stresses_y[i] = Vy[i]/A_web_beams
 
@@ -289,14 +318,14 @@ for i in range(nel_bars):
 
 # Send data of deformed geometry & normal stresses as element values
 #cfvv.beam3d.draw_displaced_geometry(edof,coord,dof,a,normal_stresses,'Max normal stress',def_scale=5,nseg=nseg)
-beam_elements = cfvv.draw_geometry(edof_beams,coord,dof,5,alpha=0.5,nseg=nseg,color='green')
+cfvv.draw_geometry(edof_beams,coord,dof,5,alpha=0.5,nseg=nseg,color='green')
 
 
 #cfvv.draw_displaced_geometry(edof,coord,dof,5,el_values=normal_stresses,label='Max normal stress',alpha=0.3,nseg=nseg)
-def_beam_elements = cfvv.draw_displaced_geometry(edof_beams,coord,dof,5,a,normal_stresses_beams,nseg=nseg,def_scale=5,colormap='coolwarm')
-cfvv.add_scalar_bar(def_beam_elements,'Max normal stress beams')
+cfvv.draw_displaced_geometry(edof_beams,coord,dof,5,a,normal_stresses_beams,nseg=nseg,def_scale=1,colormap='coolwarm')
+cfvv.add_scalar_bar('Max normal stress beams')
 #cfvv.add_legend(def_beam_elements)
-#cfvv.add_text('Beam',color='green',pos='top-left')
+cfvv.add_text('Beam',color='green',pos='top-left')
 # Send data of deformed geometry & normal stresses as element values
 #cfvv.draw_displaced_geometry(edof,coord,dof,a,shear_stresses_y,1,label='Shear stress y',def_scale=5,nseg=nseg)
 
@@ -318,12 +347,12 @@ edof_bars = np.array([
     [37, 38, 39, 40, 41, 42, 79, 80, 81, 82, 83, 84]#[37, 38, 39, 79, 80, 81]
 ])
 
-bar_elements = cfvv.draw_geometry(edof_bars,coord,dof,2,alpha=0.5,color='yellow')
+cfvv.draw_geometry(edof_bars,coord,dof,2,alpha=0.5,color='yellow')
 
-def_bar_elements = cfvv.draw_displaced_geometry(edof_bars,coord,dof,2,a,normal_stresses_bars,def_scale=5,colormap='coolwarm')
-cfvv.add_scalar_bar(def_bar_elements,'Max normal stress bars',pos=[0.75,0.1])
+cfvv.draw_displaced_geometry(edof_bars,coord,dof,2,a,normal_stresses_bars,def_scale=1,colormap='coolwarm')
+#cfvv.add_scalar_bar('Max normal stress bars',pos=[0.75,0.1])
 #cfvv.add_legend(def_bar_elements)
-#cfvv.add_text('Bar',color='yellow',pos=[0,0.95])#,render=True)
+cfvv.add_text('Bar',color='yellow',pos=[0,0.95])#,render=True)
 
 #Start Calfem-vedo visualization
 cfvv.show_and_wait()

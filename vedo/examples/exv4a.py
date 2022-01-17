@@ -18,24 +18,26 @@ import numpy as np
 #import vis_vedo as cfvv
 import vis_vedo_no_qt as cfvv
 from PyQt5 import Qt
-from scipy.io import loadmat
+#from scipy.io import loadmat
 
+edof,coord,dof,a,es,ns,L,X = cfvv.import_mat('exv4',['edof','coord','dof','a','es','ns','L','X'])
 
+#print(data)
 
-solid_data = loadmat('exv4.mat')
+#solid_data = loadmat('exv4.mat')
 
-edof = solid_data['edof']
-edof = np.delete(edof,0,1)
-coord = solid_data['coord']
-dof = solid_data['dof']
-a = solid_data['a']
-ed = solid_data['ed']
-es = solid_data['es']
-et = solid_data['et']
-eci = solid_data['eci']
-ns = solid_data['ns']
-L = solid_data['L']
-X = solid_data['X']
+#edof = solid_data['edof']
+#edof = np.delete(edof,0,1)
+#coord = solid_data['coord']
+#dof = solid_data['dof']
+#a = solid_data['a']
+#ed = solid_data['ed']
+#es = solid_data['es']
+#et = solid_data['et']
+#eci = solid_data['eci']
+#ns = solid_data['ns']
+#L = solid_data['L']
+#X = solid_data['X']
 
 
 
@@ -149,7 +151,8 @@ for i in range(0, nel):
 
 
 
-
+print(von_mises_elements)
+print(von_mises_nodes)
 
 
 
@@ -168,7 +171,7 @@ cfvv.add_rulers()
 cfvv.figure(2)
 
 scalefact = 100 #deformation scale factor
-mode_mesh = cfvv.draw_displaced_geometry(edof,coord,dof,4,X[:,0],mode_a,def_scale=scalefact,render_nodes=False)
+cfvv.draw_displaced_geometry(edof,coord,dof,4,X[:,0],mode_a,def_scale=scalefact,render_nodes=False)
 cfvv.add_text('Eigenvalue analysis: first mode')
 cfvv.add_text(f'Frequency: {round(Freq[0],2)} Hz',pos='top-right')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
@@ -181,7 +184,7 @@ cfvv.add_projection(plane='xz',offset=-1,rulers=True)
 cfvv.figure(3)
 
 scalefact = 5 #deformation scale factor
-cfvv.draw_displaced_geometry(edof,coord,dof,4,a,von_mises_elements,def_scale=scalefact,render_nodes=False)
+mesh1 = cfvv.draw_displaced_geometry(edof,coord,dof,4,a,von_mises_elements,def_scale=scalefact,render_nodes=False)
 cfvv.add_text('Static analysis: only self-weight')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
 cfvv.add_scalar_bar('von Mises in elements')
@@ -190,14 +193,15 @@ cfvv.add_scalar_bar('von Mises in elements')
 # Fourth plot, deformed mesh with nodal stresses
 cfvv.figure(4)
 
-cfvv.draw_displaced_geometry(edof,coord,dof,4,a,von_mises_nodes,def_scale=scalefact,render_nodes=False,merge=True)
+# Return the mesh for export
+mesh2 = cfvv.draw_displaced_geometry(edof,coord,dof,4,a,von_mises_nodes,def_scale=scalefact,render_nodes=False,merge=True)
 cfvv.add_scalar_bar('von Mises at nodes')
 cfvv.add_text('Static analysis: only self-weight')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
 
-
+# Export the mesh to 'exv4a.vtk'
+cfvv.export_vtk('exv4a', mesh1)
 
 
 #Start Calfem-vedo visualization
 cfvv.show_and_wait()
-
