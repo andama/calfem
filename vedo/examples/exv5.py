@@ -153,7 +153,7 @@ edof = np.int_(edof)
 
 
 
-cfvv.draw_geometry(edof,coord,dof,6,t=t,scale=0.002)
+cfvv.draw_mesh(edof,coord,dof,6,t=t,scale=0.002)
 
 
 #Start Calfem-vedo visualization

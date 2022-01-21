@@ -328,7 +328,7 @@ nnode = np.size(coord, axis = 0)
 ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
 nel = np.size(edof, axis = 0)
 
-cfvv.draw_geometry(edof,coord,dof,3,scale=0.002)
+cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
 
 
 #Start Calfem-vedo visualization
@@ -349,7 +349,7 @@ D = np.ones([3,3])*k
 
 #print(D)
 #print(ex)
-bcPrescr = np.array([1,2,3,4,5,56,57,58,59,60,111,112,113,114,115,166,167,168,169,170,221,222,223,224,225])
+bcPrescr = np.array([1,2,3,4,5,51,52,53,54,55,56,57,58,59,60,111,112,113,114,115,166,167,168,169,170,221,222,223,224,225])
 #bcPrescr = np.array([1,2,3,4,5,56,57,58,59,60,111,112,113,114,115,147,166,167,168,169,170,221,222,223,224,225])
 #bcPrescr = np.array([[1],[2],[3],[4],[5],[56],[57],[58],[59],[60],[111],[112],[113],[114],[115],[166],[167],[168],[169],[170],[221],[222],[223],[224],[225]])
 #bc = np.array([147, 30])

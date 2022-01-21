@@ -216,15 +216,15 @@ eq = [0; -g*rho; 0]; % Distibuted load vector [N/m^3]
 
 f = zeros(ndof,1);
 K = zeros(ndof);
-for i=(1:nel) % Assembling
+for i=(1:nel)
     [Ke,fe] = soli8e(ex(i,:), ey(i,:), ez(i,:), ep, D, eq);
     [K,f] = assem(edof(i,:), K, Ke, f, fe);
 end
 
 % --- Applying point forces  ---
 
-point_force = -5000; % N
-f(force_dofs) = f(force_dofs) + point_force;
+
+f(force_dofs) = f(force_dofs) - 
 
 
 % First a regular linear analysis is done, self-weight only

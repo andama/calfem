@@ -20,7 +20,7 @@ import vis_vedo_no_qt as cfvv
 from PyQt5 import Qt
 #from scipy.io import loadmat
 
-edof,coord,dof,a,es,ns,L,X = cfvv.import_mat('exv4',['edof','coord','dof','a','es','ns','L','X'])
+edof,coord,dof,a,es,ns,lamb,eigen = cfvv.import_mat('exv4',['edof','coord','dof','a','es','ns','lambda','eigen'])
 
 #print(data)
 
@@ -61,16 +61,16 @@ nel = np.size(edof, axis = 0)
 	#inter[i,:] = X[3*i,0]*X[3*i,0] + X[3*i,1]*X[3*i,1] + X[3*i,2]*X[3*i,2]
 
 mode_a = np.zeros((nel, 1))
-y = np.zeros(8)
+tot_deform = np.zeros(8)
 for i in range(nel):
 	coords = cfvv.get_coord_from_edof(edof[i,:],dof,4)
 	#print(coords)
-	X[coords,0]
+	eigen[coords,0]
 	for j in range(8):
-		x = cfvv.get_a_from_coord(coords[j],3,X[:,0])
-		y[j] = np.sqrt(x[0]**2 + x[1]**2 + x[2]**2)
+		deform = cfvv.get_a_from_coord(coords[j],3,eigen[:,0])
+		tot_deform[j] = np.sqrt(deform[0]**2 + deform[1]**2 + deform[2]**2)
 
-	mode_a[i,:] = np.average(y)
+	mode_a[i,:] = np.average(tot_deform)
 	#print(x1)
 	"""
 	mode_a[i,:] = np.sqrt(
@@ -91,7 +91,7 @@ for i in range(nel):
 #mode_a[:,0] = X[:,0]
 #print(mode_a)
 
-Freq=np.sqrt(L[0]/(2*np.pi))
+Freq=np.sqrt(lamb[0]/(2*np.pi))
 #print(L)
 #print(np.size(Freq, axis = 1))
 
@@ -151,8 +151,8 @@ for i in range(0, nel):
 
 
 
-print(von_mises_elements)
-print(von_mises_nodes)
+#print(von_mises_elements)
+#print(von_mises_nodes)
 
 
 
@@ -162,20 +162,20 @@ print(von_mises_nodes)
 # First plot, undeformed mesh
 cfvv.figure(1)
 
-cfvv.draw_geometry(edof,coord,dof,4,scale=0.002)
+cfvv.draw_mesh(edof,coord,dof,4,scale=0.005)
 cfvv.add_text('Undeformed mesh')
-cfvv.add_rulers()
+#cfvv.add_rulers()
 
 
 # Second plot, first mode from eigenvalue analysis
 cfvv.figure(2)
 
 scalefact = 100 #deformation scale factor
-cfvv.draw_displaced_geometry(edof,coord,dof,4,X[:,0],mode_a,def_scale=scalefact,render_nodes=False)
-cfvv.add_text('Eigenvalue analysis: first mode')
-cfvv.add_text(f'Frequency: {round(Freq[0],2)} Hz',pos='top-right')
-cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
-cfvv.add_scalar_bar('Tot. el. displacement')
+cfvv.draw_displaced_mesh(edof,coord,dof,4,eigen[:,0],mode_a*1000,def_scale=scalefact,render_nodes=False)
+cfvv.add_text('Eigenvalue analysis: first mode',pos='top-left')
+cfvv.add_text(f'Frequency: {round(Freq[0],2)} Hz')
+cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
+cfvv.add_scalar_bar('Tot. el. displacement [mm]')
 cfvv.add_projection(plane='xz',offset=-1,rulers=True)
 
 
@@ -183,24 +183,24 @@ cfvv.add_projection(plane='xz',offset=-1,rulers=True)
 # Third plot, deformed mesh with element stresses
 cfvv.figure(3)
 
-scalefact = 5 #deformation scale factor
-mesh1 = cfvv.draw_displaced_geometry(edof,coord,dof,4,a,von_mises_elements,def_scale=scalefact,render_nodes=False)
-cfvv.add_text('Static analysis: only self-weight')
-cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
-cfvv.add_scalar_bar('von Mises in elements')
+scalefact = 3 #deformation scale factor
+mesh1 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_elements/1000000,def_scale=scalefact,render_nodes=False)
+cfvv.add_text('Static analysis: self-weight & ecc. vertical load',pos='top-left')
+cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
+cfvv.add_scalar_bar('von Mises [MPa]')
 
 
 # Fourth plot, deformed mesh with nodal stresses
 cfvv.figure(4)
 
 # Return the mesh for export
-mesh2 = cfvv.draw_displaced_geometry(edof,coord,dof,4,a,von_mises_nodes,def_scale=scalefact,render_nodes=False,merge=True)
-cfvv.add_scalar_bar('von Mises at nodes')
-cfvv.add_text('Static analysis: only self-weight')
-cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
+mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_nodes/1000000,def_scale=scalefact,render_nodes=False,merge=True)
+cfvv.add_scalar_bar('von Mises [MPa]')
+cfvv.add_text('Static analysis: self-weight & ecc. vertical load',pos='top-left')
+cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
 
 # Export the mesh to 'exv4a.vtk'
-cfvv.export_vtk('exv4a', mesh1)
+cfvv.export_vtk('exv4a', mesh2)
 
 
 #Start Calfem-vedo visualization

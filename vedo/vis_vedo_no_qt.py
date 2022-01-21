@@ -137,8 +137,8 @@ class VedoMainWindow():
 
         # Mouse click callback
         #self.plotter[self.n].addCallback('mouse click', self.click)
-        #self.silcont = [None]
-        self.click_msg = v.Text2D("", pos="bottom-center", bg='auto', alpha=0.1, font='Calco',c='white')
+        self.silcont = [None]
+        self.click_msg = v.Text2D("", pos="bottom-center", bg='auto', alpha=0.1, font='Calco',c='black')
         #self.plotter[self.n].add(self.click_msg)
 
         # Global settings
@@ -146,32 +146,36 @@ class VedoMainWindow():
         #v.settings.renderLinesAsTubes = True
         v.settings.allowInteraction = True
         v.settings.useFXAA = True
-        v.settings.useSSAO         = True
+        #v.settings.useSSAO         = True
         v.settings.visibleGridEdges = True
+        #v.settings.useParallelProjection = True
 
     def click(self,evt):
         #if evt.isAssembly: # endast för testning ifall en assembly skapas
         #    print('assembly')
         #    self.click_msg.text(evt.actor.info)
         if evt.actor:
-            #sil = evt.actor.silhouette().lineWidth(6).c('red5')
+            sil = evt.actor.silhouette().lineWidth(6).c('red5')
             self.click_msg.text(evt.actor.name)
-            #self.plt[evt.title].remove(self.silcont.pop()).add(sil)
+            self.plt[evt.title].remove(self.silcont.pop()).add(sil)
             #evt.interactor.add(sil)
             #evt.interactor.pop()
             #.remove(self.silcont.pop())
             #.add(sil)
-            #self.plotter.remove(self.silcont.pop()).add(sil)
+            self.plotter.remove(self.silcont.pop()).add(sil)
             #self.silcont.append(sil)
         else:
-            self.click_msg.text()
+            self.click_msg.text('')
             return
 
     def render(self):
 
         for i in range(self.fig+1):
-            opts = dict(axes=4, interactive=False, new=True, bg='k', title=f'Figure {i+1} - CALFEM vedo visualization tool')
-            plt = v.show(self.meshes[i], self.nodes[i], self.click_msg, **opts)#
+            opts = dict(axes=4, interactive=False, new=True, title=f'Figure {i+1} - CALFEM vedo visualization tool')
+            plt = v.show(self.meshes[i], self.nodes[i], self.click_msg, **opts)
+            #plt.addGlobalAxes(11)#
+            #plt.addShadows()
+            #plt.addScaleIndicator(pos=(0.7, 0.05), s=0.02, length=2, lw=4, c='k1', alpha=1, units='', gap=0.05)
             plt.addCallback('mouse click', self.click)
             #plt += self.click_msg#.addHoverLegend(useInfo=True,s=1.25,maxlength=96)
             print('Figure text: ',self.msg[i])
@@ -204,7 +208,7 @@ def add_scalar_bar(
     label,
     pos=[0.75,0.05],
     font_size=24,
-    color='white',
+    color='black',
     size=(3000, 50)
     ):
     app = init_app()
@@ -216,7 +220,7 @@ def add_scalar_bar(
 # Add text to a renderer
 def add_text(
     text,
-    color='white',
+    color='black',
     pos='top-middle'
     ):
     app = init_app()
@@ -231,7 +235,7 @@ def add_text(
     plot_window.msg[plot_window.fig] += [msg]
 
 # Add silhouette with or without measurements to a renderer
-def add_projection(color='white',plane='xy',offset=0,rulers=False):
+def add_projection(color='black',plane='xy',offset=0,rulers=False):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
@@ -309,7 +313,7 @@ def add_rulers(xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='',
     # 8 node: 3,4 (Isoparametric 2D or 3D)
 
 # Creates an undeformed mesh for rendering, see element types above
-def draw_geometry(
+def draw_mesh(
     edof,
     coord,
     dof,
@@ -320,7 +324,7 @@ def draw_geometry(
     alpha=1,
     nseg=2,
     render_nodes=True,
-    color='white',
+    color='yellow',
     offset = [0, 0, 0],
     merge=False,
     t=None,
@@ -424,7 +428,7 @@ def draw_geometry(
             coords = get_coord_from_edof(edof[i,:],dof,4)
 
 
-            mesh = v.Mesh([coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
+            mesh = v.Mesh([coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha,c=color).lw(1)
             #mesh.info = f"Mesh nr. {i}"
             mesh.name = f"Mesh nr. {i+1}"
             meshes.append(mesh)
@@ -685,7 +689,7 @@ def draw_geometry(
 
 
 # Creates a deformed mesh for rendering, see element types above
-def draw_displaced_geometry(
+def draw_displaced_mesh(
     edof,
     coord,
     dof,
@@ -703,7 +707,6 @@ def draw_displaced_geometry(
     merge=False,
     t=None,
     ):
- 
 
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
@@ -1020,6 +1023,88 @@ def draw_displaced_geometry(
         print("Displaced mesh for plate elements is not supported")
         sys.exit()
 
+def test(edof,
+    ex,
+    ey,
+    ez,
+    element_type,
+    a,
+    el_values=None,
+    colormap='jet',
+    scale=0.02,
+    alpha=1,
+    def_scale=1,
+    nseg=2,
+    render_nodes=True,
+    color='white',
+    offset = [0, 0, 0],
+    merge=False,
+    t=None,):
+
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    #pass
+    if element_type == 7:
+
+        coord, topo, node_dofs = convert_to_node_topo(edof,ex,ey,ez,ignore_first=False)
+        #return coords, topo, node_dofs
+
+        ncoord = np.size(coord, axis = 0)
+        #print(coord)
+        #print(coord[0][0])
+        #print(coord[0][1])
+        #print(coord[0][2])
+
+        def_nodes = []
+        def_coord = np.zeros([ncoord,3])
+        celltype = []
+
+        for i in range(ncoord):
+            #if a.any() == None:
+            #    x = coord[i,0]
+            #    y = coord[i,1]
+            #    z = coord[i,2]
+            #else:
+            a_dx, a_dy, a_dz = get_a_from_coord(i,3,a,def_scale)
+
+            x = coord[i][0]+a_dx
+            y = coord[i][1]+a_dy
+            z = coord[i][2]+a_dz
+
+            def_coord[i] = [x,y,z]
+
+            def_nodes.append(v.Sphere(c='white').scale(1.5*scale).pos([x,y,z]).alpha(alpha))
+            celltype.append(9)
+
+        meshes = []
+        nel = np.size(edof, axis = 0)
+
+
+        
+        #for i in range(nel):
+        #coords = get_coord_from_edof(edof[i,:],dof,4)
+
+        print(topo)
+
+        mesh = v.UGrid([def_coord, topo, [23]]).lw(10)
+        #[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]],
+        mesh.color(c='red')
+        mesh.name = f"Mesh nr. {i+1}"
+        meshes.append(mesh)
+
+            
+
+
+        if render_nodes == True:
+            nodes = get_node_elements(coord,scale,alpha)
+
+            #plot_window.meshes[plot_window.fig].extend(meshes)
+            plot_window.nodes[plot_window.fig].extend(nodes)
+            print("Adding mesh to figure ",plot_window.fig+1)
+        else:
+            #plot_window.meshes[plot_window.fig].extend(meshes)
+            print("Adding mesh to figure ",plot_window.fig+1)
     else:
         print("Invalid element type, please declare 'element_type'. The element types are:\n    1 - Spring\n    2 - Bar\n    3 - Flow (unsupported in this function)\n    4 - Solid\n    5 - Beam\n    6 - Plate")
         sys.exit()
@@ -1032,6 +1117,12 @@ def draw_displaced_geometry(
     #plot_window.anim_def_coord = coord
 
 
+
+
+
+
+# Creates a deformed mesh for rendering, see element types above
+#def draw_vectors(edof,coord,dof,element_type,vect):
 
 
 
@@ -1153,167 +1244,32 @@ def animate(
 
         v.interactive().close()
 
-        #mesh = v.merge(meshes,flag=True)
-
-        #if export is not None:
-        #    v.io.write(mesh, export+".vtk")
-
-        #plot_window.render_geometry(meshes,window=window)
-
-        #for j in pb.range():
-            #for i in range(nel):
-
-                #plot_window.plotter.show(meshes[i,j])
-                #v.interactive()
-                #plot_window.add_geometry(meshes[:,j])
-
-
-
-
-    
-    #elif element_type == 5:
-    #    ncoord = np.size(coord, axis = 0)
-    #    def_coord = np.zeros([ncoord,3])
-
-
-
-
-
-"""
-class animations():
-    
-    #def __init__(self):
-    #    #Qt.QMainWindow.__init__(self)
-    #    #self.initialize()
-    #    #self.type = None
-
-    #    # Type 1
-    #    self.elements = None
-    #   self.nodes = None
-    #    self.def_elements = None
-    #    self.def_nodes = None
-
-    #    self.mesh = None
-    #    self.def_mesh = None
-    
-
-    def __init__(self):
-
-        self.start = 0
-        self.end = 1
-        self.steps = 101
-
-    def __call__(self):
-        #print('test')
-        #self.elements = None
-        #self.nodes = None
-        #self.def_elements = None
-        #self.def_nodes = None
-
-        #self.mesh = None
-        #self.def_mesh = None
-
-        self.type = None
-        self.coords = None
-        self.def_coords = None
-
-    def edit(self):
-        print('edit_parameters')
-
-
-    #def animate(coord_start,coord_end,el_values,element_type):
-    def animate(self):
-        app = init_app()
-        plot_window = VedoPlotWindow.instance().plot_window
-
-        t = np.arange(self.start, self.end, self.steps)
-        print(t)
-        
-        #if self.elements != None:
-        #    element_type = 1
-        #elif self.mesh != None:
-        #    element_type = 2
-        
-        if element_type == 1:
-            ncoord = np.size(self.coord, axis = 0)
-            def_coord = np.zeros([ncoord,3])
-"""
-
-
-
-
-
-
-
-
-
-
+        v.settings.immediateRendering = False
 
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 # Functions for importing/exporting
 
 def import_mat(file,list=None):
-    data = {}
+    data = {} # dict to be returned by loadmat
     loadmat(file, data, variable_names=list)
 
-    if list == None:
+    if list == None: # remove unnecessary entries
         keys = ['__header__', '__version__', '__globals__']
         for key in keys:
             data.pop(key)
-        return data
-    else:
-
-        #print(data)
-
-        ret = dict.fromkeys(list,None)
-        #print(ret)
-
-        #for i in range(len(list)):
+        return data # returns the data, random ordering
+    else: # supplying a 'list' is recommended
+        ret = dict.fromkeys(list,None) # returns the data, ordering by user
         for key,val in ret.items():
-            x = data[key]
+            x = data[key] 
             if key == 'edof' or key == 'Edof' or key == 'EDOF':
-                x = np.delete(x,0,1)
-            #print(x)
-            yield x
-
-    #return data
-
-    #for i in range(len(data.keys()[:])):
-    #    print(i)
-
-    #print(data.keys())
-
-    #globals().update((k, v) for k, v in d.iteritems()
-
-    #return data.keys()
-
-    #for key,val in data.items():
-        #exec(key + '=val')
-        #print(data.get(key))
-        #globals()[key] = val
-        #return(globals()[key] = val) #exec(key + '=val')
-        #exec(key + '=val')
-        #return key
-        #print(f'Entry {i}: ',data[key])
-        #i = np.array([])
-        #return i
-
-    #print(L)
+                x = np.delete(x,0,1) # auto convert Edof from Matlab to Python
+            yield x # returns the data one-by-one, ordering by user
 
 def export_vtk(file, meshes):
-    #print(meshes)
     mesh = v.merge(meshes)
     #for i in range(len(meshes)):
-        #print(meshes[i])
     v.io.write(mesh, file+".vtk")
-
-
-
-
-
-
-
-
 
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 # Tools, used in this file but can be accessed by a user as well (see exv4a.py/exv4b.py)
@@ -1374,7 +1330,85 @@ def get_node_elements(coord,scale,alpha,t=None):
             nodes.append(node)
     return nodes
 
+def convert_to_node_topo(edof, ex, ey, ez, n_dofs_per_node=3, ignore_first=True):
+    """
+    Routine to convert dof based topology and element coordinates to node based
+    topology required for visualisation with VTK and other visualisation frameworks
 
+    :param array edof: element topology [nel x (n_dofs_per_node)|(n_dofs_per_node+1)*n_nodes ]
+    :param array ex: element x coordinates [nel x n_nodes]
+    :param array ey: element y coordinates [nel x n_nodes]
+    :param array ez: element z coordinates [nel x n_nodes]
+    :param array n_dofs_per_node: number of dofs per node. (default = 3)
+    :param boolean ignore_first: ignore first column of edof. (default = True)
+    :return array coords: Array of node coordinates. [n_nodes x 3]
+    :return array topo: Node topology. [nel x n_nodes]
+    :return array node_dofs: Dofs for each node. [n_nodes x n_dofs_per_node]
+    """
+
+    node_hash_coords = {}
+    node_hash_numbers = {}
+    node_hash_dofs = {}
+    el_hash_dofs = []
+
+    nel, cols = edof.shape
+
+    if ignore_first:
+        tot_dofs = cols-1
+    else:
+        tot_dofs = cols
+
+    n_nodes = int(tot_dofs / n_dofs_per_node)
+
+    print("cols    =", tot_dofs)
+    print("nel     =", nel)
+    print("n_nodes =", n_nodes)
+
+    for elx, ely, elz, dofs in zip(ex, ey, ez, edof):
+
+        if ignore_first:
+            el_dofs = dofs[1:]
+        else:
+            el_dofs = dofs
+
+        # 0 1 2  3 4 5  6 7 8  9 12 11 
+
+        el_dof = np.zeros((n_nodes, n_dofs_per_node), dtype=int)
+        el_hash_topo = []
+
+        for i in range(n_nodes):
+            el_dof[i] = el_dofs[ (i*n_dofs_per_node):((i+1)*n_dofs_per_node) ]
+            node_hash_coords[hash(tuple(el_dof[i]))] = [elx[i], ely[i], elz[i]]
+            node_hash_numbers[hash(tuple(el_dof[i]))] = -1
+            node_hash_dofs[hash(tuple(el_dof[i]))] = el_dof[i]
+            el_hash_topo.append(hash(tuple(el_dof[i])))
+
+        el_hash_dofs.append(el_hash_topo)
+
+    coord_count = 0
+
+    coords = []
+    node_dofs = []
+
+    for node_hash in node_hash_numbers.keys():
+        node_hash_numbers[node_hash] = coord_count
+        node_dofs.append(node_hash_dofs[node_hash])
+        coord_count +=1
+
+        coords.append(node_hash_coords[node_hash])
+
+    topo = []
+
+    for el_hashes in el_hash_dofs:
+        topo.append([
+            node_hash_numbers[el_hashes[0]], 
+            node_hash_numbers[el_hashes[1]], 
+            node_hash_numbers[el_hashes[2]], 
+            node_hash_numbers[el_hashes[3]]
+            ]
+        )
+
+    return coords, topo, node_dofs
 
 
 

@@ -62,8 +62,8 @@ bcPrescr = np.array([1, 4])
 
 a = cfc.solveq(K, f, bcPrescr)
 
-cfvv.draw_geometry(edof,coord,dof,1,alpha=0.2)
-cfvv.draw_displaced_geometry(edof,coord,dof,1,a,offset=[0,0.1,0])
+cfvv.draw_mesh(edof,coord,dof,1,alpha=0.2)
+cfvv.draw_displaced_mesh(edof,coord,dof,1,a,offset=[0,0.1,0])
 #cfvv.draw_displaced_geometry(edof,coord,dof,5,a,scale=0.5,alpha=0.5)
 
 #Start Calfem-vedo visualization

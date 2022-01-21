@@ -318,11 +318,11 @@ for i in range(nel_bars):
 
 # Send data of deformed geometry & normal stresses as element values
 #cfvv.beam3d.draw_displaced_geometry(edof,coord,dof,a,normal_stresses,'Max normal stress',def_scale=5,nseg=nseg)
-cfvv.draw_geometry(edof_beams,coord,dof,5,alpha=0.5,nseg=nseg,color='green')
+cfvv.draw_mesh(edof_beams,coord,dof,5,alpha=0.5,nseg=nseg,color='green')
 
 
 #cfvv.draw_displaced_geometry(edof,coord,dof,5,el_values=normal_stresses,label='Max normal stress',alpha=0.3,nseg=nseg)
-cfvv.draw_displaced_geometry(edof_beams,coord,dof,5,a,normal_stresses_beams,nseg=nseg,def_scale=1,colormap='coolwarm')
+cfvv.draw_displaced_mesh(edof_beams,coord,dof,5,a,normal_stresses_beams,nseg=nseg,def_scale=1,colormap='coolwarm')
 cfvv.add_scalar_bar('Max normal stress beams')
 #cfvv.add_legend(def_beam_elements)
 cfvv.add_text('Beam',color='green',pos='top-left')
@@ -347,9 +347,9 @@ edof_bars = np.array([
     [37, 38, 39, 40, 41, 42, 79, 80, 81, 82, 83, 84]#[37, 38, 39, 79, 80, 81]
 ])
 
-cfvv.draw_geometry(edof_bars,coord,dof,2,alpha=0.5,color='yellow')
+cfvv.draw_mesh(edof_bars,coord,dof,2,alpha=0.5,color='yellow')
 
-cfvv.draw_displaced_geometry(edof_bars,coord,dof,2,a,normal_stresses_bars,def_scale=1,colormap='coolwarm')
+cfvv.draw_displaced_mesh(edof_bars,coord,dof,2,a,normal_stresses_bars,def_scale=1,colormap='coolwarm')
 #cfvv.add_scalar_bar('Max normal stress bars',pos=[0.75,0.1])
 #cfvv.add_legend(def_bar_elements)
 cfvv.add_text('Bar',color='yellow',pos=[0,0.95])#,render=True)
