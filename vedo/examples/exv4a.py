@@ -22,6 +22,8 @@ from PyQt5 import Qt
 
 edof,coord,dof,a,es,ns,lamb,eigen = cfvv.import_mat('exv4',['edof','coord','dof','a','es','ns','lambda','eigen'])
 
+ex,ey,ez = cfc.coordxtr(edof,coord,dof)
+
 #print(data)
 
 #solid_data = loadmat('exv4.mat')
@@ -51,6 +53,7 @@ edof,coord,dof,a,es,ns,lamb,eigen = cfvv.import_mat('exv4',['edof','coord','dof'
 
 ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
 ncoord = np.size(coord, axis = 0)
+print('Number of CALFEM coordinates: ',ncoord)
 nel = np.size(edof, axis = 0)
 
 
@@ -171,12 +174,14 @@ cfvv.add_text('Undeformed mesh')
 cfvv.figure(2)
 
 scalefact = 100 #deformation scale factor
-cfvv.draw_displaced_mesh(edof,coord,dof,4,eigen[:,0],mode_a*1000,def_scale=scalefact,render_nodes=False)
+#scalefact = 1 #deformation scale factor
+#cfvv.test(edof,ex,ey,ez,eigen[:,0],mode_a*1000,def_scale=scalefact)
+cfvv.draw_displaced_mesh(edof,coord,dof,4,eigen[:,0],mode_a*1000,def_scale=scalefact)
 cfvv.add_text('Eigenvalue analysis: first mode',pos='top-left')
 cfvv.add_text(f'Frequency: {round(Freq[0],2)} Hz')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
-cfvv.add_scalar_bar('Tot. el. displacement [mm]')
-cfvv.add_projection(plane='xz',offset=-1,rulers=True)
+#cfvv.add_scalar_bar('Tot. el. displacement [mm]')
+#cfvv.add_projection(plane='xz',offset=-1,rulers=True)
 
 
 
@@ -184,18 +189,20 @@ cfvv.add_projection(plane='xz',offset=-1,rulers=True)
 cfvv.figure(3)
 
 scalefact = 3 #deformation scale factor
-mesh1 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_elements/1000000,def_scale=scalefact,render_nodes=False)
+#mesh1 = cfvv.test(edof,ex,ey,ez,a,von_mises_elements/1000000,def_scale=scalefact)
+mesh1 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_elements/1000000,def_scale=scalefact)
 cfvv.add_text('Static analysis: self-weight & ecc. vertical load',pos='top-left')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
-cfvv.add_scalar_bar('von Mises [MPa]')
+#cfvv.add_scalar_bar('von Mises [MPa]')
 
 
 # Fourth plot, deformed mesh with nodal stresses
 cfvv.figure(4)
 
 # Return the mesh for export
-mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_nodes/1000000,def_scale=scalefact,render_nodes=False,merge=True)
-cfvv.add_scalar_bar('von Mises [MPa]')
+#mesh2 = cfvv.test(edof,ex,ey,ez,a,von_mises_nodes/1000000,def_scale=scalefact,merge=True)
+mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_nodes/1000000,def_scale=scalefact,merge=True)
+#cfvv.add_scalar_bar('von Mises [MPa]')
 cfvv.add_text('Static analysis: self-weight & ecc. vertical load',pos='top-left')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
 

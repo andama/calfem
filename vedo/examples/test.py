@@ -32,6 +32,6 @@ edof = np.array([[1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
 a = np.zeros(8*3)
 #print(a)
 ex,ey,ez = cfc.coordxtr(edof,coord,dof)
-cfvv.test(edof,ex,ey,ez,7,a,render_nodes=False)
+cfvv.test(edof,ex,ey,ez,a,render_nodes=False)
 
 cfvv.show_and_wait()

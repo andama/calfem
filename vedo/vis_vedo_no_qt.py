@@ -10,9 +10,12 @@ Module for 3D visualization in CALFEM using Vedo (https://vedo.embl.es/)
 
 import numpy as np
 import vedo as v
+import pyvtk
+import vtk
 import sys
 #import webbrowser
 from scipy.io import loadmat
+import calfem.core as cfc
 
 # Examples using this module:
     # exv1: Spring
@@ -676,18 +679,6 @@ def draw_mesh(
         #    return
             #print('test')
 
-
-
-
-
-
-
-
-
-
-
-
-
 # Creates a deformed mesh for rendering, see element types above
 def draw_displaced_mesh(
     edof,
@@ -701,7 +692,7 @@ def draw_displaced_mesh(
     alpha=1,
     def_scale=1,
     nseg=2,
-    render_nodes=True,
+    render_nodes=False,
     color='white',
     offset = [0, 0, 0],
     merge=False,
@@ -816,10 +807,25 @@ def draw_displaced_mesh(
 
     elif element_type == 4:
         ncoord = np.size(coord, axis = 0)
+        nnode = np.size(coord, axis = 0)
+
+        ex,ey,ez = cfc.coordxtr(edof,coord,dof)
+
+        coord, topo, node_dofs = convert_to_node_topo(edof,ex,ey,ez,ignore_first=False)
 
         def_nodes = []
         def_coord = np.zeros([ncoord,3])
-
+        """
+        for i in range(nnode):
+        #a_dx, a_dy, a_dz = get_a_from_coord(i,3,a,def_scale)
+        #x = coord[i][0]+a_dx
+        #y = coord[i][1]+a_dy
+        #z = coord[i][2]+a_dz
+        #def_coord[i] = [x,y,z]
+            def_coord[i,0] = a[i*3]
+            def_coord[i,1] = a[i*3+1]
+            def_coord[i,2] = a[i*3+2]
+        """
         for i in range(0, ncoord):
             #if a.any() == None:
             #    x = coord[i,0]
@@ -828,24 +834,29 @@ def draw_displaced_mesh(
             #else:
             a_dx, a_dy, a_dz = get_a_from_coord(i,3,a,def_scale)
 
-            x = coord[i,0]+a_dx
-            y = coord[i,1]+a_dy
-            z = coord[i,2]+a_dz
+            x = coord[i][0]+a_dx
+            y = coord[i][1]+a_dy
+            z = coord[i][2]+a_dz
 
             def_coord[i] = [x,y,z]
 
-            def_nodes.append(v.Sphere(c='white').scale(1.5*scale).pos([x,y,z]).alpha(alpha))
+            #def_nodes.append(v.Sphere(c='white').scale(1.5*scale).pos([x,y,z]).alpha(alpha))
 
-        meshes = []
+        #meshes = []
         nel = np.size(edof, axis = 0)
         
         vmin, vmax = np.min(el_values), np.max(el_values)
+
+        #print(topo)
+
+        mesh = v.Mesh([coord, topo]).lw(1)
+        """
         for i in range(nel):
             coords = get_coord_from_edof(edof[i,:],dof,4)
 
             mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
-            mesh.flag().color('m')
-            mesh.name = f"Mesh nr. {i+1}"
+            #mesh.flag().color('m')
+            #mesh.name = f"Mesh nr. {i+1}"
             meshes.append(mesh)
 
             
@@ -876,25 +887,32 @@ def draw_displaced_mesh(
                 #    mesh.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax).addScalarBar(title=title,horizontal=True,useAlpha=False,titleFontSize=16)
                 #else:
                 mesh.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
-
+        """
         #if export is not None:
         #    v.io.write(mesh, export+".vtk")
 
         #if merge == True:
         #    meshes = v.merge(meshes)
 
+        #mesh = v.merge(meshes)
+        print('Number of Vedo mesh coordinates: ',mesh.N())
+
         if render_nodes == True:
             nodes = get_node_elements(coord,scale,alpha)
             #plot_window.add_geometry(meshes,nodes)
             #plot_window.meshes.extend(meshes)
-            plot_window.meshes[plot_window.fig].extend(meshes)
-            plot_window.nodes[plot_window.fig].extend(nodes)
+            #plot_window.meshes[plot_window.fig].extend(meshes)
+            #plot_window.nodes[plot_window.fig].extend(nodes)
+            plot_window.meshes[plot_window.fig] += mesh
+            plot_window.nodes[plot_window.fig] += nodes
             #plot_window.meshes.extend(nodes)
             #print("Meshes are ",np.size(plot_window.meshes, axis=0),"X",np.size(plot_window.meshes, axis=1))
             print("Adding mesh to figure ",plot_window.fig+1)
         else:
             #plot_window.add_geometry(meshes)
-            plot_window.meshes[plot_window.fig].extend(meshes)
+            plot_window.meshes[plot_window.fig].append(mesh)
+            #plot_window.meshes[plot_window.fig].extend(mesh)
+            #plot_window.meshes[plot_window.fig] += mesh
             #plot_window.meshes.extend(meshes)
             #print("Meshes are ",np.size(plot_window.meshes, axis=0),"X",np.size(plot_window.meshes, axis=1))
             print("Adding mesh to figure ",plot_window.fig+1)
@@ -1027,95 +1045,105 @@ def test(edof,
     ex,
     ey,
     ez,
-    element_type,
-    a,
+    a=None,
     el_values=None,
     colormap='jet',
     scale=0.02,
     alpha=1,
     def_scale=1,
     nseg=2,
-    render_nodes=True,
     color='white',
     offset = [0, 0, 0],
     merge=False,
-    t=None,):
+    t=None):
 
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
-    #pass
-    if element_type == 7:
 
-        coord, topo, node_dofs = convert_to_node_topo(edof,ex,ey,ez,ignore_first=False)
-        #return coords, topo, node_dofs
+    coord, topo, node_dofs = convert_to_node_topo(edof,ex,ey,ez,ignore_first=False)
+    #return coords, topo, node_dofs
 
-        ncoord = np.size(coord, axis = 0)
-        #print(coord)
-        #print(coord[0][0])
-        #print(coord[0][1])
-        #print(coord[0][2])
+    if a is None:
+        a = np.zeros([np.size(coord, axis = 0)*np.size(coord, axis = 1),1])
 
-        def_nodes = []
-        def_coord = np.zeros([ncoord,3])
-        celltype = []
+    nnode = np.size(coord, axis = 0)
+    nel = np.size(topo, axis = 0)
+    ndof = np.size(topo, axis = 1)
+    print(np.size(topo, axis = 0))
+    print(np.size(topo, axis = 1))
+    print(np.size(a, axis = 0))
+    #print(np.size(a, axis = 1))
+    #print(coord[0][0])
+    #print(coord[0][1])
+    #print(coord[0][2])
 
-        for i in range(ncoord):
-            #if a.any() == None:
-            #    x = coord[i,0]
-            #    y = coord[i,1]
-            #    z = coord[i,2]
-            #else:
-            a_dx, a_dy, a_dz = get_a_from_coord(i,3,a,def_scale)
+    """
+    if ct == vtk.VTK_HEXAHEDRON:
+                    cell = vtk.vtkHexahedron()
+                elif ct == vtk.VTK_TETRA:
+                    cell = vtk.vtkTetra()
+                elif ct == vtk.VTK_VOXEL:
+                    cell = vtk.vtkVoxel()
+                elif ct == vtk.VTK_WEDGE:
+                    cell = vtk.vtkWedge()
+                elif ct == vtk.VTK_PYRAMID:
+                    cell = vtk.vtkPyramid()
+                elif ct == vtk.VTK_HEXAGONAL_PRISM:
+                    cell = vtk.vtkHexagonalPrism()
+                elif ct == vtk.VTK_PENTAGONAL_PRISM:
+                    cell = vtk.vtkPentagonalPrism()
+    """
 
-            x = coord[i][0]+a_dx
-            y = coord[i][1]+a_dy
-            z = coord[i][2]+a_dz
+    #def_nodes = []
+    def_coord = np.zeros([nnode,3])
+    #celltype = [vtk.VTK_HEXAHEDRON] * nel
 
-            def_coord[i] = [x,y,z]
+    #pdata = np.zeros((nnode), dtype=float)
 
-            def_nodes.append(v.Sphere(c='white').scale(1.5*scale).pos([x,y,z]).alpha(alpha))
-            celltype.append(9)
+    for i in range(nnode):
+        #a_dx, a_dy, a_dz = get_a_from_coord(i,3,a,def_scale)
+        #x = coord[i][0]+a_dx
+        #y = coord[i][1]+a_dy
+        #z = coord[i][2]+a_dz
+        #def_coord[i] = [x,y,z]
+        def_coord[i,0] = a[i*3]
+        def_coord[i,1] = a[i*3+1]
+        def_coord[i,2] = a[i*3+2]
 
-        meshes = []
-        nel = np.size(edof, axis = 0)
 
+    #meshes = []
+    #nel = np.size(edof, axis = 0)
 
-        
-        #for i in range(nel):
-        #coords = get_coord_from_edof(edof[i,:],dof,4)
+    #for i, dofs in enumerate(node_dofs):
+        #v = u0[dofs-1]
+        #pdata[i] = np.linalg.norm(v)
 
-        print(topo)
+    #ugrid = v.UGrid([coord, topo, celltype])
+    print(coord[0])
+    print(topo)
+    mesh = v.Mesh([coord, topo[0]]).lw(1)
+    #ugrid.pointdata["mag"] = pdata
 
-        mesh = v.UGrid([def_coord, topo, [23]]).lw(10)
-        #[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]],
-        mesh.color(c='red')
-        mesh.name = f"Mesh nr. {i+1}"
-        meshes.append(mesh)
+    #mesh = ugrid.tomesh()
+    
+    #for i in range(nel):
+    #coords = get_coord_from_edof(edof[i,:],dof,4)
+
+    #print(topo)
+
+    #mesh = v.UGrid([def_coord, topo, [10]]).lw(10)
+    #[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]],
+    mesh.color(c='red')
+    #mesh.name = f"Mesh nr. {i+1}"
+    #meshes.append(mesh)
 
             
 
 
-        if render_nodes == True:
-            nodes = get_node_elements(coord,scale,alpha)
-
-            #plot_window.meshes[plot_window.fig].extend(meshes)
-            plot_window.nodes[plot_window.fig].extend(nodes)
-            print("Adding mesh to figure ",plot_window.fig+1)
-        else:
-            #plot_window.meshes[plot_window.fig].extend(meshes)
-            print("Adding mesh to figure ",plot_window.fig+1)
-    else:
-        print("Invalid element type, please declare 'element_type'. The element types are:\n    1 - Spring\n    2 - Bar\n    3 - Flow (unsupported in this function)\n    4 - Solid\n    5 - Beam\n    6 - Plate")
-        sys.exit()
-        #try:
-        #    raise ValueError("Invalid element type, please declare 'element_type'. The element types are; 1: Spring, 2: Bar, 3: Flow, 4: Solid, 5: Beam, 6: Plate")
-        #except ValueError:
-            #return ValueError("Invalid element type, please declare 'element_type'. The element types are; 1: Spring, 2: Bar, 3: Flow, 4: Solid, 5: Beam, 6: Plate")
-        #    return
-            #print('test')
-    #plot_window.anim_def_coord = coord
-
+    #plot_window.meshes[plot_window.fig].extend(mesh)
+    plot_window.meshes[plot_window.fig] += [mesh]
+    print("Adding mesh to figure ",plot_window.fig+1)
 
 
 
@@ -1330,7 +1358,7 @@ def get_node_elements(coord,scale,alpha,t=None):
             nodes.append(node)
     return nodes
 
-def convert_to_node_topo(edof, ex, ey, ez, n_dofs_per_node=3, ignore_first=True):
+def convert_to_node_topo(edof, ex, ey, ez, n_dofs_per_node=3, ignore_first=False):
     """
     Routine to convert dof based topology and element coordinates to node based
     topology required for visualisation with VTK and other visualisation frameworks
@@ -1400,6 +1428,7 @@ def convert_to_node_topo(edof, ex, ey, ez, n_dofs_per_node=3, ignore_first=True)
     topo = []
 
     for el_hashes in el_hash_dofs:
+        """
         topo.append([
             node_hash_numbers[el_hashes[0]], 
             node_hash_numbers[el_hashes[1]], 
@@ -1407,6 +1436,44 @@ def convert_to_node_topo(edof, ex, ey, ez, n_dofs_per_node=3, ignore_first=True)
             node_hash_numbers[el_hashes[3]]
             ]
         )
+        """
+        topo.append(
+            
+            [node_hash_numbers[el_hashes[0]], 
+            node_hash_numbers[el_hashes[1]], 
+            node_hash_numbers[el_hashes[2]], 
+            node_hash_numbers[el_hashes[3]]])
+        topo.append(
+            [node_hash_numbers[el_hashes[4]],
+            node_hash_numbers[el_hashes[5]],
+            node_hash_numbers[el_hashes[6]],
+            node_hash_numbers[el_hashes[7]]])
+        topo.append(
+            [node_hash_numbers[el_hashes[0]],
+            node_hash_numbers[el_hashes[3]],
+            node_hash_numbers[el_hashes[7]],
+            node_hash_numbers[el_hashes[4]]])
+        topo.append(
+            [node_hash_numbers[el_hashes[1]],
+            node_hash_numbers[el_hashes[2]],
+            node_hash_numbers[el_hashes[6]],
+            node_hash_numbers[el_hashes[5]]])
+        topo.append(
+            [node_hash_numbers[el_hashes[0]],
+            node_hash_numbers[el_hashes[1]],
+            node_hash_numbers[el_hashes[5]],
+            node_hash_numbers[el_hashes[4]]])
+        topo.append(
+            [node_hash_numbers[el_hashes[2]],
+            node_hash_numbers[el_hashes[3]],
+            node_hash_numbers[el_hashes[7]],
+            node_hash_numbers[el_hashes[6]]])
+        
+            
+        
+        
+        
+    #mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
 
     return coords, topo, node_dofs
 
