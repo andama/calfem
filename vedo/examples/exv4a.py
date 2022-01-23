@@ -18,6 +18,7 @@ import numpy as np
 #import vis_vedo as cfvv
 import vis_vedo_no_qt as cfvv
 from PyQt5 import Qt
+import vedo_utils as cfvu
 #from scipy.io import loadmat
 
 edof,coord,dof,a,es,ns,lamb,eigen = cfvv.import_mat('exv4',['edof','coord','dof','a','es','ns','lambda','eigen'])
@@ -66,11 +67,11 @@ nel = np.size(edof, axis = 0)
 mode_a = np.zeros((nel, 1))
 tot_deform = np.zeros(8)
 for i in range(nel):
-	coords = cfvv.get_coord_from_edof(edof[i,:],dof,4)
+	coords = cfvu.get_coord_from_edof(edof[i,:],dof,4)
 	#print(coords)
 	eigen[coords,0]
 	for j in range(8):
-		deform = cfvv.get_a_from_coord(coords[j],3,eigen[:,0])
+		deform = cfvu.get_a_from_coord(coords[j],3,eigen[:,0])
 		tot_deform[j] = np.sqrt(deform[0]**2 + deform[1]**2 + deform[2]**2)
 
 	mode_a[i,:] = np.average(tot_deform)
