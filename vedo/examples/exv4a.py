@@ -21,7 +21,8 @@ from PyQt5 import Qt
 import vedo_utils as cfvu
 #from scipy.io import loadmat
 
-edof,coord,dof,a,es,ns,lamb,eigen = cfvv.import_mat('exv4',['edof','coord','dof','a','es','ns','lambda','eigen'])
+#edof,coord,dof,a,es,ns,lamb,eig = cfvv.import_mat('exv4',['edof','coord','dof','a','es','ns','lambda','eig'])
+edof,coord,dof,a,vM_el,vM_n,lamb,eig = cfvv.import_mat('exv4',['edof','coord','dof','a','vM_el','vM_n','lambda','eig'])
 
 ex,ey,ez = cfc.coordxtr(edof,coord,dof)
 
@@ -69,9 +70,9 @@ tot_deform = np.zeros(8)
 for i in range(nel):
 	coords = cfvu.get_coord_from_edof(edof[i,:],dof,4)
 	#print(coords)
-	eigen[coords,0]
+	#eig[coords,0]
 	for j in range(8):
-		deform = cfvu.get_a_from_coord(coords[j],3,eigen[:,0])
+		deform = cfvu.get_a_from_coord(coords[j],3,eig[:,0])
 		tot_deform[j] = np.sqrt(deform[0]**2 + deform[1]**2 + deform[2]**2)
 
 	mode_a[i,:] = np.average(tot_deform)
@@ -109,7 +110,7 @@ Freq=np.sqrt(lamb[0]/(2*np.pi))
 
 
 
-
+"""
 stresses = np.zeros([nel,6])
 
 #print(nel)
@@ -150,7 +151,7 @@ for i in range(0, nel):
 	von_mises_nodes[i,5] = np.sqrt( 0.5 * ( np.square(ns[5,0,i]-ns[5,1,i]) + np.square(ns[5,1,i]-ns[5,2,i]) + np.square(ns[5,2,i]-ns[5,0,i]) ) + 3 * (np.square(ns[5,3,i]) + np.square(ns[5,4,i]) + np.square(ns[5,5,i])) )
 	von_mises_nodes[i,6] = np.sqrt( 0.5 * ( np.square(ns[6,0,i]-ns[6,1,i]) + np.square(ns[6,1,i]-ns[6,2,i]) + np.square(ns[6,2,i]-ns[6,0,i]) ) + 3 * (np.square(ns[6,3,i]) + np.square(ns[6,4,i]) + np.square(ns[6,5,i])) )
 	von_mises_nodes[i,7] = np.sqrt( 0.5 * ( np.square(ns[7,0,i]-ns[7,1,i]) + np.square(ns[7,1,i]-ns[7,2,i]) + np.square(ns[7,2,i]-ns[7,0,i]) ) + 3 * (np.square(ns[7,3,i]) + np.square(ns[7,4,i]) + np.square(ns[7,5,i])) )
-
+"""
 
 
 
@@ -174,14 +175,16 @@ cfvv.add_text('Undeformed mesh')
 # Second plot, first mode from eigenvalue analysis
 cfvv.figure(2)
 
+#print(eig[70,0])
+
 scalefact = 100 #deformation scale factor
 #scalefact = 1 #deformation scale factor
 #cfvv.test(edof,ex,ey,ez,eigen[:,0],mode_a*1000,def_scale=scalefact)
-cfvv.draw_displaced_mesh(edof,coord,dof,4,eigen[:,0],mode_a*1000,def_scale=scalefact)
+cfvv.draw_displaced_mesh(edof,coord,dof,4,eig[:,0],mode_a*1000,def_scale=scalefact)
 cfvv.add_text('Eigenvalue analysis: first mode',pos='top-left')
 cfvv.add_text(f'Frequency: {round(Freq[0],2)} Hz')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
-#cfvv.add_scalar_bar('Tot. el. displacement [mm]')
+cfvv.add_scalar_bar('Tot. el. displacement [mm]')
 #cfvv.add_projection(plane='xz',offset=-1,rulers=True)
 
 
@@ -189,20 +192,27 @@ cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
 # Third plot, deformed mesh with element stresses
 cfvv.figure(3)
 
+print('Number of von Mises stresses in elements: ',np.size(vM_el))
+
 scalefact = 3 #deformation scale factor
 #mesh1 = cfvv.test(edof,ex,ey,ez,a,von_mises_elements/1000000,def_scale=scalefact)
-mesh1 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_elements/1000000,def_scale=scalefact)
+#mesh1 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_elements/1000000,def_scale=scalefact)
+mesh1 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,vM_el/1000000,def_scale=scalefact)
 cfvv.add_text('Static analysis: self-weight & ecc. vertical load',pos='top-left')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
-#cfvv.add_scalar_bar('von Mises [MPa]')
+cfvv.add_scalar_bar('von Mises [MPa]')
 
 
 # Fourth plot, deformed mesh with nodal stresses
 cfvv.figure(4)
 
+print('Number of von Mises stresses at nodes: ',np.size(vM_n))
+
 # Return the mesh for export
 #mesh2 = cfvv.test(edof,ex,ey,ez,a,von_mises_nodes/1000000,def_scale=scalefact,merge=True)
-mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_nodes/1000000,def_scale=scalefact,merge=True)
+#mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_nodes/1000000,def_scale=scalefact,merge=True)
+mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,vM_n/1000000,def_scale=scalefact,merge=True)
+
 #cfvv.add_scalar_bar('von Mises [MPa]')
 cfvv.add_text('Static analysis: self-weight & ecc. vertical load',pos='top-left')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')

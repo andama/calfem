@@ -20,9 +20,6 @@ import calfem.core as cfc
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 # Tools, used in this file but can be accessed by a user as well (see exv4a.py/exv4b.py)
 
-# Implementera nedanstående för att kontrollera att dim. stämmer för draw_mesh/draw_displaced_mesh
-#def check_input(edof,coord,dof,element_type,a):
-
 def get_coord_from_edof(edof_row,dof,element_type):
     if element_type == 1 or element_type == 2 or element_type == 5:
         edof_row1,edof_row2 = np.split(edof_row,2)
@@ -79,107 +76,117 @@ def get_node_elements(coord,scale,alpha,t=None):
             nodes.append(node)
     return nodes
 
+def check_input(edof,coord,dof,element_type,a=None,values=None):
+    if element_type == 1 or element_type == 2 or element_type == 5:
+        number_of_nodes_per_element = 2
+    elif element_type == 3 or element_type == 4:
+        number_of_nodes_per_element = 8
+    elif element_type == 6:
+        number_of_nodes_per_element = 4
+
+    number_of_elements = np.size(edof, axis=0)
+    number_of_degrees_of_freedom_per_element = np.size(edof, axis=1)
+
+    number_of_coordinates = np.size(coord, axis=0)
+    number_of_dimensions = np.size(coord, axis=1)
+
+    number_of_degrees_of_freedom = np.size(dof, axis=0)*np.size(dof, axis=1)
+    degrees_of_freedom_per_node = np.size(dof, axis=1)
+
+    if a is not None:
+        number_of_displacements = np.size(a, axis=0)
+
+    if values is not None:
+        number_of_values = np.size(values, axis=0)*np.size(values, axis=1)
+
+        if number_of_values == number_of_elements:
+            val = 'el_values'
+        elif number_of_values == number_of_elements*number_of_nodes_per_element:
+            val = 'nodal_values'
+        else:
+            print("Invalid number of element-/nodal values, please make sure values correspond to total number of elements or nodes")
+            sys.exit()
+
+
+    # Implementera kontroll av dim. stämmer för draw_mesh/draw_displaced_mesh
+    if element_type == 1 or element_type == 2 or element_type == 5:
+        print(element_type)
+    elif element_type == 3 or element_type == 4:
+        print(element_type)
+    elif element_type == 6:
+        print(element_type)
+
+    if a is None and values is None:
+        print(1)
+        return number_of_elements, \
+            number_of_degrees_of_freedom_per_element, \
+            number_of_coordinates, \
+            number_of_dimensions, \
+            number_of_degrees_of_freedom, \
+            degrees_of_freedom_per_node,
+    elif a is None:
+        print(2)
+        return number_of_elements, \
+            number_of_degrees_of_freedom_per_element, \
+            number_of_coordinates, \
+            number_of_dimensions, \
+            number_of_degrees_of_freedom, \
+            degrees_of_freedom_per_node, \
+            val
+    elif values is None:
+        print(3)
+        return number_of_elements, \
+            number_of_degrees_of_freedom_per_element, \
+            number_of_coordinates, \
+            number_of_dimensions, \
+            number_of_degrees_of_freedom, \
+            degrees_of_freedom_per_node, \
+            number_of_displacements
+    else:
+        print('test')
+        return number_of_elements, \
+            number_of_degrees_of_freedom_per_element, \
+            number_of_coordinates, \
+            number_of_dimensions, \
+            number_of_degrees_of_freedom, \
+            degrees_of_freedom_per_node, \
+            number_of_displacements, \
+            val
+            
+
+
+
 
 
 def convert_a(coord_old,coord_new,a,ndofs):
 
     ncoord = np.size(coord_old, axis=0)
-
-    print(ncoord)
-
     a_new = np.zeros((ncoord,ndofs))
-
-    #print(coord_old)
-    #print(coord_new)
-
-    print(coord_old[0])
-    print(coord_new[0])
-
-    #print(np.size(coord_old, axis=0))
-    #print(np.size(coord_new, axis=0))
-
-    indexes = []
 
     coord_hash_old = {}
     coord_hash_new = {}
-    coord_hash_old_numbers = {}
-    coord_hash_new_numbers = {}
-
-    #node = np.zeros((ncoord, ndofs), dtype=int)
-
 
     for i in range(ncoord):
-        #el_dof[i] = el_dofs[ (i*n_dofs_per_node):((i+1)*n_dofs_per_node) ]
-        #node[i] = coord_old[ i ]
-        #coord_hash_old[hash(tuple(node[i]))] = [ coord_old[i] ]
-        #coord_hash_new[hash(tuple(node[i]))] = [ coord_new[i] ]
         coord_hash_old[hash(tuple(coord_old[i]))] = i
         coord_hash_new[hash(tuple(coord_new[i]))] = i
-        #node_hash_a[hash(tuple(a_node[i]))] = a
-        #node_hash_a[hash(tuple(el_dof[i]))] = a
-        #node_hash_coords[hash(tuple(el_dof[i]))] = [elx[i]+a[i*3], ely[i]+a[i*3+1], elz[i]+a[i*3+2]]
-        #node_hash_a[hash(tuple(a_upd[i]))] = [ a[i*3], a[i*3+1], a[i*3+2] ]
-        #coord_hash_old_numbers[hash(tuple(coord_old[i]))] = -1
-        #coord_hash_new_numbers[hash(tuple(coord_new[i]))] = -1
-        #coord_hash_old_numbers[hash(tuple(coord_old[i]))] = [coord_old[i]]
-        #coord_hash_new_numbers[hash(tuple(coord_new[i]))] = [coord_new[i]]
 
-
-    #print(coord_hash_new.values())
-    #print(coord_hash_old.values())
-    #coord_count = 0
+    indexes = []
 
     for node_hash in coord_hash_old.keys():
-
-        #coord_hash_old_numbers[node_hash] = coord_count
-        #print(node_hash_numbers[node_hash])
-        #node_hash_a[hash(tuple(a))] = a_upd
-        #indexes.append(coord_hash_new_numbers[node_hash])
         index = coord_hash_new[node_hash]
         indexes.append(index)
 
-        #if np.all(old_row) == np.all(new_row):
-        #        index = j
-        #        indexes.append(index)
-            #index = np.where(np.all(old_row==new_row,axis=0))
-
-        #coord_count +=1
-
-        #coords.append(node_hash_coords[node_hash])
-        #a_node_new.append(node_hash_a[node_hash])
-        #a_node_new.append(node_hash_coords[node_hash])
-        #print(node_hash_numbers.keys())
-        #print(node_hash_coords)
-        #a_new.append(node_hash_a[node_hash])
-        #a_new.append(hash(node_hash_a[node_hash]))
-        #a_new.append(hash(tuple(node_hash_a[node_hash])))
-
     node = 0
-
     for index in zip(indexes):
-        a_new[index,0] = a[node*3]
-        a_new[index,1] = a[node*3+1]
-        a_new[index,2] = a[node*3+2]
+        if ndofs == 1:
+            a_new[index] = a[node]
+        elif ndofs == 3:
+            a_new[index,0] = a[node*3]
+            a_new[index,1] = a[node*3+1]
+            a_new[index,2] = a[node*3+2]
         node += 1
 
-    """
-    for i in range(ncoord):
-        old_row = coord_old[i]
-        
-        #print(old_row)
-        for j in range(ncoord):
-            new_row = coord_new[j]
-            if np.all(old_row) == np.all(new_row):
-                index = j
-                indexes.append(index)
-            #index = np.where(np.all(old_row==new_row,axis=0))
-            
-            #print(new_row)
-            
-        #if coord_old[i] == 
-    """
-    #print(indexes)
-
+    # Returns disp. by node, i.e. a_new = [number of nodes x degrees of freedom per node]
     return a_new
 
 
@@ -187,11 +194,57 @@ def convert_a(coord_old,coord_new,a,ndofs):
 
 
 
+def convert_el_values(edof,topo,values):
+    nel = np.size(edof, axis=0)
+    el_values = np.zeros((nel*6,1))
 
+    el_hash_old = {}
+    el_hash_new = {}
+    elem = {}
 
+    for i in range(nel):
+        el_hash_old[hash(tuple(edof[i]))] = i
+        el_hash_new[hash(tuple(topo[i]))] = i
+        elem[i] = i
 
+    #print(values)
+    #print(el_values)
 
-def convert_to_node_topo(edof, ex, ey, ez, a, n_dofs_per_node=3, ignore_first=False):
+    indexes = []
+    """
+    for el_hash in el_hash_old.keys():
+        index = el_hash_new[el_hash]
+        print(index)
+        indexes.append(index)
+    """
+    for el in el_hash_old.values():
+        index = elem[el]
+        #print(index)
+        indexes.append(index)
+
+    el = 0
+    for index in zip(indexes):
+        #print(el_values[index*6,:])
+        #print(np.size(el_values[index*6,:], axis=1))
+        #print(values[el])
+        #print(index)
+        i = index[0]*6
+        el_values[i,:] = values[el]
+        i += 1
+        el_values[i,:] = values[el]
+        i += 1
+        el_values[i,:] = values[el]
+        i += 1
+        el_values[i,:] = values[el]
+        i += 1
+        el_values[i,:] = values[el]
+        i += 1
+        el_values[i,:] = values[el]
+        el += 1
+
+    return el_values
+
+def convert_to_node_topo(edof, ex, ey, ez, n_dofs_per_node=3, ignore_first=False):
     """
     Written by: Jonas Lindemann
     Modified by: Andreas Åmand
@@ -214,8 +267,8 @@ def convert_to_node_topo(edof, ex, ey, ez, a, n_dofs_per_node=3, ignore_first=Fa
 
     node_hash_coords = {}
     node_hash_numbers = {}
-    a_hash_numbers = {}
-    node_hash_a = {}
+    #a_hash_numbers = {}
+    #node_hash_a = {}
     node_hash_dofs = {}
     el_hash_dofs = []
 
@@ -235,13 +288,13 @@ def convert_to_node_topo(edof, ex, ey, ez, a, n_dofs_per_node=3, ignore_first=Fa
     #node_hash_a[hash(tuple(a))] = a
     #print(node_hash_a)
 
-    tot_nnodes = int(np.size(a, axis = 0)/3)
+    #tot_nnodes = int(np.size(a, axis = 0)/3)
 
-    a_node = np.zeros((tot_nnodes, n_dofs_per_node))
+    #a_node = np.zeros((tot_nnodes, n_dofs_per_node))
     #print(np.size(a_node, axis = 0),np.size(a_node, axis = 1))
 
-    for i in range(tot_nnodes):
-        a_node[i,:] = [a[i*3], a[i*3+1], a[i*3+2]]
+    #for i in range(tot_nnodes):
+    #    a_node[i,:] = [a[i*3], a[i*3+1], a[i*3+2]]
         
         #node_hash_a[hash(tuple(a_node[i]))] = a_node[i,:]
 
@@ -249,7 +302,7 @@ def convert_to_node_topo(edof, ex, ey, ez, a, n_dofs_per_node=3, ignore_first=Fa
 
 
     # Loopar igenom element
-    for elx, ely, elz, dofs, a in zip(ex, ey, ez, edof, a_node):
+    for elx, ely, elz, dofs in zip(ex, ey, ez, edof):
 
         
 
@@ -270,11 +323,11 @@ def convert_to_node_topo(edof, ex, ey, ez, a, n_dofs_per_node=3, ignore_first=Fa
             el_dof[i] = el_dofs[ (i*n_dofs_per_node):((i+1)*n_dofs_per_node) ]
             node_hash_coords[hash(tuple(el_dof[i]))] = [elx[i], ely[i], elz[i]]
             #node_hash_a[hash(tuple(a_node[i]))] = a
-            node_hash_a[hash(tuple(el_dof[i]))] = a
+            #node_hash_a[hash(tuple(el_dof[i]))] = a
             #node_hash_coords[hash(tuple(el_dof[i]))] = [elx[i]+a[i*3], ely[i]+a[i*3+1], elz[i]+a[i*3+2]]
             #node_hash_a[hash(tuple(a_upd[i]))] = [ a[i*3], a[i*3+1], a[i*3+2] ]
             node_hash_numbers[hash(tuple(el_dof[i]))] = -1
-            a_hash_numbers[hash(tuple(el_dof[i]))] = -1
+            #a_hash_numbers[hash(tuple(el_dof[i]))] = -1
 
             node_hash_dofs[hash(tuple(el_dof[i]))] = el_dof[i]
             el_hash_topo.append(hash(tuple(el_dof[i])))
@@ -310,7 +363,7 @@ def convert_to_node_topo(edof, ex, ey, ez, a, n_dofs_per_node=3, ignore_first=Fa
     #print(node_hash_a)
     #print(node_hash_coords)
 
-    a_node_new = []
+    #a_node_new = []
 
     # Skapar global koordinatmartis baserat på hashes
     for node_hash in node_hash_numbers.keys():
@@ -322,14 +375,14 @@ def convert_to_node_topo(edof, ex, ey, ez, a, n_dofs_per_node=3, ignore_first=Fa
         coord_count +=1
 
         coords.append(node_hash_coords[node_hash])
-        a_node_new.append(node_hash_a[node_hash])
+        #a_node_new.append(node_hash_a[node_hash])
         #a_node_new.append(node_hash_coords[node_hash])
         #print(node_hash_numbers.keys())
         #print(node_hash_coords)
         #a_new.append(node_hash_a[node_hash])
         #a_new.append(hash(node_hash_a[node_hash]))
         #a_new.append(hash(tuple(node_hash_a[node_hash])))
-
+    """
     a_count = 0
 
     for a_hash in a_hash_numbers.keys():
@@ -344,7 +397,7 @@ def convert_to_node_topo(edof, ex, ey, ez, a, n_dofs_per_node=3, ignore_first=Fa
         #a_new.append(node_hash_a[node_hash])
         #a_new.append(hash(node_hash_a[node_hash]))
         #a_new.append(hash(tuple(node_hash_a[node_hash])))
-
+    """
 
 
     #for i in range(coord_count)
@@ -434,7 +487,7 @@ def convert_to_node_topo(edof, ex, ey, ez, a, n_dofs_per_node=3, ignore_first=Fa
         
     #mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
 
-    return coords, topo, node_dofs, a_node_new
+    return coords, topo, node_dofs
 
 
 

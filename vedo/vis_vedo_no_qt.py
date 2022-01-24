@@ -688,7 +688,7 @@ def draw_displaced_mesh(
     dof,
     element_type,
     a,
-    el_values=None,
+    values=None,
     colormap='jet',
     scale=0.02,
     alpha=1,
@@ -703,6 +703,31 @@ def draw_displaced_mesh(
 
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
+
+    if 1 <= element_type <= 6:
+        if a is None and values is None:
+            nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n = vdu.check_input(edof,coord,dof,element_type)
+        elif a is None:
+            nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n, val = vdu.check_input(edof,coord,dof,element_type,values=values)
+        elif values is None:
+            nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n, ndisp = vdu.check_input(edof,coord,dof,element_type,a)
+        else:
+            nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n, ndisp, val = vdu.check_input(edof,coord,dof,element_type,a,values)
+    else:
+        print("Invalid element type, please declare 'element_type'. The element types are:\n    1 - Spring\n    2 - Bar\n    3 - Flow\n    4 - Solid\n    5 - Beam\n    6 - Plate")
+        sys.exit()
+
+    print(val)
+
+    # Number of elements:                       nel
+    # Number of degrees of freedom per element: ndof_per_el
+    # Number of nodes:                          nnode
+    # Number of dimensions:                     ndim
+    # Number of degrees of freedom:             ndof
+    # Number of degrees of freedom per node:    ndof_per_n
+    # Number of displacements:                  ndisp
+    # Element/nodal values:                     val
+
 
     if element_type == 1:
         ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
@@ -808,28 +833,23 @@ def draw_displaced_mesh(
         sys.exit()
 
     elif element_type == 4:
-        ncoord = np.size(coord, axis = 0)
-        nnode = np.size(coord, axis = 0)
+
+        #ncoord = np.size(coord, axis = 0)
+        #nnode = np.size(coord, axis = 0)
 
         ex,ey,ez = cfc.coordxtr(edof,coord,dof)
 
-        #ugrid = ugrid_from_edof_ec(edof, ex, ey, ez, a)
-
-        #mesh = ugrid.tomesh().lw(1)
-
-        coord2, topo, node_dofs, a_node = vdu.convert_to_node_topo(edof,ex,ey,ez,a,ignore_first=False)
+        coord2, topo, node_dofs = vdu.convert_to_node_topo(edof,ex,ey,ez,ignore_first=False)
         a_node = vdu.convert_a(coord,coord2,a,3)
 
-        #print(a_node)
-        #print(coord)
-
-        def_nodes = []
-        def_coord = np.zeros([ncoord,3])
+        def_coord = np.zeros([nnode,3])
         
         for i in range(np.size(def_coord, axis = 0)):
-            #print(coord[i])
-            #print(a_node[i])
             def_coord[i] = coord2[i] + a_node[i]
+
+        
+
+
         #print(def_coord)
         
         """
@@ -869,13 +889,59 @@ def draw_displaced_mesh(
             #def_nodes.append(v.Sphere(c='white').scale(1.5*scale).pos([x,y,z]).alpha(alpha))
         """
         #meshes = []
-        nel = np.size(edof, axis = 0)
+        #nel = np.size(edof, axis = 0)
         
-        vmin, vmax = np.min(el_values), np.max(el_values)
+        
 
         #print(topo)
 
         mesh = v.Mesh([def_coord, topo]).lw(1)
+        print('Number of topo cells: ',np.size(topo, axis=0))
+        print('Number of mesh cells: ',np.size(mesh.faces(), axis=0))
+
+        print('Number of topo points: ',np.size(coord2, axis=0))
+        print('Number of mesh points: ',np.size(mesh.points(), axis=0))
+
+
+        #print('Cell connectivity: ',mesh.faces())
+
+        #elif val and val == 'nodal_values':
+        if val and val == 'el_values':
+            vmin, vmax = np.min(values), np.max(values)
+            el_values = vdu.convert_el_values(edof,topo,values)
+            print(el_values)
+            print(np.size(el_values))
+            #for i in range(nel)
+
+                #el_values_array = np.zeros((1,6))[0,:]
+                #el_values_array[0] = values[i]
+                #el_values_array[1] = values[i]
+                #el_values_array[2] = values[i]
+                #el_values_array[3] = values[i]
+                #el_values_array[4] = values[i]
+                #el_values_array[5] = values[i]
+            #if title is not None:
+            #    mesh.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax).addScalarBar(title=title,horizontal=True,useAlpha=False,titleFontSize=16)
+            #else:
+            mesh.cmap(colormap, el_values, on="cells", vmin=vmin, vmax=vmax)
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         """

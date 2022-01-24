@@ -237,13 +237,26 @@ a = solveq(K, f, bc);
 
 ed = extract(edof,a);
 
-% --- Extracting global displacements & calculating Element stresses ---
+% --- Extracting global displacements & calculating element stresses ---
 
 es = zeros(ep*ep*ep,6,nel);
 et = zeros(ep*ep*ep,6,nel);
 eci = zeros(ep*ep*ep,3,nel);
 for i=(1:nel)
     [es(:,:,i),et(:,:,i),eci(:,:,i)] = soli8s(ex(i,:),ey(i,:),ez(i,:),ep,D,ed(i,:));
+end
+
+% --- Using element stresses to calculate von Mises ---
+
+vM_el = zeros(nel,1);
+for i=(1:nel)
+	vM_el(i) = sqrt( 0.5 * ( (mean(es(:,1,i))-mean(es(:,2,i))).^2 + (mean(es(:,2,i))-mean(es(:,3,i))).^2 + (mean(es(:,3,i))-mean(es(:,1,i))) ).^2 + 3 * ((mean(es(:,4,i))).^2 + (mean(es(:,5,i))).^2 + (mean(es(:,6,i))).^2) );
+    %mean(es[:,1,i]) sigma_xx
+	%mean(es[:,2,i]) sigma_yy
+	%mean(es[:,3,i]) sigma_zz
+	%mean(es[:,4,i]) sigma_xy
+	%mean(es[:,5,i]) sigma_xz
+	%mean(es[:,6,i]) sigma_yz
 end
 
 % --- Nodal stresses for elements ---
@@ -258,6 +271,20 @@ for i = (1:nel)
     ns(:,4,i) = calc*es(:,4,i);
     ns(:,5,i) = calc*es(:,5,i);
     ns(:,6,i) = calc*es(:,6,i);
+end
+
+% --- Using element stresses to calculate von Mises ---
+
+vM_n = zeros(nel,8);
+for i=(1:nel)
+    vM_n(i,1) = sqrt( 0.5 * ( (ns(1,1,i)-ns(1,2,i)).^2 + (ns(1,2,i)-ns(1,3,i)).^2 + (ns(1,3,i)-ns(1,1,i)).^2 ) + 3 * ((ns(1,4,i)).^2 + (ns(1,5,i)).^2 + (ns(1,6,i)).^2) );
+    vM_n(i,2) = sqrt( 0.5 * ( (ns(2,1,i)-ns(2,2,i)).^2 + (ns(2,2,i)-ns(2,3,i)).^2 + (ns(2,3,i)-ns(2,1,i)).^2 ) + 3 * ((ns(2,4,i)).^2 + (ns(2,5,i)).^2 + (ns(2,6,i)).^2) );
+    vM_n(i,3) = sqrt( 0.5 * ( (ns(3,1,i)-ns(3,2,i)).^2 + (ns(3,2,i)-ns(3,3,i)).^2 + (ns(3,3,i)-ns(3,1,i)).^2 ) + 3 * ((ns(3,4,i)).^2 + (ns(3,5,i)).^2 + (ns(3,6,i)).^2) );
+    vM_n(i,4) = sqrt( 0.5 * ( (ns(4,1,i)-ns(4,2,i)).^2 + (ns(4,2,i)-ns(4,3,i)).^2 + (ns(4,3,i)-ns(4,1,i)).^2 ) + 3 * ((ns(4,4,i)).^2 + (ns(4,5,i)).^2 + (ns(4,6,i)).^2) );
+    vM_n(i,5) = sqrt( 0.5 * ( (ns(5,1,i)-ns(5,2,i)).^2 + (ns(5,2,i)-ns(5,3,i)).^2 + (ns(5,3,i)-ns(5,1,i)).^2 ) + 3 * ((ns(5,4,i)).^2 + (ns(5,5,i)).^2 + (ns(5,6,i)).^2) );
+    vM_n(i,6) = sqrt( 0.5 * ( (ns(6,1,i)-ns(6,2,i)).^2 + (ns(6,2,i)-ns(6,3,i)).^2 + (ns(6,3,i)-ns(6,1,i)).^2 ) + 3 * ((ns(6,4,i)).^2 + (ns(6,5,i)).^2 + (ns(6,6,i)).^2) );
+    vM_n(i,7) = sqrt( 0.5 * ( (ns(7,1,i)-ns(7,2,i)).^2 + (ns(7,2,i)-ns(7,3,i)).^2 + (ns(7,3,i)-ns(7,1,i)).^2 ) + 3 * ((ns(7,4,i)).^2 + (ns(7,5,i)).^2 + (ns(7,6,i)).^2) );
+    vM_n(i,8) = sqrt( 0.5 * ( (ns(8,1,i)-ns(8,2,i)).^2 + (ns(8,2,i)-ns(8,3,i)).^2 + (ns(8,3,i)-ns(8,1,i)).^2 ) + 3 * ((ns(8,4,i)).^2 + (ns(8,5,i)).^2 + (ns(8,6,i)).^2) );
 end
 
 % % The nodal stresses are interpolated through and averaged in order to
@@ -852,12 +879,12 @@ end
 
 % --- Eigenvalue analysis ---
 
-[lambda,eigen] = eigen(K,M,bc(:,1));
+[lambda,eig] = eigen(K,M,bc(:,1));
 
 
 
 % --- Results from both analyses are saved in a .mat-file ---
 
-save('exv4.mat','coord','dof','edof','a','ed','es','et','eci','ns','lambda','eigen')
+save('exv4.mat','coord','dof','edof','a','vM_el','vM_n','lambda','eig')
 
 
