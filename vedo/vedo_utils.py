@@ -159,7 +159,6 @@ def check_input(edof,coord,dof,element_type,a=None,values=None):
 
 
 def convert_a(coord_old,coord_new,a,ndofs):
-
     ncoord = np.size(coord_old, axis=0)
     a_new = np.zeros((ncoord,ndofs))
 
@@ -190,44 +189,196 @@ def convert_a(coord_old,coord_new,a,ndofs):
     return a_new
 
 
+def convert_nodal_values(edof,dof,coord_old,coord_new,values):
+    nel = np.size(edof, axis=0)
+    ncoord = np.size(coord_old, axis=0)
+    #nodal_value_array = np.zeros((ncoord,8))
+    nodal_value_array = []
+    print('Number of element values: ', np.size(values, axis=0))
+    print('Number of values: per element: ', np.size(values, axis=1))
+
+    edof_hash = {}
+    edof_split_hash = {}
+    dof_hash = {}
+    dof_num = {}
+    edof_num = {}
+
+    #edof_split = np.zeros((nel,8))
+    edof_split = []
+
+    #print(np.split(edof[0],8))
+
+    for i in range(ncoord):
+        dof_hash[hash(tuple(dof[i]))] = i
+        dof_num[(tuple(dof[i]))] = i
+
+    for i in range(nel):
+        #edof_hash[hash(tuple(edof[i]))] = i
+        for j in range(8):
+            edof_hash[hash(tuple(edof[i,j*3:j*3+3]))] = i
+            edof_num[(tuple(edof[i,j*3:j*3+3]))] = i
+
+    #print(dof_hash)
+    #print(dof_num)
+    #print(edof_num)
+
+    indexes = []
+
+    for key in dof_hash.keys():
+        #print(key)
+        indexes.append(dof_hash[key])
+
+    nodes_per_el = []
+
+    for j in range(nel):
+        ind = [x for x, z in enumerate(indexes) if z == j] 
+        nodes_per_el.append(ind)
+
+    print(nodes_per_el)
+    print(len(indexes))
+
+
+    nodal_values = []
+
+    for i in zip(nodes_per_el):
+        print(i[0])
 
 
 
 
-def convert_el_values(edof,topo,values):
+    #for i in range(nel):
+        #print(edof[i,0:3])
+        #test = dof_num(edof[i,0:3])
+    #    print(test)
+
+
+
+
+
+
+
+
+    """
+
+
+    for i in range(nel):
+        #edof_split[i,0],edof_split[i,1],edof_split[i,2],edof_split[i,3],edof_split[i,4],edof_split[i,5],edof_split[i,6],edof_split[i,7]
+        split = np.split(edof[i],8)
+        split_dofs = []
+        for j in range(8):
+            split_dofs.append([split[j]])
+        edof_split.append(split_dofs)
+
+    #print(edof_split)
+
+    for i in range(nel):
+        #el_hash_old[hash(tuple(edof[i]))] = i
+        #edof_split_hash[hash(tuple(edof_split[i]))] = i
+        edof_hash[hash(tuple(edof[i]))] = i
+        #dof_hash[hash(tuple(dof[i]))] = i
+        edof_num[(tuple(edof[i]))] = i
+        #coord_hash_old[hash(tuple(coord_old[i]))] = i
+        #coord_hash_new[hash(tuple(coord_new[i]))] = i
+        #elem[i] = i
+
+    #print(edof_split_hash)
+    #print(edof_num)
+
+    """
+
+
+
+
+
+
+
+
+
+    """
+    coord_hash_old = {}
+    coord_hash_new = {}
+    #node_hash_numbers = {}
+    #nodes = np.zeros((ncoord, 1), dtype=int)
+    #print(nodes)
+
+    for i in range(ncoord):
+        #el_hash_old[hash(tuple(edof[i]))] = i
+        coord_hash_old[hash(tuple(coord_old[i]))] = i
+        coord_hash_new[hash(tuple(coord_new[i]))] = i
+        #elem[i] = i
+
+    #print(coord_hash_old)
+
+    indexes = []
+
+    for node_hash in coord_hash_old.keys():
+        index = coord_hash_new[node_hash]
+        indexes.append(index)
+
+    print(np.size(indexes))
+
+    node = 0
+    for index in zip(indexes):
+        #print(nodal_value_array[index,:])
+        print(values[node,:])
+        nodal_value_array.append(values[node,:])
+        node += 1
+
+    print(nodal_value_array)
+    """
+
+
+
+
+    #indexes = []
+
+    #for el in el_hash_old.values():
+    #    index = elem[el]
+    #    indexes.append(index)
+
+    #print(indexes)
+
+    #coord_count = 0
+
+    # Skapar global koordinatmartis baserat på hashes
+    #for node_hash in node_hash_numbers.keys():
+    #    node_hash_numbers[node_hash] = coord_count
+        #node_dofs.append(node_hash_dofs[node_hash])
+        #nodal_values.append(node_hash_numbers[node_hash])
+
+    #    coord_count +=1
+
+        #coords.append(node_hash_coords[node_hash])
+        
+    print(nodal_values)
+
+def convert_el_values(edof,values):
     nel = np.size(edof, axis=0)
     el_values = np.zeros((nel*6,1))
 
+    for i in range(nel):
+        el_values[i*6,:] = values[i]
+        el_values[i*6+1,:] = values[i]
+        el_values[i*6+2,:] = values[i]
+        el_values[i*6+3,:] = values[i]
+        el_values[i*6+4,:] = values[i]
+        el_values[i*6+5,:] = values[i]
+    """
     el_hash_old = {}
-    el_hash_new = {}
     elem = {}
 
     for i in range(nel):
         el_hash_old[hash(tuple(edof[i]))] = i
-        el_hash_new[hash(tuple(topo[i]))] = i
         elem[i] = i
 
-    #print(values)
-    #print(el_values)
-
     indexes = []
-    """
-    for el_hash in el_hash_old.keys():
-        index = el_hash_new[el_hash]
-        print(index)
-        indexes.append(index)
-    """
+
     for el in el_hash_old.values():
         index = elem[el]
-        #print(index)
         indexes.append(index)
 
     el = 0
     for index in zip(indexes):
-        #print(el_values[index*6,:])
-        #print(np.size(el_values[index*6,:], axis=1))
-        #print(values[el])
-        #print(index)
         i = index[0]*6
         el_values[i,:] = values[el]
         i += 1
@@ -241,7 +392,7 @@ def convert_el_values(edof,topo,values):
         i += 1
         el_values[i,:] = values[el]
         el += 1
-
+    """
     return el_values
 
 def convert_to_node_topo(edof, ex, ey, ez, n_dofs_per_node=3, ignore_first=False):

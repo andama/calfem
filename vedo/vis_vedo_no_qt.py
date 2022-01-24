@@ -908,7 +908,7 @@ def draw_displaced_mesh(
         #elif val and val == 'nodal_values':
         if val and val == 'el_values':
             vmin, vmax = np.min(values), np.max(values)
-            el_values = vdu.convert_el_values(edof,topo,values)
+            el_values = vdu.convert_el_values(edof,values)
             print(el_values)
             print(np.size(el_values))
             #for i in range(nel)
@@ -925,9 +925,9 @@ def draw_displaced_mesh(
             #else:
             mesh.cmap(colormap, el_values, on="cells", vmin=vmin, vmax=vmax)
         
-
-
-
+        elif val and val == 'nodal_values':
+            vmin, vmax = np.min(values), np.max(values)
+            nodal_values = vdu.convert_nodal_values(edof,dof,coord,coord2,values)
 
 
 
