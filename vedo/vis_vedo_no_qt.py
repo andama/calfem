@@ -17,7 +17,7 @@ import sys
 from scipy.io import loadmat
 import calfem.core as cfc
 import vedo_utils as vdu
-#import vtk
+import vtk
 
 # Examples using this module:
     # exv1: Spring
@@ -211,17 +211,21 @@ class VedoMainWindow():
 # Add scalar bar to a renderer
 def add_scalar_bar(
     label,
-    pos=[0.75,0.05],
+    pos=[0.8,0.05],
     font_size=24,
     color='black',
-    size=(3000, 50)
+    #sx=1000,
+    #sy=1000
+    #size=(100, 50)
     ):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
     fig = plot_window.fig
-    plot_window.meshes[fig][0].addScalarBar(title=label, size=size, pos=pos, titleFontSize=font_size, horizontal=True, useAlpha=False)
+    plot_window.meshes[fig][0].addScalarBar(pos=pos, titleFontSize=font_size, useAlpha=False)
 
+    msg = v.Text2D(label, pos='bottom-right', alpha=1, c=color)
+    plot_window.msg[plot_window.fig] += [msg]
 # Add text to a renderer
 def add_text(
     text,
@@ -308,7 +312,35 @@ def add_rulers(xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='',
 
 
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
-# Functions for plotting results from CALFEM calculations
+# Functions for plotting geometries, meshes & results from CALFEM calculations
+
+def draw_geometry(points,vol=True):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    print(points)
+
+    lines = []
+
+    for i in range(len(points)):
+        #print(i)
+        for j in range(len(points)):
+            lines.append([i,j])
+
+    geometry = v.Mesh([points,lines]).renderPointsAsSpheres(False).lw(1)
+    #geometry
+    #pts = v.Points(points).ps(10)#.renderPointsAsSpheres()
+    #geometry = v.utils.geometry(pts.tomesh())
+    #dly = v.delaunay2D(pts, mode='fit').lw(1)
+
+    if vol == True:
+        #volume = v.mesh2Volume(geometry).mode(4)
+        #plot_window.meshes[plot_window.fig].append(volume)
+        plot_window.meshes[plot_window.fig].append(geometry)
+    else:
+        plot_window.meshes[plot_window.fig].append(geometry)
+
+    
 
 # Element types: 1: Spring, 2: Bar, 3: Flow, 4: Solid, 5: Beam, 6: Plate
 
@@ -839,13 +871,22 @@ def draw_displaced_mesh(
 
         ex,ey,ez = cfc.coordxtr(edof,coord,dof)
 
-        coord2, topo, node_dofs = vdu.convert_to_node_topo(edof,ex,ey,ez,ignore_first=False)
-        a_node = vdu.convert_a(coord,coord2,a,3)
+        ed = cfc.extractEldisp(edof,a)
 
-        def_coord = np.zeros([nnode,3])
+        coord2, topo, node_dofs, a_node = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False)
+        #a_node = vdu.convert_a(coord,coord2,a,3)
+
+        #def_coord = np.zeros([nnode,3])
+
+        def_coord = coord2 + a_node
+
         
-        for i in range(np.size(def_coord, axis = 0)):
-            def_coord[i] = coord2[i] + a_node[i]
+        
+        #for i in range(np.size(def_coord, axis = 0)):
+            #def_coord[i] = coord2[i] + a_node[i]
+        #    def_coord[i,0] = coord2[i,0] + a[i*3]
+        #    def_coord[i,1] = coord2[i,1] + a[i*3+1]
+        #    def_coord[i,2] = coord2[i,2] + a[i*3+2]
 
         
 
@@ -895,48 +936,62 @@ def draw_displaced_mesh(
 
         #print(topo)
 
-        mesh = v.Mesh([def_coord, topo]).lw(1)
-        print('Number of topo cells: ',np.size(topo, axis=0))
-        print('Number of mesh cells: ',np.size(mesh.faces(), axis=0))
+        #mesh = v.Mesh([def_coord, topo]).lw(1)
+        
 
-        print('Number of topo points: ',np.size(coord2, axis=0))
-        print('Number of mesh points: ',np.size(mesh.points(), axis=0))
 
+
+
+        ct = vtk.VTK_HEXAHEDRON
+
+        celltypes = [ct] * nel
+
+        ug=v.UGrid([def_coord, topo, celltypes])
+        ug.points(def_coord)
+        
+        mesh = ug.tomesh().lw(1)
+
+        #print(val)
 
         #print('Cell connectivity: ',mesh.faces())
 
         #elif val and val == 'nodal_values':
         if val and val == 'el_values':
-            vmin, vmax = np.min(values), np.max(values)
+            #print(val)
+            #vmin, vmax = np.min(values), np.max(values)
+            
             el_values = vdu.convert_el_values(edof,values)
-            print(el_values)
-            print(np.size(el_values))
-            #for i in range(nel)
+            mesh.celldata["val"] = el_values
 
-                #el_values_array = np.zeros((1,6))[0,:]
-                #el_values_array[0] = values[i]
-                #el_values_array[1] = values[i]
-                #el_values_array[2] = values[i]
-                #el_values_array[3] = values[i]
-                #el_values_array[4] = values[i]
-                #el_values_array[5] = values[i]
-            #if title is not None:
-            #    mesh.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax).addScalarBar(title=title,horizontal=True,useAlpha=False,titleFontSize=16)
-            #else:
-            mesh.cmap(colormap, el_values, on="cells", vmin=vmin, vmax=vmax)
+            mesh.cmap(colormap, "val", on="cells")
         
+        elif val and val == 'nodal_values_by_el':
+            #print(val)
+            #vmin, vmax = np.min(values), np.max(values)
+            nodal_values = vdu.convert_nodal_values(edof,topo,dof,coord2,values)
+            mesh.pointdata["val"] = nodal_values
+            print(ug.celldata.keys())
+            #nodal_values = vdu.convert_nodal_values(edof,dof,coord,coord2,values)
+            mesh.cmap(colormap, 'val', on="points")
+
+
         elif val and val == 'nodal_values':
+            #print(val)
             vmin, vmax = np.min(values), np.max(values)
-            nodal_values = vdu.convert_nodal_values(edof,dof,coord,coord2,values)
+            #ug.pointdata["val"] = values
+            #nodal_values = vdu.convert_nodal_values(edof,dof,coord,coord2,values)
+            #mesh.cmap(colormap, values, on="points", vmin=vmin, vmax=vmax)
 
 
 
+        
+        
 
+        print('Number of topo cells: ',np.size(topo, axis=0))
+        print('Number of mesh cells: ',np.size(mesh.faces(), axis=0))
 
-
-
-
-
+        print('Number of topo points: ',np.size(coord2, axis=0))
+        print('Number of mesh points: ',np.size(mesh.points(), axis=0))
 
 
 
