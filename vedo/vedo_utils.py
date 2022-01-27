@@ -59,24 +59,28 @@ def get_node_elements(coord,scale,alpha,t=None):
     nodes = []
     for i in range(nnode):
         if ncoord == 3:
-            node = v.Sphere(c='white').scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
-            node.info = f"Node nr. {i}"
+            #node = v.Point((coord[i,0],coord[i,1],coord[i,2]),c='black',alpha=alpha).ps(10).renderPointsAsSpheres()
+            node = v.Sphere(c='black').scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
+            node.name = f"Node nr. {i}"
             nodes.append(node)
         elif ncoord == 2:
-            node = v.Sphere(c='white').scale(1.5*scale).pos([coord[i,0],coord[i,1],0]).alpha(alpha)
-            node.info = f"Node nr. {i}"
+            #print((coord[i,0],coord[i,1],0))
+            node = v.Sphere(c='black').scale(1.5*scale).pos([coord[i,0],coord[i,1],0]).alpha(alpha)
+            #node = v.Point((coord[i,0],coord[i,1],0),c='black',alpha=alpha).ps(10).renderPointsAsSpheres()
+            node.name = f"Node nr. {i}"
             nodes.append(node)
         #elif ncoord == 2 and t is not None:
         #    node = v.Sphere(c='white').scale(1.5*scale).pos([coord[i,0],coord[i,1],0]).alpha(alpha)
         #    node.info = f"Node nr. {i}"
         #    nodes.append(node)
         elif ncoord == 1:
-            node = v.Sphere(c='white').scale(1.5*scale).pos([coord[i,0],0,0]).alpha(alpha)
-            node.info = f"Node nr. {i}"
+            node = v.Sphere(c='black').scale(1.5*scale).pos([coord[i,0],0,0]).alpha(alpha)
+            #node = v.Point((coord[i,0],0,0),c='black',alpha=alpha).ps(10).renderPointsAsSpheres()
+            node.name = f"Node nr. {i}"
             nodes.append(node)
     return nodes
 
-def check_input(edof,coord,dof,element_type,a=None,values=None):
+def check_input(edof,coord,dof,element_type,a=None,values=None,nseg=None):
     if element_type == 1 or element_type == 2 or element_type == 5:
         number_of_nodes_per_element = 2
     elif element_type == 3 or element_type == 4:
@@ -97,17 +101,32 @@ def check_input(edof,coord,dof,element_type,a=None,values=None):
         number_of_displacements = np.size(a, axis=0)
 
     if values is not None:
-        number_of_values = np.size(values, axis=0)*np.size(values, axis=1)
+        #print(values)
+        if element_type == 1 or element_type == 2 or element_type == 5:
+            if element_type == 2:
+                nseg = 1
+            number_of_values = np.size(values, axis=0)
+            #print(np.size(values, axis=0))
+            #print(number_of_elements)
+            if number_of_values == number_of_elements*nseg:
+                val = 'el_values'
+            else:
+                print("Invalid number of element-/nodal values, please make sure values correspond to total number of elements or nodes")
+                sys.exit()
+            
 
-        if number_of_values == number_of_elements:
-            val = 'el_values'
-        elif number_of_values == number_of_elements*number_of_nodes_per_element:
-            val = 'nodal_values_by_el'
-        elif number_of_values == number_of_coordinates:
-            val = 'nodal_values'
         else:
-            print("Invalid number of element-/nodal values, please make sure values correspond to total number of elements or nodes")
-            sys.exit()
+            number_of_values = np.size(values, axis=0)*np.size(values, axis=1)
+
+            if number_of_values == number_of_elements:
+                val = 'el_values'
+            elif number_of_values == number_of_elements*number_of_nodes_per_element:
+                val = 'nodal_values_by_el'
+            elif number_of_values == number_of_coordinates:
+                val = 'nodal_values'
+            else:
+                print("Invalid number of element-/nodal values, please make sure values correspond to total number of elements or nodes")
+                sys.exit()
 
 
     # Implementera kontroll av dim. stämmer för draw_mesh/draw_displaced_mesh
@@ -288,434 +307,67 @@ def convert_to_node_topo(edof, ex, ey, ez, ed=None, dofs_per_node=3, ignore_firs
 
 
 
-def convert_nodal_values(edof,topo,dof,coord,values):
+def convert_nodal_values(edof,topo,dof,values):
     nel = np.size(edof, axis=0)
-    nnode = np.size(coord, axis=0)
-    #nodal_value_array = np.zeros((ncoord,8))
+    nnode = np.size(dof, axis=0)
     nodal_value_array = np.zeros((nnode,1))
     print('Number of element values: ', np.size(values, axis=0))
     print('Number of values per element: ', np.size(values, axis=1))
 
-    topo_hash = {}
+    #edof_upd = edof-1
+
     topo_num = {}
-    dof_hash = {}
-    dof_num = {}
-    edof_hash = {}
-    edof_num = {}
-    
-
+    #edof_num = {}
     for i in range(nel):
-        #print(i,': ',topo[i])
-        #topo_hash[i] = hash(tuple(topo[i]))
-        #topo_num[i] = tuple(topo[i])
-        for j in range(8):
-            #topo_hash[hash(tuple(topo[i]))] = i
-            #topo_num[tuple(topo[i])] = i
-            topo_hash[i] = hash(tuple(topo[i]))
-            topo_num[i] = tuple(topo[i])
-            #print(i,topo_num[i])
+        topo_num[i] = tuple(topo[i])
+        #print(topo_num[i])
+        #edof_num[i] = tuple(edof[i,[0,3,6,9,12,15,18,21]])
+        #edof_num[i] = tuple(edof_upd[i])
+        #print(edof_num[i])
 
-    #for i in range(nnode):
-    #    dof_hash[hash(tuple(dof[i]))] = i
-        #dof_hash[i] = hash(tuple(dof[i]))
-    #    dof_num[tuple(dof[i])] = i
-        #dof_num[i] = tuple(dof[i])
-
-    #for i in range(nel):
-        #edof_hash[hash(tuple(edof[i]))] = i
-    #    for j in range(8):
-            #print(edof[i,j*3:j*3+3])
-    #        edof_hash[hash(tuple(edof[i,j*3:j*3+3]))] = [i,j]
-            #edof_hash[[i,j]] = hash(tuple(edof[i,j*3:j*3+3]))
-    #        edof_num[tuple(edof[i,j*3:j*3+3])] = [i,j]
-            #edof_num[[i,j]] = tuple(edof[i,j*3:j*3+3])
-
-    #print(topo_num)
-    #print(dof_num)
-    #print(edof_num)
+    print('topo_num')
+    for key,val in topo_num.items():
+        print(key,'|',val)
 
     test = {}
-
     for el, nodes in topo_num.items():
         it = 0
-        for i in zip(nodes):
-            #print(i[0])
-            #test.append([i[0],el,it])
+        #[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]
+        #print(topo[el])
+        #points = [0,1,2,3,5,4,7,6]
+        points = [0,1,2,3,4,5,6,7]
 
-            # Node: [Element, Element node number, Value]
-            #test[i[0]] = tuple([el,it,values[el,it]])
-            #test[i[0]] = tuple([values[el,it]])
-            test[tuple([el,it])] = i[0]
-            #print(i[0],test[i[0]])
-
+        #points = [7,6,5,4,3,2,1,0]
+        #print(nodes)
+        #print(points)
+        for i in nodes:
+            #print(zip(nodes))
+        #for i in range(nodes):
+            #print(el,points[it],i,'|',topo[el,it])
+            test[tuple([el,points[it]])] = i
             it += 1
 
-    #print(values)
+    #print('test')
+    #for key,val in test.items():
+    #    print(key,'|',val)
 
-    #print(test)
-    #print(len(test))
-    
     test2 = {}
-    #print('ind')
     for i in range(nnode):
         test2[i] = []
-        #print(test[i])
-    
+    #print('test2')
+    for key,val in test.items():
+        print(key,'|',val)
 
-
-
+    #print(values)
     for data, node in test.items():
-        #el = data[0]
-        #el_node = data[1]
-
+        print(node)
         test2[node].append(values[data])
 
-
-
-
-
+    #print(test2)
     for i in range(nnode):
         nodal_value_array[i] = np.mean(test2[i])
-        #print(test2[i])
-        #print(nodal_value_array[i])
 
     return nodal_value_array
-
-    """
-    for node, data in test.items():
-        #ind = [x for x, z in zip(test.keys()) if z == node]
-        print(ind)
-        #test2[node].append(data[2])
-        l = test2[node]
-        #print(l)
-        l.append(data[0])
-        test2[node] = l
-        #test2[node].append(data[0])
-    """
-
-
-
-
-    #print(test2)
-
-
-
-
-
-
-    #print(test)
-    #print(len(test))
-    #    for e_key, e_val in dof_num.items():
-    #        row = []
-    #        print(e_key,d_key)
-    #        if d_key in 
-            #if e_key == d_key:
-                #row.append(e_val)
-
-    #    test.append(row)
-        #print(key)
-        #indexes_dof.append(edof_hash[key])
-        #ind = [x for x, z in enumerate(indexes_dof) if z == j] 
-        #nodes_per_el.append(ind)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #for node, el_num in test2.items():
-    #    print(test2[node])
-
-
-
-
-
-
-
-
-
-    #edof_hash = {}
-    #edof_split_hash = {}
-    #dof_hash = {}
-    #dof_num = {}
-    #edof_num = {}
-
-    #edof_split = np.zeros((nel,8))
-    #edof_split = []
-
-    #print(np.split(edof[0],8))
-    """
-    for i in range(nnode):
-        dof_hash[hash(tuple(dof[i]))] = i
-        #dof_hash[i] = hash(tuple(dof[i]))
-        dof_num[tuple(dof[i])] = i
-        #dof_num[i] = tuple(dof[i])
-
-    for i in range(nel):
-        #edof_hash[hash(tuple(edof[i]))] = i
-        for j in range(8):
-            #print(edof[i,j*3:j*3+3])
-            edof_hash[hash(tuple(edof[i,j*3:j*3+3]))] = [i,j]
-            #edof_hash[[i,j]] = hash(tuple(edof[i,j*3:j*3+3]))
-            edof_num[tuple(edof[i,j*3:j*3+3])] = [i,j]
-            #edof_num[[i,j]] = tuple(edof[i,j*3:j*3+3])
-    """
-    #print(dof_hash)
-    #print(dof_num)
-    #print(len(dof_num))
-    #print(edof_num)
-    #print(len(edof_num))
-
-    #test = []
-    """
-    keys1 = set(dof_num.keys())
-    keys2 = set(edof_num.keys())
-    common_keys = set(keys1).intersection(set(keys2))
-    print(common_keys)
-    
-    #ind = 0
-    for d_key, d_val in dof_hash.items():
-        for e_key, e_val in dof_hash.items():
-            if d_key == e_key:
-                t = edof_hash[d_key]
-                test.append(t)
-    """
-
-    #print(test)
-    #print(len(test))
-        #for e_key, e_val in dof_num.items():
-        #    row = []
-        #    print(e_key,d_key)
-        #    if d_key in 
-            #if e_key == d_key:
-                #row.append(e_val)
-
-        #test.append(row)
-        #print(key)
-        #indexes_dof.append(edof_hash[key])
-        #ind = [x for x, z in enumerate(indexes_dof) if z == j] 
-        #nodes_per_el.append(ind)
-
-
-    #print(test)
-
-
-    """
-    indexes_dof = []
-
-    for key in dof_hash.keys():
-        #print(key)
-        indexes_dof.append(edof_hash[key])
-
-    print(indexes_dof)
-    indexes_edof = []
-
-    for key in edof_hash.keys():
-        #print(key)
-        indexes_edof.append(dof_hash[key])
-
-    print(indexes_edof)
-    nodes_per_el = []
-
-    for j in range(nel):
-        ind = [x for x, z in enumerate(indexes_dof) if z == j] 
-        nodes_per_el.append(ind)
-
-    print(nodes_per_el)
-    #print('Nodes per element: ',nodes_per_el)
-    #print('Indexes: ',len(indexes))
-    #print('Number of DoF hashes: ',len(dof_hash))
-    #print('Number of EDoF hashes: ',len(edof_hash))
-
-
-    nodal_values = []
-    """
-    #for i in zip(nodes_per_el):
-        #print('Index: ',i[0])
-
-
-
-
-    #for i in range(nel):
-        #print(edof[i,0:3])
-        #test = dof_num(edof[i,0:3])
-    #    print(test)
-
-
-
-
-
-
-
-
-    
-
-
-    #for i in range(nel):
-        #edof_split[i,0],edof_split[i,1],edof_split[i,2],edof_split[i,3],edof_split[i,4],edof_split[i,5],edof_split[i,6],edof_split[i,7]
-    #    split = np.split(edof[i],8)
-    #    split_dofs = []
-    #    for j in range(8):
-    #        split_dofs.append([split[j]])
-    #    edof_split.append(split_dofs)
-
-    #print(edof_split)
-
-    #for i in range(nel):
-        #el_hash_old[hash(tuple(edof[i]))] = i
-        #edof_split_hash[hash(tuple(edof_split[i]))] = i
-    #    edof_hash[hash(tuple(edof[i]))] = i
-        #dof_hash[hash(tuple(dof[i]))] = i
-    #    edof_num[(tuple(edof[i]))] = i
-        #coord_hash_old[hash(tuple(coord_old[i]))] = i
-        #coord_hash_new[hash(tuple(coord_new[i]))] = i
-        #elem[i] = i
-
-    #print(edof_split_hash)
-    #print(edof_num)
-
-    
-
-
-
-
-
-
-
-
-
-    
-    #coord_hash_old = {}
-    #coord_hash_new = {}
-    #node_hash_numbers = {}
-    #nodes = np.zeros((ncoord, 1), dtype=int)
-    #print(nodes)
-
-    #for i in range(ncoord):
-        #el_hash_old[hash(tuple(edof[i]))] = i
-    #    coord_hash_old[hash(tuple(coord_old[i]))] = i
-    #    coord_hash_new[hash(tuple(coord_new[i]))] = i
-        #elem[i] = i
-
-    #print(coord_hash_old)
-
-    #indexes = []
-
-    #for node_hash in coord_hash_old.keys():
-    #    index = coord_hash_new[node_hash]
-    #    indexes.append(index)
-
-    #print(np.size(indexes))
-
-    #node = 0
-    #for index in zip(indexes):
-        #print(nodal_value_array[index,:])
-    #    print(values[node,:])
-    #    nodal_value_array.append(values[node,:])
-    #    node += 1
-
-    #print(nodal_value_array)
-    
-
-
-
-
-    #indexes = []
-
-    #for el in el_hash_old.values():
-    #    index = elem[el]
-    #    indexes.append(index)
-
-    #print(indexes)
-
-    #coord_count = 0
-
-    # Skapar global koordinatmartis baserat på hashes
-    #for node_hash in node_hash_numbers.keys():
-    #    node_hash_numbers[node_hash] = coord_count
-        #node_dofs.append(node_hash_dofs[node_hash])
-        #nodal_values.append(node_hash_numbers[node_hash])
-
-    #    coord_count +=1
-
-        #coords.append(node_hash_coords[node_hash])
-        
-    #print(nodal_values)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

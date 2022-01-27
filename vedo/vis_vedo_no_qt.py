@@ -119,11 +119,6 @@ class VedoPlotWindow:
             VedoPlotWindow.__instance = self
             self.plot_window = VedoMainWindow()
 
-
-
-
-
-
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 # Main window
 
@@ -137,8 +132,9 @@ class VedoMainWindow():
         self.nodes = [[]]
         self.msg = [[]]
         self.proj = [[]]
-        self.plt = []
+        self.plt = {}
         self.rulers = [[]]
+        self.vectors = [[]]
 
         # Mouse click callback
         #self.plotter[self.n].addCallback('mouse click', self.click)
@@ -160,17 +156,40 @@ class VedoMainWindow():
         #    print('assembly')
         #    self.click_msg.text(evt.actor.info)
         if evt.actor:
-            sil = evt.actor.silhouette().lineWidth(6).c('red5')
-            self.click_msg.text(evt.actor.name)
+            #print(evt.actor.mapper())
+            #if self.silcont != [] or self.silcont != [None]:
+            # Silouette
+            sil = evt.actor.silhouette().lineWidth(5).c('red5')
             self.plt[evt.title].remove(self.silcont.pop()).add(sil)
+            self.silcont.append(sil)
+
+            #self.silcont[0].c('black')
+
+            # Color
+            #evt.actor.c('red5')
+
+            #sil = evt.actor.silhouette().lineWidth(5).c('red5')
+            #self.plt[evt.title].remove(self.silcont.pop()).add(evt.actor)
+            #self.silcont.append(evt.actor)
+            #print('Title: ',evt.title,', Plotter: ',self.plt[evt.title])
+            self.click_msg.text(evt.actor.name)
+            
+            
+
+            #self.plt[evt.title].remove(self.silcont.pop()).add(sil)
             #evt.interactor.add(sil)
             #evt.interactor.pop()
             #.remove(self.silcont.pop())
             #.add(sil)
-            self.plotter.remove(self.silcont.pop()).add(sil)
+            #self.plotter.remove(self.silcont.pop()).add(sil)
             #self.silcont.append(sil)
         else:
             self.click_msg.text('')
+            if self.silcont != [None]:
+                sil = None
+                self.plt[evt.title].remove(self.silcont.pop()).add(sil)
+                self.silcont.append(sil)
+                
             return
 
     def render(self):
@@ -183,9 +202,10 @@ class VedoMainWindow():
             #plt.addScaleIndicator(pos=(0.7, 0.05), s=0.02, length=2, lw=4, c='k1', alpha=1, units='', gap=0.05)
             plt.addCallback('mouse click', self.click)
             #plt += self.click_msg#.addHoverLegend(useInfo=True,s=1.25,maxlength=96)
-            print('Figure text: ',self.msg[i])
-            print('Projections: ',self.proj[i])
-            self.plt.append(plt)
+            #print('Figure text: ',self.msg[i])
+            #print('Projections: ',self.proj[i])
+            #self.plt.append(plt)
+            self.plt[f'Figure {i+1} - CALFEM vedo visualization tool'] = plt
 
             #if self.msg[i]:
             for j in range(len(self.msg[i])):
@@ -203,8 +223,6 @@ class VedoMainWindow():
 
         v.interactive()
 
-
-
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 # Plotting functions, for adding things to a rendering window
     
@@ -212,6 +230,7 @@ class VedoMainWindow():
 def add_scalar_bar(
     label,
     pos=[0.8,0.05],
+    #pos="bottom-right",
     font_size=24,
     color='black',
     #sx=1000,
@@ -226,6 +245,7 @@ def add_scalar_bar(
 
     msg = v.Text2D(label, pos='bottom-right', alpha=1, c=color)
     plot_window.msg[plot_window.fig] += [msg]
+
 # Add text to a renderer
 def add_text(
     text,
@@ -244,26 +264,28 @@ def add_text(
     plot_window.msg[plot_window.fig] += [msg]
 
 # Add silhouette with or without measurements to a renderer
-def add_projection(color='black',plane='xy',offset=0,rulers=False):
+def add_projection(color='black',plane='xy',offset=-1,rulers=False):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
     
 
-    print("Size of projections: ",len(plot_window.proj))
+    #print("Size of projections: ",len(plot_window.proj))
     #while len(plot_window.proj) < plot_window.fig + 1:
         
     #if rulers == True:
         #while len(plot_window.rulers) < plot_window.fig + 1:
             
-    print("Size of projections after loop: ",len(plot_window.proj))
+    #print("Size of projections after loop: ",len(plot_window.proj))
 
     if plane == 'xy':
-        assem = v.merge(plot_window.meshes[plot_window.fig])
+        #assem = v.merge(plot_window.meshes[plot_window.fig])
+        assem = plot_window.meshes[plot_window.fig]
+        plot_window.meshes[plot_window.fig]
         proj = assem.projectOnPlane('z').z(offset).silhouette('2d').c(color)
         plot_window.proj[plot_window.fig] += [proj]
         if rulers == True:
-            ruler = v.addons.RulerAxes(proj, xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='', xpad=0.1, ypad=0.1, zpad=0, font='Normografo', s=None, italic=0, units='m', c=color, alpha=1, lw=1, precision=3, labelRotation=0, axisRotation=0, xycross=True)
+            ruler = v.addons.RulerAxes(proj, xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='', xpad=1, ypad=1, zpad=1, font='Normografo', s=None, italic=0, units='m', c=color, alpha=1, lw=1, precision=3, labelRotation=0, axisRotation=0, xycross=True)
             plot_window.rulers[plot_window.fig] += [ruler]
         """
         for i in range(len(plot_window.meshes[plot_window.fig])):
@@ -272,14 +294,22 @@ def add_projection(color='black',plane='xy',offset=0,rulers=False):
         """
         #plot_window.meshes[plot_window.fig][0].addShadow(plane='x')
     elif plane == 'xz':
-        assem = v.merge(plot_window.meshes[plot_window.fig])
+        meshes = []
+        for i in range(len(plot_window.meshes[plot_window.fig])):
+            #print(plot_window.meshes[plot_window.fig,i])
+            meshes.append(plot_window.meshes[plot_window.fig][i].clone())
+        #assem = v.merge(plot_window.meshes[plot_window.fig])
+        assem = v.merge(meshes)
+        #assem = v.Assembly(plot_window.meshes[plot_window.fig])
+        #assem = plot_window.meshes[plot_window.fig][0]
         proj = assem.projectOnPlane('y').y(offset).silhouette('2d').c(color)
         plot_window.proj[plot_window.fig] += [proj]
         if rulers == True:
-            ruler = v.addons.RulerAxes(proj, xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='', xpad=0.1, ypad=0, zpad=0.1, font='Normografo', s=None, italic=0, units='m', c=color, alpha=1, lw=1, precision=3, labelRotation=0, axisRotation=0, xycross=True)
+            ruler = v.addons.RulerAxes(proj, xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='', xpad=1, ypad=1, zpad=1, font='Normografo', s=None, italic=0, units='m', c=color, alpha=1, lw=1, precision=3, labelRotation=0, axisRotation=0, xycross=True)
             plot_window.rulers[plot_window.fig] += [ruler]
     elif plane == 'yz':
-        assem = v.merge(plot_window.meshes[plot_window.fig])
+        #assem = v.merge(plot_window.meshes[plot_window.fig])
+        assem = v.Assembly(plot_window.meshes[plot_window.fig])
         proj = assem.projectOnPlane('x').x(offset).silhouette('2d').c(color)
         plot_window.proj[plot_window.fig] += [proj]
         if rulers == True:
@@ -309,6 +339,36 @@ def add_rulers(xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='',
 
     plot_window.rulers[plot_window.fig] += [ruler]
 
+#Add vector field
+def add_vectors(edof,coord,dof,v,element_type):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    nel = np.size(edof, axis = 0)
+    x = np.zeros((nel,1))
+    y = np.zeros((nel,1))
+    z = np.zeros((nel,1))
+    for i in range(nel):
+        coords = vdu.get_coord_from_edof(edof[i],dof,element_type)
+        x[i] = np.average(coord[coords,0])
+        y[i] = np.average(coord[coords,1])
+        z[i] = np.average(coord[coords,2])
+
+        mag = np.sqrt(v[i][0]**2 + v[i][1]**2 + v[i][2]**2)
+        alpha = np.arccos(v[i][0]/mag)
+        beta = np.arccos(v[i][1]/mag)
+        gamma = np.arccos(v[i][2]/mag)
+        #print('mag',mag)
+        #print('alpha',alpha)
+        #print('beta',beta)
+        #print('gamma',gamma)
+        #p1 = [-np.cos(alpha)]
+        #for j in zip(coords):
+        #    coord[j]
+    #arrow = v.Arrow().scale(0.04)
+    #field = v.Glyph([x,y,z],arrow,orientationArray=vectors)
+    #field = v.Tensors([x,y,z],source='Arrow')
+    plot_window.vectors[plot_window.fig] += [field]
 
 
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
@@ -340,8 +400,6 @@ def draw_geometry(points,vol=True):
     else:
         plot_window.meshes[plot_window.fig].append(geometry)
 
-    
-
 # Element types: 1: Spring, 2: Bar, 3: Flow, 4: Solid, 5: Beam, 6: Plate
 
     # 2 node: 1,2,5 (1-3D)
@@ -361,7 +419,7 @@ def draw_mesh(
     alpha=1,
     nseg=2,
     render_nodes=True,
-    #color='yellow',
+    color='yellow',
     offset = [0, 0, 0],
     merge=False,
     t=None,
@@ -630,7 +688,25 @@ def draw_mesh(
             coords = vdu.get_coord_from_edof(edof[i,:],dof,6)
             #print(coords)
             #print(coord[coords,:])
+            new_coord = np.zeros([8,3])
+            new_coord[0,0] = coord[coords[0],0]
+            new_coord[1,0] = coord[coords[1],0]
+            new_coord[2,0] = coord[coords[2],0]
+            new_coord[3,0] = coord[coords[3],0]
+            new_coord[4,0] = coord[coords[0],0]
+            new_coord[5,0] = coord[coords[1],0]
+            new_coord[6,0] = coord[coords[2],0]
+            new_coord[7,0] = coord[coords[3],0]
 
+            new_coord[0,1] = coord[coords[0],1]
+            new_coord[1,1] = coord[coords[1],1]
+            new_coord[2,1] = coord[coords[2],1]
+            new_coord[3,1] = coord[coords[3],1]
+            new_coord[4,1] = coord[coords[0],1]
+            new_coord[5,1] = coord[coords[1],1]
+            new_coord[6,1] = coord[coords[2],1]
+            new_coord[7,1] = coord[coords[3],1]
+            """
             new_coord = np.zeros([8,3])
             new_coord[0,0] = coord[coords[0],0]
             new_coord[1,0] = coord[coords[1],0]
@@ -658,13 +734,15 @@ def draw_mesh(
             new_coord[5,2] =  0.5*t
             new_coord[6,2] =  0.5*t
             new_coord[7,2] =  0.5*t
-
+            """
             #print(new_coord)
 
             #coord.append(np.array([-;]))
 
-            plate = v.Mesh([new_coord,[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
-            plate.info = f"Mesh nr. {i}"
+            #plate = v.Mesh([new_coord,[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
+            #print(f'Element {i}: {coord[i]}')
+            plate = v.Mesh([new_coord,[[0,1,2,3]]],alpha=alpha).lw(1)
+            plate.name = f"Element nr. {i}"
             meshes.append(plate)
 
             if el_values is not None and np.size(el_values, axis = 1) == 1:
@@ -738,18 +816,18 @@ def draw_displaced_mesh(
 
     if 1 <= element_type <= 6:
         if a is None and values is None:
-            nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n = vdu.check_input(edof,coord,dof,element_type)
+            nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n = vdu.check_input(edof,coord,dof,element_type,nseg=nseg)
         elif a is None:
-            nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n, val = vdu.check_input(edof,coord,dof,element_type,values=values)
+            nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n, val = vdu.check_input(edof,coord,dof,element_type,values=values,nseg=nseg)
         elif values is None:
-            nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n, ndisp = vdu.check_input(edof,coord,dof,element_type,a)
+            nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n, ndisp = vdu.check_input(edof,coord,dof,element_type,a,nseg=nseg)
         else:
-            nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n, ndisp, val = vdu.check_input(edof,coord,dof,element_type,a,values)
+            nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n, ndisp, val = vdu.check_input(edof,coord,dof,element_type,a,values,nseg=nseg)
     else:
         print("Invalid element type, please declare 'element_type'. The element types are:\n    1 - Spring\n    2 - Bar\n    3 - Flow\n    4 - Solid\n    5 - Beam\n    6 - Plate")
         sys.exit()
 
-    print(val)
+    #print(val)
 
     # Number of elements:                       nel
     # Number of degrees of freedom per element: ndof_per_el
@@ -773,14 +851,14 @@ def draw_displaced_mesh(
         elements = []
 
         for i in range(nel):
-            coord1,coord2 = get_coord_from_edof(edof[i,:],dof,element_type)
+            coord1,coord2 = vdu.get_coord_from_edof(edof[i,:],dof,element_type)
 
             spring = v.Spring([coord[coord1,0],0,0],[coord[coord2,0],0,0],r=scale*1.5).alpha(alpha)
             spring.info = f"Spring nr. {i}"
             elements.append(spring)
 
         if render_nodes == True:
-            nodes = get_node_elements(coord,scale,alpha)
+            nodes = vdu.get_node_elements(coord,scale,alpha)
             #plot_window.add_geometry(elements,nodes)
             plot_window.meshes[plot_window.fig].extend(elements)
             plot_window.nodes[plot_window.fig].extend(nodes)
@@ -802,7 +880,7 @@ def draw_displaced_mesh(
             #    y = coord[i,1]
             #    z = coord[i,2]
             #else:
-            a_dx, a_dy, a_dz = get_a_from_coord(i,6,a,def_scale)
+            a_dx, a_dy, a_dz = vdu.get_a_from_coord(i,6,a,def_scale)
 
             x = coord[i,0]+a_dx
             y = coord[i,1]+a_dy
@@ -817,36 +895,36 @@ def draw_displaced_mesh(
         def_elements = []
         res = 4
 
-        vmin, vmax = np.min(el_values), np.max(el_values)
+        vmin, vmax = np.min(values), np.max(values)
 
         el_values_array = np.zeros((1,4*res))[0,:]
 
         for i in range(nel):
-            coord1,coord2 = get_coord_from_edof(edof[i,:],dof,element_type)
+            coord1,coord2 = vdu.get_coord_from_edof(edof[i,:],dof,element_type)
 
 
             bar = v.Cylinder([[def_coord[coord1,0],def_coord[coord1,1],def_coord[coord1,2]],[def_coord[coord2,0],def_coord[coord2,1],def_coord[coord2,2]]],r=scale,res=res,c=color).alpha(alpha)
             bar.info = f"Bar nr. {i}, at [{def_coord[coord1,0]+0.5*(def_coord[coord2,0]-def_coord[coord1,0])},{def_coord[coord1,1]+0.5*(def_coord[coord2,1]-def_coord[coord1,1])},{def_coord[coord1,2]+0.5*(def_coord[coord2,2]-def_coord[coord1,2])}]"
             def_elements.append(bar)
-            if el_values is not None:
-                bar.info = bar.info + f", max el. value {el_values[i]}"
-                el_values_array[1] = el_values[i]
-                el_values_array[3] = el_values[i]
-                el_values_array[5] = el_values[i]
-                el_values_array[7] = el_values[i]
-                el_values_array[12] = el_values[i]
-                el_values_array[13] = el_values[i]
-                el_values_array[14] = el_values[i]
-                el_values_array[15] = el_values[i]
+            if values is not None:
+                bar.info = bar.info + f", max el. value {values[i]}"
+                el_values_array[1] = values[i]
+                el_values_array[3] = values[i]
+                el_values_array[5] = values[i]
+                el_values_array[7] = values[i]
+                el_values_array[12] = values[i]
+                el_values_array[13] = values[i]
+                el_values_array[14] = values[i]
+                el_values_array[15] = values[i]
 
-                el_values_array[0] = el_values[i]
-                el_values_array[2] = el_values[i]
-                el_values_array[4] = el_values[i]
-                el_values_array[6] = el_values[i]
-                el_values_array[8] = el_values[i]
-                el_values_array[9] = el_values[i]
-                el_values_array[10] = el_values[i]
-                el_values_array[11] = el_values[i]
+                el_values_array[0] = values[i]
+                el_values_array[2] = values[i]
+                el_values_array[4] = values[i]
+                el_values_array[6] = values[i]
+                el_values_array[8] = values[i]
+                el_values_array[9] = values[i]
+                el_values_array[10] = values[i]
+                el_values_array[11] = values[i]
 
                 bar.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
 
@@ -860,11 +938,13 @@ def draw_displaced_mesh(
 
         return def_elements
 
-    elif element_type == 3:
-        print("Displaced mesh for flow elements is not supported")
-        sys.exit()
+    #elif element_type == 3:
+    #    print("Displaced mesh for flow elements is not supported")
+    #    sys.exit()
 
-    elif element_type == 4:
+    elif element_type == 3 or element_type == 4:
+
+        #print(a)
 
         #ncoord = np.size(coord, axis = 0)
         #nnode = np.size(coord, axis = 0)
@@ -872,15 +952,17 @@ def draw_displaced_mesh(
         ex,ey,ez = cfc.coordxtr(edof,coord,dof)
 
         ed = cfc.extractEldisp(edof,a)
-
-        coord2, topo, node_dofs, a_node = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False)
+        if element_type == 3:
+            coord2, topo, node_dofs, a_node = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False,dofs_per_node=1)
+        elif element_type == 4:
+            coord2, topo, node_dofs, a_node = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False)
         #a_node = vdu.convert_a(coord,coord2,a,3)
 
         #def_coord = np.zeros([nnode,3])
 
-        def_coord = coord2 + a_node
+        def_coord = coord2 + a_node*def_scale
 
-        
+        #print(a_node)
         
         #for i in range(np.size(def_coord, axis = 0)):
             #def_coord[i] = coord2[i] + a_node[i]
@@ -949,7 +1031,9 @@ def draw_displaced_mesh(
         ug=v.UGrid([def_coord, topo, celltypes])
         ug.points(def_coord)
         
-        mesh = ug.tomesh().lw(1)
+        mesh = ug.tomesh().lw(1).alpha(alpha)
+
+        #v.settings.useDepthPeeling = True
 
         #print(val)
 
@@ -968,7 +1052,8 @@ def draw_displaced_mesh(
         elif val and val == 'nodal_values_by_el':
             #print(val)
             #vmin, vmax = np.min(values), np.max(values)
-            nodal_values = vdu.convert_nodal_values(edof,topo,dof,coord2,values)
+            nodal_values = vdu.convert_nodal_values(edof,topo,dof,values)
+            #nodal_values = vdu.convert_a(coord2,coord,nodal_values,1)
             mesh.pointdata["val"] = nodal_values
             print(ug.celldata.keys())
             #nodal_values = vdu.convert_nodal_values(edof,dof,coord,coord2,values)
@@ -976,8 +1061,10 @@ def draw_displaced_mesh(
 
 
         elif val and val == 'nodal_values':
-            #print(val)
+            print(val)
             vmin, vmax = np.min(values), np.max(values)
+            mesh.pointdata["val"] = values
+            mesh.cmap(colormap, 'val', on="points")
             #ug.pointdata["val"] = values
             #nodal_values = vdu.convert_nodal_values(edof,dof,coord,coord2,values)
             #mesh.cmap(colormap, values, on="points", vmin=vmin, vmax=vmax)
@@ -1082,7 +1169,7 @@ def draw_displaced_mesh(
             #    y = coord[i,1]
             #    z = coord[i,2]
             #else:
-            a_dx, a_dy, a_dz = get_a_from_coord(i,6,a,def_scale)
+            a_dx, a_dy, a_dz = vdu.get_a_from_coord(i,6,a,def_scale)
 
             x = coord[i,0]+a_dx
             y = coord[i,1]+a_dy
@@ -1096,12 +1183,12 @@ def draw_displaced_mesh(
         def_elements = []
         res = 4
 
-        vmin, vmax = np.min(el_values), np.max(el_values)
+        vmin, vmax = np.min(values), np.max(values)
 
         el_values_array = np.zeros((1,4*res))[0,:]
 
         for i in range(nel):
-            coord1,coord2 = get_coord_from_edof(edof[i,:],dof,5)
+            coord1,coord2 = vdu.get_coord_from_edof(edof[i,:],dof,5)
 
             if nseg > 2:
                 steps = np.float32(1/(nseg-1))
@@ -1123,9 +1210,9 @@ def draw_displaced_mesh(
                     beam.info = f"Beam nr. {i}, seg. {j}"
                     def_elements.append(beam)
 
-                    if el_values is not None:
-                        el_value1 = el_values[nseg*i]
-                        el_value2 = el_values[nseg*i+1]
+                    if values is not None:
+                        el_value1 = values[nseg*i]
+                        el_value2 = values[nseg*i+1]
 
                         el_values_array[1] = el_value1
                         el_values_array[3] = el_value1
@@ -1152,9 +1239,9 @@ def draw_displaced_mesh(
                 beam.info = f"Beam nr. {i}"
                 def_elements.append(beam)
 
-                if el_values is not None:
-                    el_value1 = el_values[2*i]
-                    el_value2 = el_values[2*i+1]
+                if values is not None:
+                    el_value1 = values[2*i]
+                    el_value2 = values[2*i+1]
 
                     el_values_array[1] = el_value1
                     el_values_array[3] = el_value1
@@ -1187,8 +1274,55 @@ def draw_displaced_mesh(
         return def_elements
 
     elif element_type == 6:
-        print("Displaced mesh for plate elements is not supported")
-        sys.exit()
+        #print("Displaced mesh for plate elements is not supported")
+        #sys.exit()
+
+        ex,ey = cfc.coordxtr(edof,coord,dof)
+        #print(ex)
+
+        ez = np.zeros((nel,4))
+        #print(ez)
+
+        ed = cfc.extractEldisp(edof,a)
+        coord2, topo, node_dofs, a_node = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False)
+        #a_node = vdu.convert_a(coord,coord2,a,3)
+
+        #def_coord = np.zeros([nnode,3])
+
+        def_coord = coord2 + a_node
+
+
+        ct = vtk.VTK_HEXAHEDRON
+
+        celltypes = [ct] * nel
+
+        ug=v.UGrid([def_coord, topo, celltypes])
+        ug.points(def_coord)
+        
+        mesh = ug.tomesh().lw(1).alpha(alpha)
+
+        if render_nodes == True:
+            nodes = vdu.get_node_elements(coord,scale,alpha)
+            #plot_window.add_geometry(meshes,nodes)
+            #plot_window.meshes.extend(meshes)
+            #plot_window.meshes[plot_window.fig].extend(meshes)
+            #plot_window.nodes[plot_window.fig].extend(nodes)
+            plot_window.meshes[plot_window.fig] += mesh
+            plot_window.nodes[plot_window.fig] += nodes
+            #plot_window.meshes.extend(nodes)
+            #print("Meshes are ",np.size(plot_window.meshes, axis=0),"X",np.size(plot_window.meshes, axis=1))
+            print("Adding mesh to figure ",plot_window.fig+1)
+        else:
+            #plot_window.add_geometry(meshes)
+            plot_window.meshes[plot_window.fig].append(mesh)
+            #plot_window.meshes[plot_window.fig].extend(mesh)
+            #plot_window.meshes[plot_window.fig] += mesh
+            #plot_window.meshes.extend(meshes)
+            #print("Meshes are ",np.size(plot_window.meshes, axis=0),"X",np.size(plot_window.meshes, axis=1))
+            print("Adding mesh to figure ",plot_window.fig+1)
+
+
+
 
 def test(edof,
     ex,
@@ -1354,7 +1488,7 @@ def animate(
 
 
         for i in range(nel):
-            coords = get_coord_from_edof(edof[i,:],dof,4)
+            coords = vdu.get_coord_from_edof(edof[i,:],dof,4)
 
 
             mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
@@ -1366,9 +1500,10 @@ def animate(
 
         #plt = v.show(mesh, axes=4, interactive=0)
 
-        plt = v.Plotter(axes=4, interactive=0)
+        plt = v.Plotter(axes=4, interactive=False)
 
         plt.show(mesh)
+        #plt += mesh
 
 
 
@@ -1377,7 +1512,7 @@ def animate(
         for t in timesteps:
 
             for i in range(0, ncoord):
-                a_dx, a_dy, a_dz = get_a_from_coord(i,3,a,def_scale)
+                a_dx, a_dy, a_dz = vdu.get_a_from_coord(i,3,a,def_scale)
 
                 a_dx = t*a_dx
                 a_dy = t*a_dy
@@ -1401,7 +1536,7 @@ def animate(
             
             #vmin, vmax = np.min(el_values), np.max(el_values)
             for i in range(nel):
-                coords = get_coord_from_edof(edof[i,:],dof,4)
+                coords = vdu.get_coord_from_edof(edof[i,:],dof,4)
 
                 mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
                 meshes.append(mesh)
@@ -1452,9 +1587,13 @@ def export_vtk(file, meshes):
 # Functions for handling rendering
 
 
+#def figure(fig=None):
 def figure(fig):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
+
+    #if fig == None:
+    #    fig = plot_window.fig + 1
 
     if fig < 1:
         print("Please give a positive integer (> 0)")

@@ -4,7 +4,7 @@
 
 @author: Andreas Åmand
 """
-
+"""
 import os
 import sys
 
@@ -18,7 +18,31 @@ import numpy as np
 #import vis_vedo as cfvv
 import vis_vedo_no_qt as cfvv
 from PyQt5 import Qt
+"""
+import os
+import sys
 
+os.system('clear')
+sys.path.append("../")
+sys.path.append("../../../calfem-python-develop/calfem")
+
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+#import calfem.core as cfc
+import core as cfc
+import numpy as np
+#import vis_vedo as cfvv
+import vis_vedo_no_qt as cfvv
+from PyQt5 import Qt
+
+#import calfem.geometry as cfg
+#import calfem.mesh as cfm
+#import calfem.vis as cfv
+import geometry as cfg
+import mesh as cfm
+import vis as cfv
+import utils as cfu
+#import calfem.utils as cfu
 
 
 
@@ -63,8 +87,8 @@ nel_x = (ncoord_x-1);
 nel_y = (ncoord_y-1);
 
 #edof = np.zeros([nel_x*nel_y*nel_z,8*3]);
-edof = np.zeros([nel_x*nel_y,4*3]);
-bc = np.zeros([ncoord_y*2*3*2-12,1]);
+edof = np.zeros((nel_x*nel_y,4*3));
+bc = np.zeros((ncoord_y*2*3*2-12,1));
 
 x_step = 1;
 y_step = ncoord_x;
@@ -82,11 +106,11 @@ for row in range(nel_y):
         #edof[it,0] = dof[node];
         
         if el == 0:
-            bc[bc_it,0] = dof[node,0];
+            bc[bc_it,0] = int(dof[node,0])
             bc_it = bc_it + 1;
-            bc[bc_it,0] = dof[node,1];
+            bc[bc_it,0] = int(dof[node,1])
             bc_it = bc_it + 1;
-            bc[bc_it,0] = dof[node,2];
+            bc[bc_it,0] = int(dof[node,2])
             bc_it = bc_it + 1;
         
         node = node+x_step;
@@ -95,11 +119,11 @@ for row in range(nel_y):
         print(bc_it)
         print(node)
         if el == nel_x-1:
-            bc[bc_it,0] = dof[node,0];
+            bc[bc_it,0] = int(dof[node,0])
             bc_it = bc_it + 1;
-            bc[bc_it,0] = dof[node,1];
+            bc[bc_it,0] = int(dof[node,1])
             bc_it = bc_it + 1;
-            bc[bc_it,0] = dof[node,2];
+            bc[bc_it,0] = int(dof[node,2])
             bc_it = bc_it + 1;
         
         node = node+y_step;
@@ -107,11 +131,11 @@ for row in range(nel_y):
         #edof[it,2] = dof[node];
         
         if el == nel_x-1:
-            bc[bc_it,0] = dof[node,0];
+            bc[bc_it,0] = int(dof[node,0])
             bc_it = bc_it + 1;
-            bc[bc_it,0] = dof[node,1];
+            bc[bc_it,0] = int(dof[node,1])
             bc_it = bc_it + 1;
-            bc[bc_it,0] = dof[node,2];
+            bc[bc_it,0] = int(dof[node,2])
             bc_it = bc_it + 1;
         
         node = node-x_step;
@@ -119,11 +143,11 @@ for row in range(nel_y):
         #edof[it,3] = dof[node];
         
         if el == 0:
-            bc[bc_it,0] = dof[node,0];
+            bc[bc_it,0] = int(dof[node,0])
             bc_it = bc_it + 1;
-            bc[bc_it,0] = dof[node,1];
+            bc[bc_it,0] = int(dof[node,1])
             bc_it = bc_it + 1;
-            bc[bc_it,0] = dof[node,2];
+            bc[bc_it,0] = int(dof[node,2])
             bc_it = bc_it + 1;
         
 
@@ -153,11 +177,7 @@ edof = np.int_(edof)
 
 
 
-cfvv.draw_mesh(edof,coord,dof,6,t=t,scale=0.002)
 
-
-#Start Calfem-vedo visualization
-cfvv.show_and_wait()
 
 
 nnode = np.size(coord, axis = 0)
@@ -174,24 +194,63 @@ D = cfc.hooke(1,E,v);
 
 ex, ey = cfc.coordxtr(edof,coord,dof)
 
-print(ex[0])
+#print(ex[0])
 
-K = np.int_(np.zeros((ndof,ndof)))
-#K = np.zeros([ndof,ndof])
-f = np.int_(np.zeros((ndof,1)))
+#K = np.int_(np.zeros((ndof,ndof)))
+K = np.zeros((ndof,ndof))
+#f = np.int_(np.zeros((ndof,1)))
+f = np.zeros((ndof,1))
 
-print(f)
+#print(f)
 
+for eltopo, elx, ely in zip(edof, ex, ey):
+    Ke,fe = cfc.platre(elx, ely, ep, D, eq)
+    # Transposing fe due to error in platre
+    fe = np.transpose(fe)
+    cfc.assem(eltopo, K, Ke, f, fe)
+"""
 for i in range(nel):
+    print(ex[i])
+    print(ey[i])
+    print(ep)
+    print(D)
+    print(eq)
     Ke, fe = cfc.platre(ex[i], ey[i], ep, D, eq)
     print(fe)
     #print(edof[i,:])
     #print(K)
     K, f = cfc.assem(edof[i,:],K,Ke,f,fe)
+"""
+bc = bc[:,0]
+#for i in range(np.size(bc)):
+    #print(int(bc[i,0]))
+    #bc = int(bc[i,0])
+bc = bc.astype(np.int64)
+#print(bc)
+bcVal = np.zeros((1,np.size(bc)))
+#print(bcVal[0])
+
+a,r = cfc.solveq(K, f, bc, bcVal[0])
+
+ed = cfc.extract_eldisp(edof,a)
+#print(ed)
+
+es = np.zeros((5,nel))
+
+#for i in range(nel):
+#    es[:,i] = cfc.platrs(ex[i],ey[i],ep,D,ed[i])
+
+#print(es)
 
 
 
+cfvv.draw_mesh(edof,coord,dof,6,scale=0.002)
 
+cfvv.figure(2)
+cfvv.draw_displaced_mesh(edof,coord,dof,6,a,scale=0.002)
+
+#Start Calfem-vedo visualization
+cfvv.show_and_wait()
 
 
 

@@ -157,6 +157,7 @@ for i in range(nel_beams):
         K = cfc.assem(edof_beams[i],K,Ke)
     else:
         Ke, fe = cfc.beam3e(ex_beams[i], ey_beams[i], ez_beams[i], eo[i], ep_beams,eq)
+        #print(fe)
         K, f = cfc.assem(edof_beams[i],K,Ke,f,fe)
 # FRÅGA JONAS OM NEDAN
 #f = -np.absolute(f)
@@ -348,9 +349,9 @@ edof_bars = np.array([
 ])
 
 cfvv.draw_mesh(edof_bars,coord,dof,2,alpha=0.5,color='yellow')
-
+#print('bar disp')
 cfvv.draw_displaced_mesh(edof_bars,coord,dof,2,a,normal_stresses_bars,def_scale=1,colormap='coolwarm')
-#cfvv.add_scalar_bar('Max normal stress bars',pos=[0.75,0.1])
+cfvv.add_scalar_bar('Max normal stress bars',pos=[0.75,0.1])
 #cfvv.add_legend(def_bar_elements)
 cfvv.add_text('Bar',color='yellow',pos=[0,0.95])#,render=True)
 

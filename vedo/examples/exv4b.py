@@ -18,10 +18,11 @@ import numpy as np
 #import vis_vedo as cfvv
 import vis_vedo_no_qt as cfvv
 from PyQt5 import Qt
+import vedo_utils as cfvu
 #from scipy.io import loadmat
 
-edof,coord,dof,a,es,ns,L,X = cfvv.import_mat('exv4',['edof','coord','dof','a','es','ns','L','X'])
-
+#edof,coord,dof,a,es,ns,L,X = cfvv.import_mat('exv4',['edof','coord','dof','a','es','ns','L','X'])
+edof,coord,dof,a,vM_el,vM_n,lamb,eig = cfvv.import_mat('exv4',['edof','coord','dof','a','vM_el','vM_n','lambda','eig'])
 #solid_data = loadmat('exv4.mat')
 
 #edof = solid_data['edof']
@@ -45,16 +46,16 @@ nel = np.size(edof, axis = 0)
 mode_a = np.zeros((nel, 1))
 y = np.zeros(8)
 for i in range(nel):
-	coords = cfvv.get_coord_from_edof(edof[i,:],dof,4)
-	X[coords,0]
+	coords = cfvu.get_coord_from_edof(edof[i,:],dof,4)
+	#eig[coords,0]
 	for j in range(8):
-		x = cfvv.get_a_from_coord(coords[j],3,X[:,0])
+		x = cfvu.get_a_from_coord(coords[j],3,eig[:,0])
 		y[j] = np.sqrt(x[0]**2 + x[1]**2 + x[2]**2)
 
 	mode_a[i,:] = np.average(y)
 
 
-Freq=np.sqrt(L[0]/(2*np.pi))
+Freq=np.sqrt(lamb[0]/(2*np.pi))
 
 
 
@@ -73,7 +74,7 @@ cfvv.add_text(f'Frequency: {Freq[0]} Hz',pos='top-right')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
 #cfvv.add_scalar_bar(mode_mesh,'Tot. el. displacement',window=1)
 
-cfvv.animate(edof,coord,dof,4,X[:,0],10,def_scale=scalefact)
+cfvv.animate(edof,coord,dof,4,eig[:,0],10,def_scale=scalefact)
 
 
 

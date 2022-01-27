@@ -10,316 +10,151 @@ import sys
 
 os.system('clear')
 sys.path.append("../")
+sys.path.append("../../../calfem-python-develop/calfem")
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-import calfem.core as cfc
+#import calfem.core as cfc
+import core as cfc
 import numpy as np
 #import vis_vedo as cfvv
 import vis_vedo_no_qt as cfvv
 from PyQt5 import Qt
 
+#import calfem.geometry as cfg
+#import calfem.mesh as cfm
+#import calfem.vis as cfv
+import geometry as cfg
+import mesh as cfm
+import vis as cfv
+import utils as cfu
+#import calfem.utils as cfu
 
+
+
+# x=0.4, y=1, z=0.4
+
+g = cfg.Geometry()
 """
-coord = np.array([
-    #Botten
-    [0,     0,     0], #DOF 1-3
-    [0.2,   0,     0], #DOF 4-6
-    [0.4,   0,     0], #DOF ?-?
-    [0,     0,     0.2], #DOF 1-3
-    [0.2,   0,     0.2],  #DOF 1-3
-    [0.4,   0,     0.2],
-    [0,     0,     0.4],
-    [0.2,   0,     0.4],
-    [0.4,   0,     0.4],
-    #Mitten
-    [0,     0.2,   0],
-    [0.2,   0.2,   0],
-    [0.4,   0.2,   0],
-    [0,     0.2,   0.2],
-    [0.2,   0.2,   0.2],
-    [0.4,   0.2,   0.2],
-    [0,     0.2,   0.4],
-    [0.2,   0.2,   0.4],
-    [0.4,   0.2,   0.4],
-    #Överst
-    [0,     0.4,   0],
-    [0.2,   0.4,   0],
-    [0.4,   0.4,   0],
-    [0,     0.4,   0.2],
-    [0.2,   0.4,   0.2],
-    [0.4,   0.4,   0.2],
-    [0,     0.4,   0.4],
-    [0.2,   0.4,   0.4],
-    [0.4,   0.4,   0.4]
-])
+g.point([0.0, 0.0, 0.0]) # point 0
+g.point([0.0, 0.0, 0.4]) # point 1
+g.point([0.0, 1.0, 0.0]) # point 2
+g.point([0.0, 1.0, 0.4]) # point 3
+g.point([0.4, 0.0, 0.0]) # point 4
+g.point([0.4, 0.0, 0.4]) # point 5
+g.point([0.4, 1.0, 0.0]) # point 6
+g.point([0.4, 1.0, 0.4]) # point 7
 
-dof = np.array([
-    #Botten
-    [1,  2,  3],
-    [4,  5,  6],
-    [7,  8,  9],
-    [10, 11, 12],
-    [13, 14, 15],
-    [16, 17, 18],
-    [19, 20, 21],
-    [22, 23, 24],
-    [25, 26, 27],
-    #Mitten
-    [28, 29, 30],
-    [31, 32, 33],
-    [34, 35, 36],
-    [37, 38, 39],
-    [40, 41, 42],
-    [43, 44, 45],
-    [46, 47, 48],
-    [49, 50, 51],
-    [52, 53, 54],
-    #Överst
-    [55, 56, 57],
-    [58, 59, 60],
-    [61, 62, 63],
-    [64, 65, 66],
-    [67, 68, 69],
-    [70, 71, 72],
-    [73, 74, 75],
-    [76, 77, 78],
-    [79, 80, 81]
-])
 
-edof = np.array([
-    [1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12],
-    [7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18],
-    [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
-    [1,  2,  3,  4,  5,  6,  25, 26, 27, 28, 29, 30],
-    [7,  8,  9,  10, 11, 12, 25, 26, 27, 28, 29, 30],
-    [13, 14, 15, 16, 17, 18, 25, 26, 27, 28, 29, 30],
-    [13, 14, 15, 16, 17, 18, 31, 32, 33, 34, 35, 36],
-    [19, 20, 21, 22, 23, 24, 31, 32, 33, 34, 35, 36],
-    [19, 20, 21, 22, 23, 24, 37, 38, 39, 40, 41, 42],
-    [25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36],
-    [31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42], 
-    [43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54],
-    [49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60],
-    [55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66],
-    [43, 44, 45, 46, 47, 48, 67, 68, 69, 70, 71, 72],
-    [49, 50, 51, 52, 53, 54, 67, 68, 69, 70, 71, 72],
-    [55, 56, 57, 58, 59, 60, 67, 68, 69, 70, 71, 72],
-    [55, 56, 57, 58, 59, 60, 73, 74, 75, 76, 77, 78],
-    [61, 62, 63, 64, 65, 66, 73, 74, 75, 76, 77, 78],
-    [61, 62, 63, 64, 65, 66, 79, 80, 81, 82, 83, 84],
-    [67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78],
-    [73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84],
-    [1,  2,  3,  4,  5,  6,  43, 44, 45, 46, 47, 48],
-    [7,  8,  9,  10, 11, 12, 49, 50, 51, 52, 53, 54],
-    [13, 14, 15, 16, 17, 18, 55, 56, 57, 58, 59, 60],
-    [19, 20, 21, 22, 23, 24, 61, 62, 63, 64, 65, 66],
-    [25, 26, 27, 28, 29, 30, 67, 68, 69, 70, 71, 72],
-    [31, 32, 33, 34, 35, 36, 73, 74, 75, 76, 77, 78],
-    [37, 38, 39, 40, 41, 42, 79, 80, 81, 82, 83, 84]
-])
-"""
-"""
-coord = np.array([
-    [0,     0,     0],
-    [0.2,   0,     0],
-    [0.2,   0.2,     0],
-    [0,   0.2,     0],
-    [0,   0,     0.2],
-    [0.2,   0,     0.2],
-    [0.2,   0.2,     0.2],
-    [0,   0.2,     0.2]
-])
+g.spline([0, 1]) # line 0
+g.spline([1, 5]) # line 1
+g.spline([5, 4]) # line 2
+g.spline([4, 0]) # line 2
 
-dof = np.array([
-    [1,  2,  3],
-    [4,  5,  6],
-    [7,  8,  9],
-    [10, 11, 12],
-    [13, 14, 15],
-    [16, 17, 18],
-    [19, 20, 21],
-    [22, 23, 24]
-])
+g.spline([2, 3]) # line 0
+g.spline([3, 7]) # line 1
+g.spline([7, 6]) # line 2
+g.spline([6, 2]) # line 2
 
-edof = np.array([
-    [1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
-])
+g.spline([0, 2]) # line 0
+g.spline([1, 3]) # line 1
+g.spline([5, 7]) # line 2
+g.spline([4, 6]) # line 2
+
+g.surface([0, 1, 5, 4])
+g.surface([2, 3, 7, 6])
+
+g.surface([0, 1, 3, 2])
+g.surface([1, 5, 7, 3])
+g.surface([5, 4, 6, 7])
+g.surface([4, 6, 2, 0])
+
+g.volume([0,1,2,3,4,5])
 """
 
+l = 1.0
+h = 0.4
+w = 0.4
 
-d=0.1;
+n_el_x = 4
+n_el_y = 4
+n_el_z = 10
 
-ncoord_x = 4+1;
-ncoord_y = 10+1;
-ncoord_z = 4+1;
+g.point([0, 0, 0], ID=0)
+g.point([w/2.0, 0.0, 0.0], 1)
+g.point([w, 0, 0], 2)
+g.point([w, l, 0], 3)
+g.point([0, l, 0], 4, marker = 11) # Set some markers no reason.
+g.point([0, 0, h], 5, marker = 11) # (markers can be given to points as well
+                                      # as curves and surfaces)
+g.point([w, 0, h], 6, marker = 11)
+g.point([w, l, h], 7)
+g.point([0, l, h], 8)
 
-ncoord_init = ncoord_x*ncoord_y*ncoord_z;
+# Add splines
 
-coord = np.zeros([ncoord_init,3]);
-row = 0;
+g.spline([0, 1, 2], 0, marker = 33, el_on_curve = n_el_x)
+g.spline([2, 3], 1, marker = 23, el_on_curve = n_el_z)
+g.spline([3, 4], 2, marker = 23, el_on_curve = n_el_x)
+g.spline([4, 0], 3, el_on_curve = n_el_z)
+g.spline([0, 5], 4, el_on_curve = n_el_y)
+g.spline([2, 6], 5, el_on_curve = n_el_y)
+g.spline([3, 7], 6, el_on_curve = n_el_y)
+g.spline([4, 8], 7, el_on_curve = n_el_y)
+g.spline([5, 6], 8, el_on_curve = n_el_x)
+g.spline([6, 7], 9, el_on_curve = n_el_z)
+g.spline([7, 8], 10, el_on_curve = n_el_x)
+g.spline([8, 5], 11, el_on_curve = n_el_z)
 
-for z in range(ncoord_z):
-    for y in range(ncoord_y):
-        for x in range(ncoord_x):
-            coord[row,:] = [x*d,y*d,z*d];
-            row = row+1;
+# Add surfaces
 
-ncoord = np.size(coord,0);
-
-dof = np.zeros([ncoord,1]);
-
-it = 1;
-#dofs = [0,1,2]
-for row in range(ncoord):
-    #for col in dofs:
-    #    dof[row,col] = it;
-    #    it = it + 1;
-    dof[row] = row+1;
-
-
-ndof = np.size(dof,0)*np.size(dof,1);
+marker_bottom = 40
+marker_top = 41
+marker_fixed_left = 42
+marker_back = 43
+marker_fixed_right = 44
+marker_front = 45
 
 
+g.structuredSurface([0, 1, 2, 3], 0, marker=marker_bottom)
+g.structuredSurface([8, 9, 10, 11], 1, marker=marker_top)
+g.structuredSurface([0, 4, 8, 5], 2, marker=marker_fixed_left)
+g.structuredSurface([1, 5, 9, 6], 3, marker=marker_back)
+g.structuredSurface([2, 6, 10, 7], 4, marker=marker_fixed_right)
+g.structuredSurface([3, 4, 11, 7], 5, marker=marker_front)
 
-nel_x = (ncoord_x-1);
-nel_y = (ncoord_y-1);
-nel_z = (ncoord_z-1);
-
-#edof = np.zeros([nel_x*nel_y*nel_z,8*3]);
-edof = np.zeros([nel_x*nel_y*nel_z,8]);
-#bc = np.zeros([ncoord_y*ncoord_z*2*3,1]);
-
-x_step = 1;
-y_step = ncoord_x;
-z_step = (y_step)*ncoord_y;
-
-it = 0;
-bc_it = 0;
-node = 0;
-
-for col in range(nel_z):
-    #print(col)
-    node = z_step*col;
-    for row in range(nel_y):
-        for el in range(nel_x):
-
-            #edof[it,0] = it;
-            #edof[it,0:3] = dof[node,:];
-            edof[it,0] = dof[node];
-            """
-            if el == 0:
-                bc[bc_it,0] = dof[node,0];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,1];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,2];
-                bc_it = bc_it + 1;
-            """
-            node = node+x_step;
-            #edof[it,3:6] = dof[node,:];
-            edof[it,1] = dof[node];
-            """
-            if el == nel_x-1:
-                bc[bc_it,0] = dof[node,0];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,1];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,2];
-                bc_it = bc_it + 1;
-            """
-            node = node+y_step;
-            #edof[it,6:9] = dof[node,:];
-            edof[it,2] = dof[node];
-            """
-            if el == nel_x-1:
-                bc[bc_it,0] = dof[node,0];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,1];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,2];
-                bc_it = bc_it + 1;
-            """
-            node = node-x_step;
-            #edof[it,9:12] = dof[node,:];
-            edof[it,3] = dof[node];
-            """
-            if el == 0:
-                bc[bc_it,0] = dof[node,0];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,1];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,2];
-                bc_it = bc_it + 1;
-            """
-            node = node+z_step-y_step;
-            #edof[it,12:15] = dof[node,:];
-            edof[it,4] = dof[node];
-            """
-            if el == 0:
-                bc[bc_it,0] = dof[node,0];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,1];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,2];
-                bc_it = bc_it + 1;
-            """
-            node = node+x_step;
-            #edof[it,15:18] = dof[node,:];
-            edof[it,5] = dof[node];
-            """
-            if el == nel_x-1:
-                bc[bc_it,0] = dof[node,0];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,1];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,2];
-                bc_it = bc_it + 1;
-            """
-            node = node+y_step;
-
-            #edof[it,18:21] = dof[node,:];
-            edof[it,6] = dof[node];
-            """
-            if el == nel_x-1:
-                bc[bc_it,0] = dof[node,0];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,1];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,2];
-                bc_it = bc_it + 1;
-            """
-            node = node-x_step;
-            #edof[it,21:24] = dof[node,:];
-            edof[it,7] = dof[node];
-            """
-            if el == 0:
-                bc[bc_it,0] = dof[node,0];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,1];
-                bc_it = bc_it + 1;
-                bc[bc_it,0] = dof[node,2];
-                bc_it = bc_it + 1;
-            """
-            if el == nel_x-1:
-                #node = node-z_step-y_step-2*x_step+y_step;
-                #node = node-z_step-2*x_step;
-                node = node-z_step-y_step+2
-            else:
-                node = node+x_step-y_step-z_step;
-            
-            it = it+1;
+g.structuredVolume([0,1,2,3,4,5], 0, marker=90)
 
 
 
 
 
-#edof = np.delete(edof,0,1)
-edof = np.int_(edof)
 
-#print(coord[0,:])
+el_type = 5 
+dofs_per_node = 1
+elSizeFactor = 0.01
+
+# Create mesh
+
+#coord, edof, dof, bdof, elementmarkers = cfm.GmshMeshGenerator.create(g, el_type=5, dofs_per_node=1, el_size_factor=0.1)
+#coord, edof, dof, bdof, elementmarkers = cfm.mesh(g, el_type, 0.1, dofs_per_node)
+#mesh.create()
+"""
+mesh = cfm.GmshMesh(g)
+mesh.elType = 5             # Type of mesh
+mesh.dofsPerNode = 1        # Factor that changes element sizes
+mesh.elSizeFactor = 0.01    # Factor that changes element sizes
+coord, edof, dof, bdof, elementmarkers = mesh.create()
+"""
+coord, edof, dof, bdof, elementmarkers = cfm.mesh(g, el_type, elSizeFactor, dofs_per_node)
+#print(edof[0])
+#print(coord)
 #print(dof)
-#print(edof[0,:])
+#print(bdof)
+ex, ey, ez = cfc.coordxtr(edof, coord, dof)
+
+
+
 
 
 
@@ -328,71 +163,218 @@ nnode = np.size(coord, axis = 0)
 ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
 nel = np.size(edof, axis = 0)
 
-cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
-
-
-#Start Calfem-vedo visualization
-cfvv.show_and_wait()
-
-
-ex,ey,ez = cfc.coordxtr(edof,coord,dof)
-
-# Send data of undeformed geometry
-#cfvv.solid3d.draw_geometry(edof,coord,dof,0.02,1)
-#cfvv.draw_geometry(edof,coord,dof,0.02,1,export=False)
-
-
-ep = [2]
-
 k = 4
 D = np.ones([3,3])*k
 
 #print(D)
 #print(ex)
-bcPrescr = np.array([1,2,3,4,5,51,52,53,54,55,56,57,58,59,60,111,112,113,114,115,166,167,168,169,170,221,222,223,224,225])
+#bcPrescr = np.array([1,2,3,4,5,51,52,53,54,55,56,57,58,59,60,111,112,113,114,115,166,167,168,169,170,221,222,223,224,225])
 #bcPrescr = np.array([1,2,3,4,5,56,57,58,59,60,111,112,113,114,115,147,166,167,168,169,170,221,222,223,224,225])
 #bcPrescr = np.array([[1],[2],[3],[4],[5],[56],[57],[58],[59],[60],[111],[112],[113],[114],[115],[166],[167],[168],[169],[170],[221],[222],[223],[224],[225]])
 #bc = np.array([147, 30])
 #bc = np.zeros((1,26))
 #bc[:,15] = 30
-print(bcPrescr)
+#print(bcPrescr)
 #print(bc)
 
-K = np.int_(np.zeros((ndof,ndof)))
+#K = np.int_(np.zeros((ndof,ndof)))
+K = np.zeros((ndof,ndof))
 
 f = np.zeros([ndof,1])
 eq = np.zeros([ndof,1])
 
-eq[41] = 1000
+eq[20] = 1000
 
-print(edof[0,:])
+#print(edof[0,:])
 #Ke = cfc.flw3i8e(ex, ey, ez, ep, D)
 #K = cfc.assem(edof,K,Ke)
+for eltopo, elx, ely, elz, el_marker in zip(edof, ex, ey, ez, elementmarkers):
+    Ke = cfc.flw3i8e(elx, ely, elz, [2], D)
+    #print(Ke)
+    cfc.assem(eltopo, K, Ke)
+"""
 for i in range(nel):
-    Ke, fe = cfc.flw3i8e(ex[i], ey[i], ez[i], ep, D, eq[i])
+    #Ke, fe = cfc.flw3i8e(ex[i], ey[i], ez[i], ep, D, eq[i])
+    Ke = cfc.flw3i8e(ex[i], ey[i], ez[i], ep, D)
     #print(Ke)
     #print(edof[i,:])
     #print(K)
     #print(i)
-    K,f = cfc.assem(edof[i,:],K,Ke,f,fe)
+    #K,f = cfc.assem(edof[i,:],K,Ke,f,fe)
+    K = cfc.assem(edof[i,:],K,Ke)
     #Ke = cfc.flw3i8e(ex[i,:], ey[i,:], ez[i,:], ep, D)
     #print(Ke)
     #K = cfc.assem(edof[i,:],K,Ke)
-
+"""
 #f = np.zeros([ndof,1])
 #f[7,0] = -3000
 
+bc = np.array([],'i')
+bcVal = np.array([],'i')
+
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_bottom, 0.0)
+#bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_top, 0.0)
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_left, 0.0)
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_back, 0.0)
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_right, 0.0)
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_front, 0.0)
+
+#f = np.zeros([ndof,1])
+cfu.apply_force_total_3d(bdof, f, marker_top, value = 30, dimension=1)
+
 #bcPrescr = np.array([1,2,3,4,5,6,13,14,15,16,17,18])
-T = cfc.solveq(K, f, bcPrescr)
+#print(bc)
+#print(bcVal)
+#print(K[0,:])
+#print(f)
+print(bc)
+print(bcVal)
+T,r = cfc.solveq(K, f, bc, bcVal)
 
-ed = cfc.extractEldisp(edof,T)
-
+#ed = cfc.extractEldisp(edof,T)
+#print(edof[0])
+#print(T)
+#print(np.size(T))
+ed = cfc.extract_eldisp(edof,T)
 #print(ed)
 
-[es,et,eci] = cfc.flw3i8e(ex, ey, ez, ep, D, ed)
+#print(ed)
+es = np.zeros((8,3,nel))
+edi = np.zeros((8,3,nel))
+eci = np.zeros((8,3,nel))
+
+#print('ex: ',ex[0])
+#print('ey: ',ey[0])
+#print('ez: ',ez[0])
+#print('ed: ',ed[0])
+
+for i in range(nel):
+    es[0:8,:,i], edi[0:8,:,i], eci[0:8,:,i] = cfc.flw3i8s(ex[i],ey[i],ez[i],[2],D,ed[i])
+#es, et, eci = cfc.flw3i8s(ex, ey, ez, [2], D, ed)
+
+# --- Gauss points & shape functions from soli8e/soli8s ---
+# This is used to get stresses at nodes & modal analysis later
+
+g1=0.577350269189626;
+gp = np.mat([
+    [-1,-1,-1],
+    [ 1,-1,-1],
+    [ 1, 1,-1],
+    [-1, 1,-1],
+    [-1,-1, 1],
+    [ 1,-1, 1],
+    [ 1, 1, 1],
+    [-1, 1, 1]
+])*g1
+
+xsi = gp[:,0]
+eta = gp[:,1]
+zet = gp[:,2]
+
+N = np.multiply(np.multiply((1-xsi),(1-eta)),(1-zet))/8.
+N = np.append(N,np.multiply(np.multiply((1+xsi),(1-eta)),(1-zet))/8.,axis=1)
+N = np.append(N,np.multiply(np.multiply((1+xsi),(1+eta)),(1-zet))/8.,axis=1)
+N = np.append(N,np.multiply(np.multiply((1-xsi),(1+eta)),(1-zet))/8.,axis=1)
+N = np.append(N,np.multiply(np.multiply((1-xsi),(1-eta)),(1+zet))/8.,axis=1)
+N = np.append(N,np.multiply(np.multiply((1+xsi),(1-eta)),(1+zet))/8.,axis=1)
+N = np.append(N,np.multiply(np.multiply((1+xsi),(1+eta)),(1+zet))/8.,axis=1)
+N = np.append(N,np.multiply(np.multiply((1-xsi),(1+eta)),(1+zet))/8.,axis=1)
+
+#print(N)
+
+calc = ((np.transpose(N) * N) / np.transpose(N)) # saving for quicker calculation
 
 
 
+ns = np.zeros((nel,8));
+#print(ns[:,0,0])
+#print(calc)
+#print(es[:,0,0])
+vectors = np.zeros((nel,3));
+for i in range(nel):
+
+    flow_x = calc*np.transpose([es[:,0,i]])
+    flow_y = calc*np.transpose([es[:,1,i]])
+    flow_z = calc*np.transpose([es[:,2,i]])
+
+    vectors[i,0] = np.average(flow_x)
+    vectors[i,1] = np.average(flow_y)
+    vectors[i,2] = np.average(flow_z)
+
+    ns[i,0] = np.sqrt(flow_x[0]**2 + flow_y[0]**2 + flow_z[0]**2)
+    ns[i,1] = np.sqrt(flow_x[1]**2 + flow_y[1]**2 + flow_z[1]**2)
+    ns[i,2] = np.sqrt(flow_x[2]**2 + flow_y[2]**2 + flow_z[2]**2)
+    ns[i,3] = np.sqrt(flow_x[3]**2 + flow_y[3]**2 + flow_z[3]**2)
+    ns[i,4] = np.sqrt(flow_x[4]**2 + flow_y[4]**2 + flow_z[4]**2)
+    ns[i,5] = np.sqrt(flow_x[5]**2 + flow_y[5]**2 + flow_z[5]**2)
+    ns[i,6] = np.sqrt(flow_x[6]**2 + flow_y[6]**2 + flow_z[6]**2)
+    ns[i,7] = np.sqrt(flow_x[7]**2 + flow_y[7]**2 + flow_z[7]**2)
+
+#ns = np.transpose(ns)
+#print(ns[0])
+print('vectors: ',vectors)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#cfvv.figure(1)
+points = g.getPointCoords()
+cfvv.draw_geometry(points)
+#cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
+#cfvv.show_and_wait()
+
+
+
+cfvv.figure(2)
+cfvv.draw_mesh(edof,coord,dof,4,alpha=1,scale=0.001)
+#cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
+#cfvv.show_and_wait()
+
+
+
+disp = np.zeros((nnode,1))
+
+cfvv.figure(3)
+cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,ns,alpha=0.5,colormap='coolwarm')
+cfvv.add_scalar_bar('Temp. flow')
+#cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
+#cfvv.show_and_wait()
+
+cfvv.figure(4)
+cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,T,alpha=0.5,colormap='coolwarm')
+cfvv.add_scalar_bar('Temp. [C]')
+#cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
+cfvv.show_and_wait()
+
+cfvv.figure(5)
+#cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,T,alpha=0.5,scale=0.01)
+cfvv.add_vectors(edof,coord,dof,vectors,3)
+#cfvv.add_scalar_bar('Temp. [C]')
+#cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
+cfvv.show_and_wait()
+
+
+    #ns[:,:,i] = calc*np.transpose([es[:,0,i]])
+    #ns[:,:,i] = calc*np.transpose([es[:,1,i]])#calc*es[:,1,i]
+    #ns[:,:,i] = calc*np.transpose([es[:,2,i]])#calc*es[:,2,i]
+
+#print(ns)
+
+#ns_test
 
 """
 ngp=ep[1]*ep[1]*ep[1];
