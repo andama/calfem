@@ -245,7 +245,7 @@ es = np.zeros((5,nel))
 
 
 cfvv.draw_mesh(edof,coord,dof,6,scale=0.002)
-
+cfvv.show_and_wait()
 cfvv.figure(2)
 cfvv.draw_displaced_mesh(edof,coord,dof,6,a,scale=0.002)
 

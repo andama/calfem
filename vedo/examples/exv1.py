@@ -47,7 +47,7 @@ nel = np.size(edof, axis = 0)
 
 k = 1000
 
-ep = [2*k, k, 5*k]
+ep = [3*k, k, 8*k]
 
 K = np.zeros([ndof,ndof])
 f = np.zeros([ndof,1])
@@ -56,14 +56,19 @@ for i in range(nel):
     Ke = cfc.spring1e(ep[i])
     K = cfc.assem(edof[i],K,Ke)
 
-f[1,0] = 3000
+f[3,0] = 500 #Newton
 
-bcPrescr = np.array([1, 4])
+bcPrescr = np.array([1])
 
-a = cfc.solveq(K, f, bcPrescr)
+a,r = cfc.solveq(K, f, bcPrescr)
 
-cfvv.draw_mesh(edof,coord,dof,1,alpha=0.2)
-cfvv.draw_displaced_mesh(edof,coord,dof,1,a,offset=[0,0.1,0])
+cfvv.draw_mesh(edof,coord,dof,1)
+cfvv.draw_displaced_mesh(edof,coord,dof,1,a,offset=[0,0.2,0],render_nodes=True)
+cfvv.add_text_3D('k=3 kN/m',[0.15,-0.1,0],size=0.03)
+cfvv.add_text_3D('k=1 kN/m',[0.65,-0.1,0],size=0.03)
+cfvv.add_text_3D('k=8 kN/m',[1.15,-0.1,0],size=0.03)
+cfvv.add_text_3D('F_x =500 N',[1.55,-0.02,0],size=0.03)
+#cfvv.add_rulers()
 #cfvv.draw_displaced_geometry(edof,coord,dof,5,a,scale=0.5,alpha=0.5)
 
 #Start Calfem-vedo visualization

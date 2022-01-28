@@ -250,7 +250,8 @@ def add_scalar_bar(
 def add_text(
     text,
     color='black',
-    pos='top-middle'
+    pos='top-middle',
+    size=1
     ):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
@@ -261,6 +262,13 @@ def add_text(
     #plot_window.msg.append([])
 
     msg = v.Text2D(text, pos=pos, alpha=1, c=color)
+    plot_window.msg[plot_window.fig] += [msg]
+
+def add_text_3D(text,pos=(0,0,0),color='black',size=1,alpha=1):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    msg = v.Text3D(text, pos=pos, s=size, font='', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c=color, alpha=alpha, literal=False)
     plot_window.msg[plot_window.fig] += [msg]
 
 # Add silhouette with or without measurements to a renderer
@@ -374,31 +382,125 @@ def add_vectors(edof,coord,dof,v,element_type):
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 # Functions for plotting geometries, meshes & results from CALFEM calculations
 
-def draw_geometry(points,vol=True):
+def draw_geometry(points=None,lines=None,surfaces=None,scale=0.05):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
-    print(points)
+    if surfaces == None and lines == None and points == None:
+        print("Please input either points, lines or surfaces")
+        sys.exit()
+    else:
+        if surfaces is not None:
+            print('points',points)
+            print('lines',lines)
+            print('surfaces',surfaces)
 
-    lines = []
+            pts = []
+            p_text = []
+            for key,val in points.items():
+                pts.append(v.Point(pos=val[0], r=12, c='black', alpha=1))
+                p_text.append(v.Text3D(key, pos=val[0], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
 
-    for i in range(len(points)):
+            plot_window.meshes[plot_window.fig].append(pts)
+            plot_window.meshes[plot_window.fig].append(p_text)
+
+            l = []
+            l_text = []
+            for key,val in lines.items():
+                p1 = points[val[1][0]][0]
+                p2 = points[val[1][1]][0]
+                l.append(v.Lines([p1], [p2], c='k4', alpha=1, lw=1, res=2))
+                l_text.append(v.Text3D(key, pos=[(p1[0]+0.5*(p2[0]-p1[0])), (p1[1]+0.5*(p2[1]-p1[1])), (p1[2]+0.5*(p2[2]-p1[2]))], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
+
+            plot_window.meshes[plot_window.fig].append(l)
+            plot_window.meshes[plot_window.fig].append(l_text)
+
+            surf = []
+            s_text = []
+            for key,val in surfaces.items():
+                ### NOTE: only 4 point surfaces implemented
+                l12 = lines[val[1][0]][1]
+                l34 = lines[val[1][2]][1]
+
+                p1=points[l12[0]][0]
+                p2=points[l12[1]][0]
+                p3=points[l34[0]][0]
+                p4=points[l34[1]][0]
+
+                x = np.average([p1[0],p2[0],p3[0],p4[0]])
+                y = np.average([p1[1],p2[1],p3[1],p4[1]])
+                z = np.average([p1[2],p2[2],p3[2],p4[2]])
+
+                print(x)
+                print(y)
+                print(z)
+                #print(p4)
+                #sys.exit()
+                
+                surf.append(v.Plane(pos=(x, y, z), normal=(0, 0, 1), sx=1, sy=None, c='gray6', alpha=1))
+                s_text.append(v.Text3D(key, pos=[x, y, z], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
+
+            plot_window.meshes[plot_window.fig].append(surf)
+            plot_window.meshes[plot_window.fig].append(s_text)
+
+            
+        elif lines is not None and points is not None:
+            pts = []
+            p_text = []
+            for key,val in points.items():
+                pts.append(v.Point(pos=val[0], r=12, c='black', alpha=1))
+                p_text.append(v.Text3D(key, pos=val[0], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
+
+            plot_window.meshes[plot_window.fig].append(pts)
+            plot_window.meshes[plot_window.fig].append(p_text)
+
+            l = []
+            l_text = []
+            for key,val in lines.items():
+                p1 = points[val[1][0]][0]
+                p2 = points[val[1][1]][0]
+                l.append(v.Lines([p1], [p2], c='k4', alpha=1, lw=1, res=2))
+                l_text.append(v.Text3D(key, pos=[(p1[0]+0.5*(p2[0]-p1[0])), (p1[1]+0.5*(p2[1]-p1[1])), (p1[2]+0.5*(p2[2]-p1[2]))], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
+
+            plot_window.meshes[plot_window.fig].append(l)
+            plot_window.meshes[plot_window.fig].append(l_text)
+        elif points is not None:
+            pts = []
+            text = []
+
+            for key,val in points.items():
+                pts.append(v.Point(pos=val[0], r=12, c='black', alpha=1))
+                text.append(v.Text3D(key, pos=val[0], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
+
+            plot_window.meshes[plot_window.fig].append(pts)
+            plot_window.meshes[plot_window.fig].append(text)
+        elif lines is not None:
+            print("Please provide point coordinates along with lines")
+            sys.exit()
+
+        
+
+    #print(points)
+
+    #lines = []
+
+    #for i in range(len(points)):
         #print(i)
-        for j in range(len(points)):
-            lines.append([i,j])
+    #    for j in range(len(points)):
+    #        lines.append([i,j])
 
-    geometry = v.Mesh([points,lines]).renderPointsAsSpheres(False).lw(1)
+    
     #geometry
     #pts = v.Points(points).ps(10)#.renderPointsAsSpheres()
     #geometry = v.utils.geometry(pts.tomesh())
     #dly = v.delaunay2D(pts, mode='fit').lw(1)
 
-    if vol == True:
+    #if vol == True:
         #volume = v.mesh2Volume(geometry).mode(4)
         #plot_window.meshes[plot_window.fig].append(volume)
-        plot_window.meshes[plot_window.fig].append(geometry)
-    else:
-        plot_window.meshes[plot_window.fig].append(geometry)
+    #    plot_window.meshes[plot_window.fig].append(geometry)
+    #else:
+    
 
 # Element types: 1: Spring, 2: Bar, 3: Flow, 4: Solid, 5: Beam, 6: Plate
 
@@ -444,12 +546,12 @@ def draw_mesh(
             #print(coord[coord2,0])
             #spring = v.Spring([coord[coord1,0],0,0],[coord[coord2,0],0,0])
             spring = v.Spring([coord[coord1,0],0,0],[coord[coord2,0],0,0],r=1.5*scale).alpha(alpha)
-            spring.info = f"Spring nr. {i}"
+            spring.name = f"Element nr. {i}"
             elements.append(spring)
 
         #print(elements,nodes)
         if render_nodes == True:
-            nodes = vdu.get_node_elements(coord,scale,alpha)
+            nodes = vdu.get_node_elements(coord,scale*0.5,alpha)
             #plot_window.add_geometry(elements,nodes)
             plot_window.meshes[plot_window.fig].extend(elements)
             plot_window.nodes[plot_window.fig].extend(nodes)
@@ -841,24 +943,55 @@ def draw_displaced_mesh(
 
     if element_type == 1:
         ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
-        print(coord[:,1])
-        coord[:,0] = coord[:,0] + offset[0]
-        coord[:,1] = coord[:,1] + offset[1]
-        print(coord[:,1])
-        coord[:,2] = coord[:,2] + offset[2]
+        #print(coord[:,1])
+        ncoord = np.size(coord, axis = 0)
+        #coord[:,0] = coord[:,0] + offset[0]
+        #coord[:,1] = coord[:,1] + offset[1]
+        #print(coord[:,1])
+        #coord[:,2] = coord[:,2] + offset[2]
+
+        def_nodes = []
 
         nel = np.size(edof, axis = 0)
         elements = []
 
+        def_coord = np.zeros([ncoord,3])
+
+        #print(def_coord)
+
+        for i in range(0, ncoord):
+            #if a.any() == None:
+            #    x = coord[i,0]
+            #    y = coord[i,1]
+            #    z = coord[i,2]
+            #else:
+            #def get_a_from_coord(coord_row_num,num_of_deformations,a,scale=1):
+            #a_dx, a_dy, a_dz = vdu.get_a_from_coord(i,2,a,def_scale)
+            a_dx = a[i]*def_scale
+            #print(a)
+
+            x = coord[i,0]+a_dx
+            y = coord[i,1]
+            z = coord[i,2]
+            #print(def_coord[i])
+            #print([x,y,z])
+            #print(offset)
+            def_coord[i] = [x,y,z]
+            def_coord[i] += offset
+            #print(def_coord[i])
+            #def_nodes.append(v.Point(c='white').scale(scale*0.5).pos(def_coord[i]).alpha(alpha))
+
         for i in range(nel):
             coord1,coord2 = vdu.get_coord_from_edof(edof[i,:],dof,element_type)
 
-            spring = v.Spring([coord[coord1,0],0,0],[coord[coord2,0],0,0],r=scale*1.5).alpha(alpha)
+            spring = v.Spring([def_coord[coord1,0],def_coord[coord1,1],def_coord[coord1,2]],[def_coord[coord2,0],def_coord[coord2,1],def_coord[coord2,2]],r=scale*1.5).alpha(alpha)
             spring.info = f"Spring nr. {i}"
             elements.append(spring)
 
         if render_nodes == True:
-            nodes = vdu.get_node_elements(coord,scale,alpha)
+            print(def_coord)
+            nodes = vdu.get_node_elements(def_coord,scale*0.5,alpha)
+            print(nodes)
             #plot_window.add_geometry(elements,nodes)
             plot_window.meshes[plot_window.fig].extend(elements)
             plot_window.nodes[plot_window.fig].extend(nodes)
@@ -953,9 +1086,15 @@ def draw_displaced_mesh(
 
         ed = cfc.extractEldisp(edof,a)
         if element_type == 3:
-            coord2, topo, node_dofs, a_node = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False,dofs_per_node=1)
+            if val != 'nodal_values_by_el':
+                coord2, topo, node_dofs, a_node, node_scalars = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False,dofs_per_node=1)
+            else:
+                coord2, topo, node_dofs, a_node, node_scalars = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,values,ignore_first=False,dofs_per_node=1)
         elif element_type == 4:
-            coord2, topo, node_dofs, a_node = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False)
+            if val != 'nodal_values_by_el':
+                coord2, topo, node_dofs, a_node, node_scalars = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False)
+            else:
+                coord2, topo, node_dofs, a_node, node_scalars = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,values,ignore_first=False)
         #a_node = vdu.convert_a(coord,coord2,a,3)
 
         #def_coord = np.zeros([nnode,3])
@@ -1052,9 +1191,10 @@ def draw_displaced_mesh(
         elif val and val == 'nodal_values_by_el':
             #print(val)
             #vmin, vmax = np.min(values), np.max(values)
-            nodal_values = vdu.convert_nodal_values(edof,topo,dof,values)
+            #nodal_values = vdu.convert_nodal_values(edof,topo,dof,values)
             #nodal_values = vdu.convert_a(coord2,coord,nodal_values,1)
-            mesh.pointdata["val"] = nodal_values
+            #mesh.pointdata["val"] = nodal_values
+            mesh.pointdata["val"] = node_scalars
             print(ug.celldata.keys())
             #nodal_values = vdu.convert_nodal_values(edof,dof,coord,coord2,values)
             mesh.cmap(colormap, 'val', on="points")
@@ -1284,7 +1424,7 @@ def draw_displaced_mesh(
         #print(ez)
 
         ed = cfc.extractEldisp(edof,a)
-        coord2, topo, node_dofs, a_node = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False)
+        coord2, topo, node_dofs, a_node, test = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False)
         #a_node = vdu.convert_a(coord,coord2,a,3)
 
         #def_coord = np.zeros([nnode,3])
@@ -1448,8 +1588,12 @@ def animate(
     element_type,
     a,
     steps,
+    values=None,
     def_scale=1,
-    alpha=1
+    alpha=1,
+    export=False,
+    colormap='jet',
+    file='anim/'
     ):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
@@ -1506,11 +1650,14 @@ def animate(
         #plt += mesh
 
 
-
+        if values is not None:
+            vmin, vmax = np.min(values), np.max(values)
 
 
         for t in timesteps:
 
+            
+            '''
             for i in range(0, ncoord):
                 a_dx, a_dy, a_dz = vdu.get_a_from_coord(i,3,a,def_scale)
 
@@ -1529,17 +1676,51 @@ def animate(
                     z = coord[i,2]+z_step*j
 
                     def_coord[i,:] = [x,y,z]
+            '''
 
+
+            ex,ey,ez = cfc.coordxtr(edof,coord,dof)
+            ed = cfc.extractEldisp(edof,a)
+            coord2, topo, node_dofs, a_node, node_scalars = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False,dofs_per_node=3)
             
-            meshes = []
+            new_coord = coord2 + a_node*def_scale
+
+            ct = vtk.VTK_HEXAHEDRON
+
+            celltypes = [ct] * nel
+
+            ug=v.UGrid([new_coord, topo, celltypes])
+            ug.points(new_coord)
             
+            mesh = ug.tomesh().lw(1).alpha(alpha)
+
+            # Element values
+            el_values = vdu.convert_el_values(edof,values)
+            mesh.celldata["val"] = el_values
+
+            mesh.cmap(colormap, "val", on="cells", vmin=vmin*t, vmax=vmax*t)
+            #meshes = []
             
+            '''
             #vmin, vmax = np.min(el_values), np.max(el_values)
             for i in range(nel):
                 coords = vdu.get_coord_from_edof(edof[i,:],dof,4)
 
                 mesh = v.Mesh([def_coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
                 meshes.append(mesh)
+
+                if values is not None and np.size(values, axis = 1) == 1:
+                    el_values_array = np.zeros((1,6))[0,:]
+                    el_values_array[0] = values[i]*t
+                    el_values_array[1] = values[i]*t
+                    el_values_array[2] = values[i]*t
+                    el_values_array[3] = values[i]*t
+                    el_values_array[4] = values[i]*t
+                    el_values_array[5] = values[i]*t
+                    #if title is not None:
+                    #    mesh.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax).addScalarBar(title=title,horizontal=True,useAlpha=False,titleFontSize=16)
+                    #else:
+                    mesh.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax)
                 #for j in range(steps):
                     #mesh = v.Mesh([def_coord[coords,:,j],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha)
                     #meshes[i,j] = mesh
@@ -1547,8 +1728,12 @@ def animate(
                 #mesh.info = f"Mesh nr. {i}"
                 #meshes.append(mesh)
             mesh = v.merge(meshes)
+            '''
             plt.clear()
             plt += mesh
+            if export == True:
+                output = file+f'_{int(10*t)}'
+                export_vtk(output,mesh)
             plt.render(resetcam=True)
             #plt.show(mesh)
             

@@ -81,30 +81,30 @@ n_el_y = 4
 n_el_z = 10
 
 g.point([0, 0, 0], ID=0)
-g.point([w/2.0, 0.0, 0.0], 1)
-g.point([w, 0, 0], 2)
-g.point([w, l, 0], 3)
-g.point([0, l, 0], 4, marker = 11) # Set some markers no reason.
-g.point([0, 0, h], 5, marker = 11) # (markers can be given to points as well
+#g.point([w/2.0, 0.0, 0.0], 1)
+g.point([w, 0, 0], 1)
+g.point([w, l, 0], 2, marker=50)
+g.point([0, l, 0], 3, marker = 11) # Set some markers no reason.
+g.point([0, 0, h], 4, marker = 11) # (markers can be given to points as well
                                       # as curves and surfaces)
-g.point([w, 0, h], 6, marker = 11)
-g.point([w, l, h], 7)
-g.point([0, l, h], 8)
+g.point([w, 0, h], 5, marker = 11)
+g.point([w, l, h], 6)
+g.point([0, l, h], 7)
 
 # Add splines
 
-g.spline([0, 1, 2], 0, marker = 33, el_on_curve = n_el_x)
-g.spline([2, 3], 1, marker = 23, el_on_curve = n_el_z)
-g.spline([3, 4], 2, marker = 23, el_on_curve = n_el_x)
-g.spline([4, 0], 3, el_on_curve = n_el_z)
-g.spline([0, 5], 4, el_on_curve = n_el_y)
-g.spline([2, 6], 5, el_on_curve = n_el_y)
-g.spline([3, 7], 6, el_on_curve = n_el_y)
-g.spline([4, 8], 7, el_on_curve = n_el_y)
-g.spline([5, 6], 8, el_on_curve = n_el_x)
-g.spline([6, 7], 9, el_on_curve = n_el_z)
-g.spline([7, 8], 10, el_on_curve = n_el_x)
-g.spline([8, 5], 11, el_on_curve = n_el_z)
+g.spline([0, 1], 0, marker = 33, el_on_curve = n_el_x)
+g.spline([1, 2], 1, marker = 23, el_on_curve = n_el_z)
+g.spline([2, 3], 2, marker = 23, el_on_curve = n_el_x)
+g.spline([3, 0], 3, el_on_curve = n_el_z)
+g.spline([0, 4], 4, el_on_curve = n_el_y)
+g.spline([1, 5], 5, el_on_curve = n_el_y)
+g.spline([2, 6], 6, el_on_curve = n_el_y)
+g.spline([3, 7], 7, el_on_curve = n_el_y)
+g.spline([4, 5], 8, el_on_curve = n_el_x)
+g.spline([5, 6], 9, el_on_curve = n_el_z)
+g.spline([6, 7], 10, el_on_curve = n_el_x)
+g.spline([7, 4], 11, el_on_curve = n_el_z)
 
 # Add surfaces
 
@@ -163,8 +163,8 @@ nnode = np.size(coord, axis = 0)
 ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
 nel = np.size(edof, axis = 0)
 
-k = 4
-D = np.ones([3,3])*k
+Lambda = 1.4 # Thermal conductivity for concrete
+D = np.ones([3,3])*Lambda
 
 #print(D)
 #print(ex)
@@ -183,15 +183,17 @@ K = np.zeros((ndof,ndof))
 f = np.zeros([ndof,1])
 eq = np.zeros([ndof,1])
 
-eq[20] = 1000
+eq[40] = 1000
 
 #print(edof[0,:])
 #Ke = cfc.flw3i8e(ex, ey, ez, ep, D)
 #K = cfc.assem(edof,K,Ke)
-for eltopo, elx, ely, elz, el_marker in zip(edof, ex, ey, ez, elementmarkers):
-    Ke = cfc.flw3i8e(elx, ely, elz, [2], D)
+for eltopo, elx, ely, elz, eq in zip(edof, ex, ey, ez, eq):
+    #Ke = cfc.flw3i8e(elx, ely, elz, [2], D)
+    Ke,fe = cfc.flw3i8e(elx, ely, elz, [2], D, eq)
     #print(Ke)
-    cfc.assem(eltopo, K, Ke)
+    #cfc.assem(eltopo, K, Ke)
+    cfc.assem(eltopo, K, Ke, f, fe)
 """
 for i in range(nel):
     #Ke, fe = cfc.flw3i8e(ex[i], ey[i], ez[i], ep, D, eq[i])
@@ -208,19 +210,43 @@ for i in range(nel):
 """
 #f = np.zeros([ndof,1])
 #f[7,0] = -3000
-
+"""
 bc = np.array([],'i')
 bcVal = np.array([],'i')
+bcs = np.array([
+    [2],[20], [38], [158]
+    ])
+bc_50 = np.array([
+    [50],[50], [50], [50]
+    ])
+np.append(bc, bcs, axis=0)
+np.append(bcVal, bc_50, axis=0)
+"""
+bc = np.array([2,20,38,158])
+bcVal = np.array([50,50,50,50])
 
-bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_bottom, 0.0)
-#bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_top, 0.0)
-bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_left, 0.0)
-bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_back, 0.0)
-bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_right, 0.0)
-bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_front, 0.0)
+#sys.exit()
+# Nearly all surfaces are 20 deg
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_bottom, 20.0)
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_top, 20.0)
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_left, 10.0) # bottom is 0
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_back, 20.0)
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_right, 20.0)
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_front, 20.0)
+#bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, 50, 50.0)
 
 #f = np.zeros([ndof,1])
-cfu.apply_force_total_3d(bdof, f, marker_top, value = 30, dimension=1)
+#cfu.apply_force_total_3d(bdof, f, marker_top, value = 30, dimension=1)
+
+# Visually accuires 4 nodes for a top corner, these are to be 30 deg
+# They are found to be 2, 20, 38, 158
+#for i in range(len(bc)):
+#    if bc[i] == 2 or bc[i] == 20 or bc[i] == 38 or bc[i] == 158:
+#        bcVal[i] = 50
+#    print('DOF: ',bc[i],' value: ',bcVal[i])
+
+
+print('DOF: ',bc,' value: ',bcVal)
 
 #bcPrescr = np.array([1,2,3,4,5,6,13,14,15,16,17,18])
 #print(bc)
@@ -251,7 +277,7 @@ eci = np.zeros((8,3,nel))
 for i in range(nel):
     es[0:8,:,i], edi[0:8,:,i], eci[0:8,:,i] = cfc.flw3i8s(ex[i],ey[i],ez[i],[2],D,ed[i])
 #es, et, eci = cfc.flw3i8s(ex, ey, ez, [2], D, ed)
-
+"""
 # --- Gauss points & shape functions from soli8e/soli8s ---
 # This is used to get stresses at nodes & modal analysis later
 
@@ -283,36 +309,56 @@ N = np.append(N,np.multiply(np.multiply((1-xsi),(1+eta)),(1+zet))/8.,axis=1)
 #print(N)
 
 calc = ((np.transpose(N) * N) / np.transpose(N)) # saving for quicker calculation
+"""
 
 
-
-ns = np.zeros((nel,8));
+#ns = np.zeros((nel,8));
 #print(ns[:,0,0])
 #print(calc)
 #print(es[:,0,0])
 vectors = np.zeros((nel,3));
+flux = np.zeros((nel,1));
 for i in range(nel):
+    print('Flux at element in x-dir.',[es[:,0,i]])
+    print('Flux at element in y-dir.',[es[:,1,i]])
+    print('Flux at element in z-dir.',[es[:,2,i]])
+    flux[i] = np.sqrt(np.average([es[:,0,i]])**2 + np.average([es[:,1,i]])**2 + np.average([es[:,2,i]])**2)
 
-    flow_x = calc*np.transpose([es[:,0,i]])
-    flow_y = calc*np.transpose([es[:,1,i]])
-    flow_z = calc*np.transpose([es[:,2,i]])
+    """
+    flux_x = np.average([es[:,0,i]])
+    #flow_x = calc*np.transpose([es[:,0,i]])
+    print('Flux at element in x-dir.',flux_x)
+    flux_y = np.average([es[:,1,i]])
+    #flow_y = calc*np.transpose([es[:,1,i]])
+    print('Flux at element in y-dir.',flux_y)
+    flux_z = np.average([es[:,2,i]])
+    #flow_z = calc*np.transpose([es[:,2,i]])
+    print('Flux at element in z-dir.',flux_z)
 
-    vectors[i,0] = np.average(flow_x)
-    vectors[i,1] = np.average(flow_y)
-    vectors[i,2] = np.average(flow_z)
+    flux[i] = np.sqrt(flux_x**2 + flux_y**2 + flux_z**2)
+    print('Flux at element',flux[i])
 
-    ns[i,0] = np.sqrt(flow_x[0]**2 + flow_y[0]**2 + flow_z[0]**2)
-    ns[i,1] = np.sqrt(flow_x[1]**2 + flow_y[1]**2 + flow_z[1]**2)
-    ns[i,2] = np.sqrt(flow_x[2]**2 + flow_y[2]**2 + flow_z[2]**2)
-    ns[i,3] = np.sqrt(flow_x[3]**2 + flow_y[3]**2 + flow_z[3]**2)
-    ns[i,4] = np.sqrt(flow_x[4]**2 + flow_y[4]**2 + flow_z[4]**2)
-    ns[i,5] = np.sqrt(flow_x[5]**2 + flow_y[5]**2 + flow_z[5]**2)
-    ns[i,6] = np.sqrt(flow_x[6]**2 + flow_y[6]**2 + flow_z[6]**2)
-    ns[i,7] = np.sqrt(flow_x[7]**2 + flow_y[7]**2 + flow_z[7]**2)
+    """
+
+
+
+
+    #vectors[i,0] = np.average(flow_x)
+    #vectors[i,1] = np.average(flow_y)
+    #vectors[i,2] = np.average(flow_z)
+
+    #ns[i,0] = np.sqrt(flow_x[0]**2 + flow_y[0]**2 + flow_z[0]**2)
+    #ns[i,1] = np.sqrt(flow_x[1]**2 + flow_y[1]**2 + flow_z[1]**2)
+    #ns[i,2] = np.sqrt(flow_x[2]**2 + flow_y[2]**2 + flow_z[2]**2)
+    #ns[i,3] = np.sqrt(flow_x[3]**2 + flow_y[3]**2 + flow_z[3]**2)
+    #ns[i,4] = np.sqrt(flow_x[4]**2 + flow_y[4]**2 + flow_z[4]**2)
+    #ns[i,5] = np.sqrt(flow_x[5]**2 + flow_y[5]**2 + flow_z[5]**2)
+    #ns[i,6] = np.sqrt(flow_x[6]**2 + flow_y[6]**2 + flow_z[6]**2)
+    #ns[i,7] = np.sqrt(flow_x[7]**2 + flow_y[7]**2 + flow_z[7]**2)
 
 #ns = np.transpose(ns)
 #print(ns[0])
-print('vectors: ',vectors)
+#print('vectors: ',vectors)
 
 
 
@@ -329,11 +375,17 @@ print('vectors: ',vectors)
 
 
 
+# For simple point coordinates of geometry
+#points = g.getPointCoords()
+points = g.points
 
+# For lines with point connectivity
+lines = g.curves
 
-#cfvv.figure(1)
-points = g.getPointCoords()
-cfvv.draw_geometry(points)
+# For surfaces with line connectivity
+#surfaces = g.surfaces
+
+cfvv.draw_geometry(points,lines)
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
 #cfvv.show_and_wait()
 
@@ -349,13 +401,15 @@ cfvv.draw_mesh(edof,coord,dof,4,alpha=1,scale=0.001)
 disp = np.zeros((nnode,1))
 
 cfvv.figure(3)
-cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,ns,alpha=0.5,colormap='coolwarm')
-cfvv.add_scalar_bar('Temp. flow')
+cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,flux,colormap='coolwarm')
+cfvv.add_scalar_bar('Heat flux [W/m^2]')
+#cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,ns,colormap='coolwarm')
+#cfvv.add_scalar_bar('Heat flow rate [W]')
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
 #cfvv.show_and_wait()
 
 cfvv.figure(4)
-cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,T,alpha=0.5,colormap='coolwarm')
+cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,T,colormap='coolwarm')
 cfvv.add_scalar_bar('Temp. [C]')
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
 cfvv.show_and_wait()
