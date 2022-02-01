@@ -72,30 +72,29 @@ g.surface([4, 6, 2, 0])
 g.volume([0,1,2,3,4,5])
 """
 
-l = 1.0
+l = 0.4
 h = 0.4
 w = 0.4
 
-n_el_x = 4
-n_el_y = 4
-n_el_z = 10
+n_el_x = 12
+n_el_y = 12
+n_el_z = 12
 
 g.point([0, 0, 0], ID=0)
 #g.point([w/2.0, 0.0, 0.0], 1)
 g.point([w, 0, 0], 1)
 g.point([w, l, 0], 2, marker=50)
-g.point([0, l, 0], 3, marker = 11) # Set some markers no reason.
-g.point([0, 0, h], 4, marker = 11) # (markers can be given to points as well
-                                      # as curves and surfaces)
-g.point([w, 0, h], 5, marker = 11)
+g.point([0, l, 0], 3)
+g.point([0, 0, h], 4)
+g.point([w, 0, h], 5)
 g.point([w, l, h], 6)
 g.point([0, l, h], 7)
 
 # Add splines
 
-g.spline([0, 1], 0, marker = 33, el_on_curve = n_el_x)
-g.spline([1, 2], 1, marker = 23, el_on_curve = n_el_z)
-g.spline([2, 3], 2, marker = 23, el_on_curve = n_el_x)
+g.spline([0, 1], 0, el_on_curve = n_el_x)
+g.spline([1, 2], 1, el_on_curve = n_el_z)
+g.spline([2, 3], 2, el_on_curve = n_el_x)
 g.spline([3, 0], 3, el_on_curve = n_el_z)
 g.spline([0, 4], 4, el_on_curve = n_el_y)
 g.spline([1, 5], 5, el_on_curve = n_el_y)
@@ -105,7 +104,20 @@ g.spline([4, 5], 8, el_on_curve = n_el_x)
 g.spline([5, 6], 9, el_on_curve = n_el_z)
 g.spline([6, 7], 10, el_on_curve = n_el_x)
 g.spline([7, 4], 11, el_on_curve = n_el_z)
-
+'''
+g.spline([0, 1], 0)
+g.spline([1, 2], 1)
+g.spline([2, 3], 2)
+g.spline([3, 0], 3)
+g.spline([0, 4], 4)
+g.spline([1, 5], 5)
+g.spline([2, 6], 6)
+g.spline([3, 7], 7)
+g.spline([4, 5], 8)
+g.spline([5, 6], 9)
+g.spline([6, 7], 10)
+g.spline([7, 4], 11)
+'''
 # Add surfaces
 
 marker_bottom = 40
@@ -115,6 +127,12 @@ marker_back = 43
 marker_fixed_right = 44
 marker_front = 45
 
+#g.surface([0, 1, 2, 3], 0, marker=marker_bottom)
+#g.Surface([8, 9, 10, 11], 1, marker=marker_top)
+#g.Surface([0, 4, 8, 5], 2, marker=marker_fixed_left)
+#g.Surface([1, 5, 9, 6], 3, marker=marker_back)
+#g.Surface([2, 6, 10, 7], 4, marker=marker_fixed_right)
+#g.Surface([3, 4, 11, 7], 5, marker=marker_front)
 
 g.structuredSurface([0, 1, 2, 3], 0, marker=marker_bottom)
 g.structuredSurface([8, 9, 10, 11], 1, marker=marker_top)
@@ -148,7 +166,7 @@ coord, edof, dof, bdof, elementmarkers = mesh.create()
 """
 coord, edof, dof, bdof, elementmarkers = cfm.mesh(g, el_type, elSizeFactor, dofs_per_node)
 #print(edof[0])
-#print(coord)
+print('coord',coord)
 #print(dof)
 #print(bdof)
 ex, ey, ez = cfc.coordxtr(edof, coord, dof)
@@ -183,17 +201,17 @@ K = np.zeros((ndof,ndof))
 f = np.zeros([ndof,1])
 eq = np.zeros([ndof,1])
 
-eq[40] = 1000
+#eq[37] = 1
 
 #print(edof[0,:])
 #Ke = cfc.flw3i8e(ex, ey, ez, ep, D)
 #K = cfc.assem(edof,K,Ke)
 for eltopo, elx, ely, elz, eq in zip(edof, ex, ey, ez, eq):
-    #Ke = cfc.flw3i8e(elx, ely, elz, [2], D)
-    Ke,fe = cfc.flw3i8e(elx, ely, elz, [2], D, eq)
+    Ke = cfc.flw3i8e(elx, ely, elz, [2], D)
+    #Ke,fe = cfc.flw3i8e(elx, ely, elz, [2], D, eq)
     #print(Ke)
-    #cfc.assem(eltopo, K, Ke)
-    cfc.assem(eltopo, K, Ke, f, fe)
+    cfc.assem(eltopo, K, Ke)
+    #cfc.assem(eltopo, K, Ke, f, fe)
 """
 for i in range(nel):
     #Ke, fe = cfc.flw3i8e(ex[i], ey[i], ez[i], ep, D, eq[i])
@@ -210,6 +228,8 @@ for i in range(nel):
 """
 #f = np.zeros([ndof,1])
 #f[7,0] = -3000
+bc = np.array([],'i')
+bcVal = np.array([],'i')
 """
 bc = np.array([],'i')
 bcVal = np.array([],'i')
@@ -222,14 +242,17 @@ bc_50 = np.array([
 np.append(bc, bcs, axis=0)
 np.append(bcVal, bc_50, axis=0)
 """
-bc = np.array([2,20,38,158])
-bcVal = np.array([50,50,50,50])
+#bc = np.array([2,20,38,158])
+#bc = np.array([1,2,4,5,6,  9,10,11,   23,42,165])
+#bcVal = np.array([0,0,50,0,0,  0,0,0,    50,50,50])
+#bc = np.array([1,2,5,6,  9,10,11])
+#bcVal = np.array([0,0,0,0,  0,0,0])
 
 #sys.exit()
 # Nearly all surfaces are 20 deg
 bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_bottom, 20.0)
 bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_top, 20.0)
-bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_left, 10.0) # bottom is 0
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_left, 0.0) # bottom is 0
 bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_back, 20.0)
 bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_right, 20.0)
 bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_front, 20.0)
@@ -253,8 +276,9 @@ print('DOF: ',bc,' value: ',bcVal)
 #print(bcVal)
 #print(K[0,:])
 #print(f)
-print(bc)
-print(bcVal)
+#print(type(bc))
+#print(bc)
+#print(bcVal)
 T,r = cfc.solveq(K, f, bc, bcVal)
 
 #ed = cfc.extractEldisp(edof,T)
@@ -317,28 +341,29 @@ calc = ((np.transpose(N) * N) / np.transpose(N)) # saving for quicker calculatio
 #print(calc)
 #print(es[:,0,0])
 vectors = np.zeros((nel,3));
-flux = np.zeros((nel,1));
+flux = np.zeros((nel,3));
+flux_tot = np.zeros((nel,1));
 for i in range(nel):
-    print('Flux at element in x-dir.',[es[:,0,i]])
-    print('Flux at element in y-dir.',[es[:,1,i]])
-    print('Flux at element in z-dir.',[es[:,2,i]])
-    flux[i] = np.sqrt(np.average([es[:,0,i]])**2 + np.average([es[:,1,i]])**2 + np.average([es[:,2,i]])**2)
-
-    """
-    flux_x = np.average([es[:,0,i]])
+    #print('Flux at element in x-dir.',[es[:,0,i]])
+    #print('Flux at element in y-dir.',[es[:,1,i]])
+    #print('Flux at element in z-dir.',[es[:,2,i]])
+    #flux[i] = np.sqrt(np.average([es[:,0,i]])**2 + np.average([es[:,1,i]])**2 + np.average([es[:,2,i]])**2)
+    #print('Flux at element',flux[i])
+    
+    flux[i,:] = [np.average([es[:,0,i]]), np.average([es[:,1,i]]), np.average([es[:,2,i]])]
     #flow_x = calc*np.transpose([es[:,0,i]])
-    print('Flux at element in x-dir.',flux_x)
-    flux_y = np.average([es[:,1,i]])
+    #print('Flux at element in x-dir.',flux_x)
+    #flux_y = np.average([es[:,1,i]])
     #flow_y = calc*np.transpose([es[:,1,i]])
-    print('Flux at element in y-dir.',flux_y)
-    flux_z = np.average([es[:,2,i]])
+    #print('Flux at element in y-dir.',flux_y)
+    #flux_z = np.average([es[:,2,i]])
     #flow_z = calc*np.transpose([es[:,2,i]])
-    print('Flux at element in z-dir.',flux_z)
+    #print('Flux at element in z-dir.',flux_z)
 
-    flux[i] = np.sqrt(flux_x**2 + flux_y**2 + flux_z**2)
-    print('Flux at element',flux[i])
+    flux_tot[i] = np.sqrt(flux[i,0]**2 + flux[i,1]**2 + flux[i,2]**2)
+    #print('Flux at element',flux[i])
 
-    """
+    
 
 
 
@@ -392,7 +417,7 @@ cfvv.draw_geometry(points,lines)
 
 
 cfvv.figure(2)
-cfvv.draw_mesh(edof,coord,dof,4,alpha=1,scale=0.001)
+cfvv.draw_mesh(edof,coord,dof,3,alpha=1,scale=0.005,bc=bc)
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
 #cfvv.show_and_wait()
 
@@ -401,7 +426,8 @@ cfvv.draw_mesh(edof,coord,dof,4,alpha=1,scale=0.001)
 disp = np.zeros((nnode,1))
 
 cfvv.figure(3)
-cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,flux,colormap='coolwarm')
+print('flux',flux,flux.shape[0],flux.shape[1])
+cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,flux_tot,colormap='coolwarm')
 cfvv.add_scalar_bar('Heat flux [W/m^2]')
 #cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,ns,colormap='coolwarm')
 #cfvv.add_scalar_bar('Heat flow rate [W]')
@@ -409,6 +435,7 @@ cfvv.add_scalar_bar('Heat flux [W/m^2]')
 #cfvv.show_and_wait()
 
 cfvv.figure(4)
+print('T',T,T.shape[0],T.shape[1])
 cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,T,colormap='coolwarm')
 cfvv.add_scalar_bar('Temp. [C]')
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
@@ -416,7 +443,7 @@ cfvv.show_and_wait()
 
 cfvv.figure(5)
 #cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,T,alpha=0.5,scale=0.01)
-cfvv.add_vectors(edof,coord,dof,vectors,3)
+cfvv.add_vectors(edof,coord,dof,flux,3)
 #cfvv.add_scalar_bar('Temp. [C]')
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
 cfvv.show_and_wait()

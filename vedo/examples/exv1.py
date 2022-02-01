@@ -11,13 +11,9 @@ import sys
 os.system('clear')
 sys.path.append("../")
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+import numpy as np # Ska vara line 8 -> 6 tillkommer
 import calfem.core as cfc
-import numpy as np
-#import vis_vedo as cfvv
 import vis_vedo_no_qt as cfvv
-from PyQt5 import Qt
 
 coord = np.array([
     [0,0,0],
@@ -39,27 +35,24 @@ edof = np.array([
     [3, 4]
 ])
 
-#nnode = np.size(coord, axis = 0)
-ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
-nel = np.size(edof, axis = 0)
-
-#ex,ey,ez = cfc.coordxtr(edof,coord,dof)
-
 k = 1000
-
 ep = [3*k, k, 8*k]
 
+ndof = dof.shape[0]*dof.shape[1]
+#ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
+nel = edof.shape[0]
+#nel = np.size(edof, axis = 0)
+
 K = np.zeros([ndof,ndof])
-f = np.zeros([ndof,1])
 
 for i in range(nel):
     Ke = cfc.spring1e(ep[i])
     K = cfc.assem(edof[i],K,Ke)
 
+f = np.zeros([ndof,1])
 f[3,0] = 500 #Newton
 
 bcPrescr = np.array([1])
-
 a,r = cfc.solveq(K, f, bcPrescr)
 
 cfvv.draw_mesh(edof,coord,dof,1)
@@ -73,3 +66,8 @@ cfvv.add_text_3D('F_x =500 N',[1.55,-0.02,0],size=0.03)
 
 #Start Calfem-vedo visualization
 cfvv.show_and_wait()
+
+
+
+
+

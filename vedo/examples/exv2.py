@@ -139,10 +139,22 @@ eq[21] = [0,-2000,0,0]
 K = np.zeros([ndof,ndof])
 f = np.zeros([ndof,1])
 
-eq = [0,-10000,0,0]
+# 1 kN point load in z-direction at symmetry (top)
+f[38] = 1000 # N
+
+# Transverse beams at y=0
+# Dead load of 3x3 m concrete, t = 0.2 m, 25 kN/m^2
+q1 = 25*1000*0.2*3 #N/m
+eq1 = [0,-q1,0,0]
+
+# Vertical beams at x=0
+# Wind load of 1 kN/m, c/c = 3 m
+#q2 = 1*1000*3 #N/m
+#eq2 = [0,0,q2,0]
+
 
 for i in range(nel_beams):
-    print(i)
+    #print(i)
     """
     if i < 18:
         Ke = cfc.beam3e(ex_beams[i], ey_beams[i], ez_beams[i], eo, ep_beams)
@@ -152,11 +164,15 @@ for i in range(nel_beams):
         K, f = cfc.assem(edof_beams[i],K,Ke,f,fe)
     #Ke = cfc.beam3e(ex_beams[i], ey_beams[i], ez_beams[i], eo, ep_beams)
     """
+    #if i == 4 or i == 5 or i == 6:
+    #    Ke, fe = cfc.beam3e(ex_beams[i], ey_beams[i], ez_beams[i], eo[i], ep_beams,eq2)
+        #print(fe)
+    #    K, f = cfc.assem(edof_beams[i],K,Ke,f,fe)
     if i < 18:
         Ke = cfc.beam3e(ex_beams[i], ey_beams[i], ez_beams[i], eo[i], ep_beams)
         K = cfc.assem(edof_beams[i],K,Ke)
     else:
-        Ke, fe = cfc.beam3e(ex_beams[i], ey_beams[i], ez_beams[i], eo[i], ep_beams,eq)
+        Ke, fe = cfc.beam3e(ex_beams[i], ey_beams[i], ez_beams[i], eo[i], ep_beams,eq1)
         #print(fe)
         K, f = cfc.assem(edof_beams[i],K,Ke,f,fe)
 # FRÅGA JONAS OM NEDAN
@@ -237,8 +253,8 @@ for i in range(nel_bars):
 #f[61,0] = -3000
 #f[79,0] = -3000
 
-#bcPrescr = np.array([1, 2, 3, 4, 5, 6, 19, 22, 23, 24, 37, 40, 41, 42, 43, 44, 45, 46, 47, 48, 61, 64, 65, 66, 79, 82, 83, 84])
-bcPrescr = np.array([1, 2, 3, 19, 37, 43, 44, 45, 61, 79])
+bcPrescr = np.array([1, 2, 3, 4, 5, 6, 19, 22, 23, 24, 37, 40, 41, 42, 43, 44, 45, 46, 47, 48, 61, 64, 65, 66, 79, 82, 83, 84])
+#bcPrescr = np.array([1, 2, 3, 19, 37, 43, 44, 45, 61, 79])
 a,r = cfc.solveq(K, f, bcPrescr)
 print(a)
 
@@ -248,8 +264,8 @@ ed_beams = cfc.extractEldisp(edof_beams,a)
 #nseg=2  # 2 points in a 3m long beam = 3000mm long segments
 nseg=13 # 13 points in a 3m long beam = 250mm long segments
 
-
 es_beams = np.zeros((nel_beams*nseg,6))
+#es_beams = np.zeros((nseg,6,nel_beams))
 edi_beams = np.zeros((nel_beams*nseg,4))
 eci_beams = np.zeros((nel_beams*nseg,1))
 
@@ -257,10 +273,16 @@ for i in range(nel_beams):
     #es_beams[nseg*i:nseg*i+nseg,:], edi_beams[nseg*i:nseg*i+nseg,:], eci_beams[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex_beams[i],ey_beams[i],ez_beams[i],eo,ep_beams,ed_beams[i],eq[i,:],nseg)
     #es[nseg*i:nseg*i+nseg,:], edi[nseg*i:nseg*i+nseg,:], eci[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex[i],ey[i],ez[i],eo,ep,ed[i],eq[i],nseg)
     
+    #if i == 4 or i == 5 or i == 6:
+    #    es_beams[nseg*i:nseg*i+nseg,:], edi_beams[nseg*i:nseg*i+nseg,:], eci_beams[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex_beams[i],ey_beams[i],ez_beams[i],eo[i],ep_beams,ed_beams[i],eq2,nseg)
     if i < 18:
         es_beams[nseg*i:nseg*i+nseg,:], edi_beams[nseg*i:nseg*i+nseg,:], eci_beams[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex_beams[i],ey_beams[i],ez_beams[i],eo[i],ep_beams,ed_beams[i],[0,0,0,0],nseg)
+        #es_beams[:,:,i] = cfc.beam3s(ex_beams[i],ey_beams[i],ez_beams[i],eo[i],ep_beams,ed_beams[i],[0,0,0,0],nseg)        
+        #print(f'beam {i}',es_beams[nseg*i:nseg*i+nseg,:],'at',eci_beams[nseg*i:nseg*i+nseg,:])
     else:
-        es_beams[nseg*i:nseg*i+nseg,:], edi_beams[nseg*i:nseg*i+nseg,:], eci_beams[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex_beams[i],ey_beams[i],ez_beams[i],eo[i],ep_beams,ed_beams[i],eq,nseg)
+        es_beams[nseg*i:nseg*i+nseg,:], edi_beams[nseg*i:nseg*i+nseg,:], eci_beams[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex_beams[i],ey_beams[i],ez_beams[i],eo[i],ep_beams,ed_beams[i],eq1,nseg)
+        #es_beams[:,:,i] = cfc.beam3s(ex_beams[i],ey_beams[i],ez_beams[i],eo[i],ep_beams,ed_beams[i],eq,nseg)        
+        #print(f'beam {i}',es_beams[nseg*i:nseg*i+nseg,:])
     #es[nseg*i:nseg*i+nseg,:] = cfc.beam3s(ex[i],ey[i],ez[i],eo,ep,ed[i],[0,0,0,0],nseg)
 
 N_beams = es_beams[:,0]
@@ -301,10 +323,10 @@ for i in range(nel_beams*nseg):
         #normal_stresses[i] = N[i]/A + My[i]/Iy*hz + Mz[i]/Iz*hy
     
     # Calculate shear stress in y-direction (Assuming only web taking shear stresses)
-    shear_stresses_y[i] = Vy[i]/A_web_beams
+    #shear_stresses_y[i] = Vy[i]/A_web_beams
 
     # Calculate shear stress in y-direction (Assuming only flanges taking shear stresses)
-    shear_stresses_z[i] = Vz[i]/(A_beams-A_web_beams)
+    #shear_stresses_z[i] = Vz[i]/(A_beams-A_web_beams)
 #print(normal_stresses)
 
 normal_stresses_bars = np.zeros(nel_bars)
@@ -312,6 +334,9 @@ normal_stresses_bars = np.zeros(nel_bars)
 for i in range(nel_bars):
     # Calculate least favorable normal stress
     normal_stresses_bars[i] = N_bars[i]/A_bars
+
+#normal_stresses_beams = np.absolute(normal_stresses_beams)
+#normal_stresses_bars = np.absolute(normal_stresses_bars)
     
 # Below the data for the undeformed mesh is sent, along with element values.
 # Normal stresses are sent by default, but comment it out and uncomment 
@@ -319,14 +344,14 @@ for i in range(nel_bars):
 
 # Send data of deformed geometry & normal stresses as element values
 #cfvv.beam3d.draw_displaced_geometry(edof,coord,dof,a,normal_stresses,'Max normal stress',def_scale=5,nseg=nseg)
-cfvv.draw_mesh(edof_beams,coord,dof,5,alpha=0.5,nseg=nseg,color='green')
+cfvv.draw_displaced_mesh(edof_beams,coord,dof,5,a,normal_stresses_beams/1000,nseg=nseg,def_scale=1)
+cfvv.draw_mesh(edof_beams,coord,dof,5,nseg=nseg,alpha=0.2)
 
 
 #cfvv.draw_displaced_geometry(edof,coord,dof,5,el_values=normal_stresses,label='Max normal stress',alpha=0.3,nseg=nseg)
-cfvv.draw_displaced_mesh(edof_beams,coord,dof,5,a,normal_stresses_beams,nseg=nseg,def_scale=1,colormap='coolwarm')
-cfvv.add_scalar_bar('Max normal stress beams')
+
+cfvv.add_scalar_bar('Max normal stress [kN]')
 #cfvv.add_legend(def_beam_elements)
-cfvv.add_text('Beam',color='green',pos='top-left')
 # Send data of deformed geometry & normal stresses as element values
 #cfvv.draw_displaced_geometry(edof,coord,dof,a,shear_stresses_y,1,label='Shear stress y',def_scale=5,nseg=nseg)
 
@@ -348,12 +373,12 @@ edof_bars = np.array([
     [37, 38, 39, 40, 41, 42, 79, 80, 81, 82, 83, 84]#[37, 38, 39, 79, 80, 81]
 ])
 
-cfvv.draw_mesh(edof_bars,coord,dof,2,alpha=0.5,color='yellow')
+cfvv.draw_mesh(edof_bars,coord,dof,2,alpha=0.2)
 #print('bar disp')
-cfvv.draw_displaced_mesh(edof_bars,coord,dof,2,a,normal_stresses_bars,def_scale=1,colormap='coolwarm')
-cfvv.add_scalar_bar('Max normal stress bars',pos=[0.75,0.1])
+vmin, vmax = np.min(normal_stresses_beams), np.max(normal_stresses_beams)
+cfvv.draw_displaced_mesh(edof_bars,coord,dof,2,a,normal_stresses_bars/1000,def_scale=1,vmin=vmin,vmax=vmax)
+#cfvv.add_scalar_bar('Max normal stress bars',pos=[0.75,0.1])
 #cfvv.add_legend(def_bar_elements)
-cfvv.add_text('Bar',color='yellow',pos=[0,0.95])#,render=True)
 
 #Start Calfem-vedo visualization
 cfvv.show_and_wait()

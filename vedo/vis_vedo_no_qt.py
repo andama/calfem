@@ -147,7 +147,7 @@ class VedoMainWindow():
         #v.settings.renderLinesAsTubes = True
         v.settings.allowInteraction = True
         v.settings.useFXAA = True
-        #v.settings.useSSAO         = True
+        v.settings.useSSAO         = True
         v.settings.visibleGridEdges = True
         #v.settings.useParallelProjection = True
 
@@ -241,7 +241,7 @@ def add_scalar_bar(
     plot_window = VedoPlotWindow.instance().plot_window
 
     fig = plot_window.fig
-    plot_window.meshes[fig][0].addScalarBar(pos=pos, titleFontSize=font_size, useAlpha=False)
+    plot_window.meshes[fig][0].addScalarBar(pos=pos, titleFontSize=font_size)
 
     msg = v.Text2D(label, pos='bottom-right', alpha=1, c=color)
     plot_window.msg[plot_window.fig] += [msg]
@@ -343,7 +343,7 @@ def add_rulers(xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='',
 
     assem = v.merge(plot_window.meshes[plot_window.fig])
 
-    ruler = v.addons.RulerAxes(assem, xtitle=xtitle, ytitle=ytitle, ztitle=ztitle, xlabel=xlabel, ylabel=ylabel, zlabel=zlabel, xpad=0.1, ypad=0.1, zpad=0.1, font='Normografo', s=None, italic=0, units='m', c=(1,1,1), alpha=alpha, lw=1, precision=3, labelRotation=0, axisRotation=0, xycross=False)
+    ruler = v.addons.RulerAxes(assem, xtitle=xtitle, ytitle=ytitle, ztitle=ztitle, xlabel=xlabel, ylabel=ylabel, zlabel=zlabel, xpad=0.1, ypad=0.1, zpad=0.1, font='Normografo', s=None, italic=0, units='m', c=(0,0,0), alpha=alpha, lw=1, precision=3, labelRotation=0, axisRotation=0, xycross=False)
 
     plot_window.rulers[plot_window.fig] += [ruler]
 
@@ -525,6 +525,8 @@ def draw_mesh(
     offset = [0, 0, 0],
     merge=False,
     t=None,
+    bc=None,
+    eq=None
     ):
 
     app = init_app()
@@ -570,7 +572,8 @@ def draw_mesh(
 
         vmin, vmax = np.min(el_values), np.max(el_values)
 
-        el_values_array = np.zeros((1,4*res))[0,:]
+        #el_values_array = np.zeros((1,4*res))[0,:]
+        #el_values_array = np.zeros((1,res))[0,:]
 
         for i in range(nel):
             coord1,coord2 = vdu.get_coord_from_edof(edof[i,:],dof,element_type)
@@ -581,7 +584,7 @@ def draw_mesh(
 
             if el_values is not None:
                 bar.info = f"Bar nr. {i}, max el. value {el_values[i]}"
-
+                '''
                 el_values_array[1] = el_values[i]
                 el_values_array[3] = el_values[i]
                 el_values_array[5] = el_values[i]
@@ -599,12 +602,13 @@ def draw_mesh(
                 el_values_array[9] = el_values[i]
                 el_values_array[10] = el_values[i]
                 el_values_array[11] = el_values[i]
-
-                bar.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
+                '''
+                #bar.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
+                #bar.cmap(colormap, [el], on="cells", vmin=vmin, vmax=vmax)
             else:
                 bar.info = f"Bar nr. {i}"
         if render_nodes == True:
-            nodes = vdu.get_node_elements(coord,scale,alpha)
+            nodes = vdu.get_node_elements(coord,scale,alpha,dof)
             #plot_window.add_geometry(elements,nodes)
             plot_window.meshes[plot_window.fig].extend(elements)
             plot_window.nodes[plot_window.fig].extend(nodes)
@@ -660,7 +664,10 @@ def draw_mesh(
         #    v.io.write(mesh, export+".vtk")
 
         if render_nodes == True:
-            nodes = vdu.get_node_elements(coord,scale,alpha)
+            if element_type == 3:
+                nodes = vdu.get_node_elements(coord,scale,alpha,dof,bc,dofs_per_node=1)
+            elif element_type == 4:
+                nodes = vdu.get_node_elements(coord,scale,alpha,dof,bc,dofs_per_node=3)
             #plot_window.add_geometry(meshes,nodes)
             
             #plot_window.meshes = np.append(meshes, nodes, axis=0)
@@ -770,7 +777,8 @@ def draw_mesh(
         #    v.io.write(mesh, export+".vtk")
 
         if render_nodes == True:
-            nodes = vdu.get_node_elements(coord,scale,alpha)
+            #print(dof)
+            nodes = vdu.get_node_elements(coord,scale,alpha,dof)
             #plot_window.add_geometry(elements,nodes)
             plot_window.meshes[plot_window.fig].extend(elements)
             plot_window.nodes[plot_window.fig].extend(nodes)
@@ -911,6 +919,8 @@ def draw_displaced_mesh(
     offset = [0, 0, 0],
     merge=False,
     t=None,
+    vmax=None,
+    vmin=None
     ):
 
     app = init_app()
@@ -1028,7 +1038,8 @@ def draw_displaced_mesh(
         def_elements = []
         res = 4
 
-        vmin, vmax = np.min(values), np.max(values)
+        if vmin == None and vmax == None:
+            vmin, vmax = np.min(values), np.max(values)
 
         el_values_array = np.zeros((1,4*res))[0,:]
 
@@ -1059,8 +1070,8 @@ def draw_displaced_mesh(
                 el_values_array[10] = values[i]
                 el_values_array[11] = values[i]
 
-                bar.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
-
+                #bar.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
+                bar.cmap(colormap, [values[i],values[i],values[i],values[i],values[i],values[i]], on="cells", vmin=vmin, vmax=vmax)
         if render_nodes == True:
             #plot_window.add_geometry(def_elements,def_nodes)
             plot_window.meshes[plot_window.fig].extend(def_elements)
@@ -1083,6 +1094,8 @@ def draw_displaced_mesh(
         #nnode = np.size(coord, axis = 0)
 
         ex,ey,ez = cfc.coordxtr(edof,coord,dof)
+
+        print(val)
 
         ed = cfc.extractEldisp(edof,a)
         if element_type == 3:
@@ -1158,19 +1171,23 @@ def draw_displaced_mesh(
         #print(topo)
 
         #mesh = v.Mesh([def_coord, topo]).lw(1)
+
+
         
+        #mesh = v.Mesh([def_coord, topo]).lw(1).alpha(alpha)
 
 
-
-
+        
         ct = vtk.VTK_HEXAHEDRON
 
         celltypes = [ct] * nel
 
+        #ug=v.UGrid([def_coord, topo, celltypes])
         ug=v.UGrid([def_coord, topo, celltypes])
         ug.points(def_coord)
         
         mesh = ug.tomesh().lw(1).alpha(alpha)
+        
 
         #v.settings.useDepthPeeling = True
 
@@ -1310,6 +1327,7 @@ def draw_displaced_mesh(
             #    z = coord[i,2]
             #else:
             a_dx, a_dy, a_dz = vdu.get_a_from_coord(i,6,a,def_scale)
+            print('def scale',def_scale,'dx',a_dx,'dy',a_dy,'dz',a_dz,)
 
             x = coord[i,0]+a_dx
             y = coord[i,1]+a_dy
@@ -1333,11 +1351,13 @@ def draw_displaced_mesh(
             if nseg > 2:
                 steps = np.float32(1/(nseg-1))
 
+
                 dx = (def_coord[coord2,0]-def_coord[coord1,0])*steps
                 dy = (def_coord[coord2,1]-def_coord[coord1,1])*steps
                 dz = (def_coord[coord2,2]-def_coord[coord1,2])*steps
 
                 for j in range(nseg-1):
+
                     x1 = def_coord[coord1,0]+dx*j
                     y1 = def_coord[coord1,1]+dy*j
                     z1 = def_coord[coord1,2]+dz*j
@@ -1346,14 +1366,20 @@ def draw_displaced_mesh(
                     y2 = def_coord[coord1,1]+dy*(j+1)
                     z2 = def_coord[coord1,2]+dz*(j+1)
 
+
+
                     beam = v.Cylinder([[x1,y1,z1],[x2,y2,z2]],r=scale,res=res,c=color).alpha(alpha)
-                    beam.info = f"Beam nr. {i}, seg. {j}"
+                    beam.name = f"Beam nr. {i+1}, seg. {j+1}"
                     def_elements.append(beam)
 
                     if values is not None:
-                        el_value1 = values[nseg*i]
-                        el_value2 = values[nseg*i+1]
+                        el_value1 = values[nseg*i+j]
+                        #beam.name = f"Beam nr. {i}, seg. {j}, element value: {np.round(values[nseg*i],2)}"
+                        #beam.celldata["val"] = [values[nseg*i],values[nseg*i],values[nseg*i],values[nseg*i],values[nseg*i],values[nseg*i]]
+                        el_value2 = values[nseg*i+j+1]
 
+                        print('beam',i+1,'segment',j+1,f'val {el_value1} and {el_value2}')
+                        
                         el_values_array[1] = el_value1
                         el_values_array[3] = el_value1
                         el_values_array[5] = el_value1
@@ -1371,8 +1397,9 @@ def draw_displaced_mesh(
                         el_values_array[9] = el_value2
                         el_values_array[10] = el_value2
                         el_values_array[11] = el_value2
-
+                        
                         beam.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
+                        #beam.cmap(colormap, 'val', on="cells", vmin=vmin, vmax=vmax)
 
             else:
                 beam = v.Cylinder([[def_coord[coord1,0],def_coord[coord1,1],def_coord[coord1,2]],[def_coord[coord2,0],def_coord[coord2,1],def_coord[coord2,2]]],r=scale,res=res,c=color).alpha(alpha)
@@ -1419,8 +1446,16 @@ def draw_displaced_mesh(
 
         ex,ey = cfc.coordxtr(edof,coord,dof)
         #print(ex)
+        #print(ey)
 
         ez = np.zeros((nel,4))
+        #ez_init = np.array([
+        #        [-t, t, -t, t]
+        #    ])
+
+        #for i in range(ez.shape[0]):
+        #    ez[i] = ez_init
+
         #print(ez)
 
         ed = cfc.extractEldisp(edof,a)
@@ -1429,17 +1464,31 @@ def draw_displaced_mesh(
 
         #def_coord = np.zeros([nnode,3])
 
-        def_coord = coord2 + a_node
+        #print('a_node',a_node)
+
+        def_coord = coord2
+        def_coord[:,2] = a_node[:,0]*def_scale
+
+        mesh = v.Mesh([def_coord, topo]).lw(1).alpha(alpha)
 
 
-        ct = vtk.VTK_HEXAHEDRON
+        #ct = vtk.VTK_HEXAHEDRON
 
-        celltypes = [ct] * nel
+        #celltypes = [ct] * nel
 
-        ug=v.UGrid([def_coord, topo, celltypes])
-        ug.points(def_coord)
+        #ug=v.UGrid([def_coord, topo, celltypes])
+        #ug.points(def_coord)
         
-        mesh = ug.tomesh().lw(1).alpha(alpha)
+        #mesh = ug.tomesh().lw(1).alpha(alpha)
+
+        if val and val == 'el_values':
+            #print(val)
+            #vmin, vmax = np.min(values), np.max(values)
+            
+            #el_values = vdu.convert_el_values(edof,values)
+            mesh.celldata["val"] = values
+
+            mesh.cmap(colormap, "val", on="cells")
 
         if render_nodes == True:
             nodes = vdu.get_node_elements(coord,scale,alpha)
@@ -1798,7 +1847,7 @@ def figure(fig):
             plot_window.rulers.append([])
 
 
-
+# Lägg till figurnummer här???
 # Start Calfem-vedo visualization
 def show_and_wait():
     app = init_app()

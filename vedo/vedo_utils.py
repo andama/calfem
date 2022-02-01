@@ -53,19 +53,77 @@ def get_a_from_coord(coord_row_num,num_of_deformations,a,scale=1):
     dz = a[coord_row_num*num_of_deformations+2]*scale
     return dx, dy, dz
 
-def get_node_elements(coord,scale,alpha,t=None):
+def get_node_elements(coord,scale,alpha,dof=None,bc=None,dofs_per_node=None,t=None):
     nnode = np.size(coord, axis = 0)
     ncoord = np.size(coord, axis = 1)
     nodes = []
+
+    
+    #bc_dict = {}
+    #if dofs_per_node == 1:
+    #    for i in range(nnode):
+            
+    #        print(np.where(bc == i+1)[0])
+    #        if np.where(bc == i+1)[0] == [i]:
+
+    #            bc_dict[i+1] = dof[i][0]
+        #bc_nodes = bc-1
+    #elif dofs_per_node == 3:
+    #    print('3 dofs per node')
+    #print('dict',bc_dict)
+
+    print(dof)
+
+    for i in range(nnode):
+        #if np.where(bc == i+1)[0] == [i]:
+        if ncoord == 3:
+                #node = v.Point((coord[i,0],coord[i,1],coord[i,2]),c='black',alpha=alpha).ps(10).renderPointsAsSpheres()
+            #print('where',np.where(bc == i+1)[0])
+            if dofs_per_node == 1:
+                dofs = dof[i]
+            else:
+                print(dof[i,:])
+                dofs = dof[i,:]
+            #print('dofs',dofs)
+            #print(np.isin(bc, dofs, assume_unique=True))
+            if np.any(np.isin(bc, dofs, assume_unique=True)) == True:
+                color = 'red'
+                #print('bc ',dofs[0],' is in dofs')
+                #print('---')
+            #print(np.any(dof == i+1)[0])
+            #b = bc[np.where(bc == i+1)[0]]
+            #print('dof',b)
+            #print('i',[i])
+            #if np.where(bc == i+1)[0] == [i]:
+            #    color = 'red'
+            #    print('red:',i+1)
+            else:
+                color = 'black'
+                #print('black:',i+1)
+            node = v.Sphere(c=color).scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
+            node.name = f"Node nr. {i+1}, DoFs: [{dof[i,0]}]"
+            nodes.append(node)
+            #print('Node nr.',i)
+            #test = np.where(bc == i+1)[0]
+            #print('test',test)
+    '''
     for i in range(nnode):
         if ncoord == 3:
             #node = v.Point((coord[i,0],coord[i,1],coord[i,2]),c='black',alpha=alpha).ps(10).renderPointsAsSpheres()
-            node = v.Sphere(c='black').scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
+            if i == bc[i]-1:
+                color = 'red'
+            else:
+                color = 'black'
+            node = v.Sphere(c=color).scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
             node.name = f"Node nr. {i}"
             nodes.append(node)
         elif ncoord == 2:
             #print((coord[i,0],coord[i,1],0))
-            node = v.Sphere(c='black').scale(1.5*scale).pos([coord[i,0],coord[i,1],0]).alpha(alpha)
+            if i == bc[i]-1:
+                color = 'red'
+            else:
+                color = 'black'
+            node = v.Sphere(c=color).scale(1.5*scale).pos([coord[i,0],coord[i,1],0]).alpha(alpha)
             #node = v.Point((coord[i,0],coord[i,1],0),c='black',alpha=alpha).ps(10).renderPointsAsSpheres()
             node.name = f"Node nr. {i}"
             nodes.append(node)
@@ -74,10 +132,15 @@ def get_node_elements(coord,scale,alpha,t=None):
         #    node.info = f"Node nr. {i}"
         #    nodes.append(node)
         elif ncoord == 1:
-            node = v.Sphere(c='black').scale(1.5*scale).pos([coord[i,0],0,0]).alpha(alpha)
+            if i == bc[i]-1:
+                color = 'red'
+            else:
+                color = 'black'
+            node = v.Sphere(c=color).scale(1.5*scale).pos([coord[i,0],0,0]).alpha(alpha)
             #node = v.Point((coord[i,0],0,0),c='black',alpha=alpha).ps(10).renderPointsAsSpheres()
             node.name = f"Node nr. {i}"
             nodes.append(node)
+    '''
     return nodes
 
 def check_input(edof,coord,dof,element_type,a=None,values=None,nseg=None):
@@ -435,10 +498,6 @@ def convert_to_node_topo(edof, ex, ey, ez, ed=None, es=None, dofs_per_node=3, ig
         topo.append(el_hash_topo)
 
     return np.asarray(coords), np.asarray(topo), np.asarray(node_dofs), np.asarray(node_displ), np.asarray(node_scalars)
-
-
-
-
 
 
 
