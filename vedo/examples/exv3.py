@@ -12,18 +12,19 @@ os.system('clear')
 sys.path.append("../")
 sys.path.append("../../../calfem-python-develop/calfem")
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+#from PyQt5.QtWidgets import *
+#from PyQt5.QtCore import *
 #import calfem.core as cfc
-import core as cfc
+
 import numpy as np
 #import vis_vedo as cfvv
 import vis_vedo_no_qt as cfvv
-from PyQt5 import Qt
+#from PyQt5 import Qt
 
 #import calfem.geometry as cfg
 #import calfem.mesh as cfm
 #import calfem.vis as cfv
+import core as cfc
 import geometry as cfg
 import mesh as cfm
 import vis as cfv
@@ -72,13 +73,13 @@ g.surface([4, 6, 2, 0])
 g.volume([0,1,2,3,4,5])
 """
 
-l = 0.4
+l = 1
 h = 0.4
 w = 0.4
 
 n_el_x = 12
 n_el_y = 12
-n_el_z = 12
+n_el_z = 30
 
 g.point([0, 0, 0], ID=0)
 #g.point([w/2.0, 0.0, 0.0], 1)

@@ -885,6 +885,6 @@ end
 
 % --- Results from both analyses are saved in a .mat-file ---
 
-save('exv4.mat','coord','dof','edof','a','vM_el','vM_n','lambda','eig')
+save('exv4.mat','coord','dof','edof','force_dofs','a','ed','vM_el','vM_n','lambda','eig')
 
 

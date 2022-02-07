@@ -91,7 +91,7 @@ class MainWindow(Qt.QMainWindow):
         self.iren.Start()
         """
         Qt.QMainWindow.__init__(self, parent)
-        uic.loadUi("QtVTKMainWindow.ui", self)
+        #uic.loadUi("QtVTKMainWindow.ui", self)
         #self.frame = QtWidgets.QFrame()
         self.frame = Qt.QFrame()
         #vlayout = QtWidgets.QVBoxLayout()

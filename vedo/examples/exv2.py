@@ -11,13 +11,14 @@ import sys
 os.system('clear')
 sys.path.append("../")
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+#from PyQt5.QtWidgets import *
+#from PyQt5.QtCore import *
 import calfem.core as cfc
 import numpy as np
 #import vis_vedo as cfvv
 import vis_vedo_no_qt as cfvv
-from PyQt5 import Qt
+import vedo_utils as cfvu
+#from PyQt5 import Qt
 
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 
@@ -304,8 +305,8 @@ for i in range(nel_bars):
 N_bars = es_bars
 
 normal_stresses_beams = np.zeros(nel_beams*nseg)
-shear_stresses_y = np.zeros(nel_beams*nseg)
-shear_stresses_z = np.zeros(nel_beams*nseg)
+#shear_stresses_y = np.zeros(nel_beams*nseg)
+#shear_stresses_z = np.zeros(nel_beams*nseg)
 
 #print(N)
 
@@ -328,6 +329,26 @@ for i in range(nel_beams*nseg):
     # Calculate shear stress in y-direction (Assuming only flanges taking shear stresses)
     #shear_stresses_z[i] = Vz[i]/(A_beams-A_web_beams)
 #print(normal_stresses)
+
+print('Beam 19 stresses:',normal_stresses_beams[18*nseg:18*nseg+nseg])
+print('Beam 19 points along:',eci_beams[18*nseg:18*nseg+nseg])
+#beam_19_start, beam_19_end = cfvu.get_coord_from_edof(edof_beams[18],dof,5)
+#print('Beam 19 start point:',coord[beam_19_start],coord[beam_19_end])
+
+print('Beam 20 stresses:',normal_stresses_beams[19*nseg:19*nseg+nseg])
+print('Beam 20 points along:',eci_beams[19*nseg:19*nseg+nseg])
+#beam_20_start, beam_20_end = cfvu.get_coord_from_edof(edof_beams[19],dof,5)
+#print('Beam 20 start point:',coord[beam_20_start],coord[beam_20_end])
+
+print('Beam 21 stresses:',normal_stresses_beams[20*nseg:20*nseg+nseg])
+print('Beam 21 points along:',eci_beams[20*nseg:20*nseg+nseg])
+#beam_21_start, beam_21_end = cfvu.get_coord_from_edof(edof_beams[20],dof,5)
+#print('Beam 21 start point:',coord[beam_21_start],coord[beam_21_end])
+
+print('Beam 22 stresses:',normal_stresses_beams[21*nseg:21*nseg+nseg])
+print('Beam 22 points along:',eci_beams[20*nseg:20*nseg+nseg])
+#beam_22_start, beam_22_end = cfvu.get_coord_from_edof(edof_beams[21],dof,5)
+#print('Beam 22 start point:',coord[beam_22_start],coord[beam_22_end])
 
 normal_stresses_bars = np.zeros(nel_bars)
 
@@ -361,7 +382,7 @@ cfvv.add_scalar_bar('Max normal stress [kN]')
 
 #cfvv.beam3d(edof,coord,dof,a,normal_stresses,'Max normal stress',nseg=nseg)
 
-### IMPORTANT: Keep 6 dofs here, otherwise visualization breaks
+### IMPORTANT: Keep 12 dofs here, otherwise visualization breaks
 ### In reality, 3D-bars only have 6 dofs
 edof_bars = np.array([
     [13, 14, 15, 16, 17, 18, 25, 26, 27, 28, 29, 30],#[13, 14, 15, 25, 26, 27],
@@ -379,6 +400,19 @@ vmin, vmax = np.min(normal_stresses_beams), np.max(normal_stresses_beams)
 cfvv.draw_displaced_mesh(edof_bars,coord,dof,2,a,normal_stresses_bars/1000,def_scale=1,vmin=vmin,vmax=vmax)
 #cfvv.add_scalar_bar('Max normal stress bars',pos=[0.75,0.1])
 #cfvv.add_legend(def_bar_elements)
+
+nS_beams = np.zeros((4,nseg))
+Mz_beams = np.zeros((4,nseg))
+eci_beams_upd = np.zeros((4,nseg))
+for i in range(nS_beams.shape[0]):
+    nS_beams[i] = normal_stresses_beams[(18+i)*nseg:(18+i)*nseg+nseg]
+    Mz_beams[i] = Mz[(18+i)*nseg:(18+i)*nseg+nseg]
+    print(eci_beams_upd[i])
+    print(eci_beams[(18+i)*nseg:(18+i)*nseg+nseg])
+    eci_beams_upd[i] = np.transpose(eci_beams[(18+i)*nseg:(18+i)*nseg+nseg])
+
+#cfvv.eldia(ex_beams[18:22],ey_beams[18:22],ez_beams[18:22],nS_beams,eci_beams_upd,scale=.0000001)
+cfvv.eldia(ex_beams[18:22],ey_beams[18:22],ez_beams[18:22],Mz_beams/1000,eci_beams_upd,label='M_x [kNm]')
 
 #Start Calfem-vedo visualization
 cfvv.show_and_wait()

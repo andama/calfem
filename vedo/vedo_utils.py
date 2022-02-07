@@ -79,17 +79,18 @@ def get_node_elements(coord,scale,alpha,dof=None,bc=None,dofs_per_node=None,t=No
         if ncoord == 3:
                 #node = v.Point((coord[i,0],coord[i,1],coord[i,2]),c='black',alpha=alpha).ps(10).renderPointsAsSpheres()
             #print('where',np.where(bc == i+1)[0])
-            if dofs_per_node == 1:
-                dofs = dof[i]
-            else:
-                print(dof[i,:])
-                dofs = dof[i,:]
-            #print('dofs',dofs)
-            #print(np.isin(bc, dofs, assume_unique=True))
-            if np.any(np.isin(bc, dofs, assume_unique=True)) == True:
-                color = 'red'
-                #print('bc ',dofs[0],' is in dofs')
-                #print('---')
+            if type(dof) is list:
+                if dofs_per_node == 1:
+                    dofs = dof[i]
+                else:
+                    print(dof)
+                    dofs = dof[i,:]
+                #print('dofs',dofs)
+                #print(np.isin(bc, dofs, assume_unique=True))
+                if np.any(np.isin(bc, dofs, assume_unique=True)) == True:
+                    color = 'red'
+                    #print('bc ',dofs[0],' is in dofs')
+                    #print('---')
             #print(np.any(dof == i+1)[0])
             #b = bc[np.where(bc == i+1)[0]]
             #print('dof',b)
@@ -97,12 +98,12 @@ def get_node_elements(coord,scale,alpha,dof=None,bc=None,dofs_per_node=None,t=No
             #if np.where(bc == i+1)[0] == [i]:
             #    color = 'red'
             #    print('red:',i+1)
-            else:
-                color = 'black'
-                #print('black:',i+1)
-            node = v.Sphere(c=color).scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
-            node.name = f"Node nr. {i+1}, DoFs: [{dof[i,0]}]"
-            nodes.append(node)
+                else:
+                    color = 'black'
+                    #print('black:',i+1)
+                node = v.Sphere(c=color).scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
+                node.name = f"Node nr. {i+1}, DoFs: [{dof[i,0]}]"
+                nodes.append(node)
             #print('Node nr.',i)
             #test = np.where(bc == i+1)[0]
             #print('test',test)
