@@ -77,9 +77,9 @@ l = 1
 h = 0.4
 w = 0.4
 
-n_el_x = 12
-n_el_y = 12
-n_el_z = 30
+n_el_x = 4
+n_el_y = 4
+n_el_z = 10
 
 g.point([0, 0, 0], ID=0)
 #g.point([w/2.0, 0.0, 0.0], 1)
@@ -183,7 +183,7 @@ ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
 nel = np.size(edof, axis = 0)
 
 Lambda = 1.4 # Thermal conductivity for concrete
-D = np.ones([3,3])*Lambda
+D = np.identity(3)*Lambda
 
 #print(D)
 #print(ex)
@@ -200,19 +200,25 @@ D = np.ones([3,3])*Lambda
 K = np.zeros((ndof,ndof))
 
 f = np.zeros([ndof,1])
-eq = np.zeros([ndof,1])
+eq = np.zeros([nel,1])
 
-#eq[37] = 1
+print('eq',eq)
+
+#eq_el = 140
+
+eq_el = 66
+
+eq[eq_el] = 10000
 
 #print(edof[0,:])
 #Ke = cfc.flw3i8e(ex, ey, ez, ep, D)
 #K = cfc.assem(edof,K,Ke)
-for eltopo, elx, ely, elz, eq in zip(edof, ex, ey, ez, eq):
-    Ke = cfc.flw3i8e(elx, ely, elz, [2], D)
-    #Ke,fe = cfc.flw3i8e(elx, ely, elz, [2], D, eq)
+for eltopo, elx, ely, elz, eqs in zip(edof, ex, ey, ez, eq):
+    #Ke = cfc.flw3i8e(elx, ely, elz, [2], D)
+    Ke,fe = cfc.flw3i8e(elx, ely, elz, [2], D, eqs)
     #print(Ke)
-    cfc.assem(eltopo, K, Ke)
-    #cfc.assem(eltopo, K, Ke, f, fe)
+    #cfc.assem(eltopo, K, Ke)
+    cfc.assem(eltopo, K, Ke, f, fe)
 """
 for i in range(nel):
     #Ke, fe = cfc.flw3i8e(ex[i], ey[i], ez[i], ep, D, eq[i])
@@ -252,11 +258,11 @@ np.append(bcVal, bc_50, axis=0)
 #sys.exit()
 # Nearly all surfaces are 20 deg
 bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_bottom, 20.0)
-bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_top, 20.0)
-bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_left, 0.0) # bottom is 0
+#bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_top, 20.0)
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_left, 20.0) # bottom is 0
 bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_back, 20.0)
-bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_right, 20.0)
-bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_front, 20.0)
+bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_right, 20.0) # top is 20
+#bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_front, 20.0)
 #bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, 50, 50.0)
 
 #f = np.zeros([ndof,1])
@@ -395,11 +401,38 @@ for i in range(nel):
 
 
 
+'''
+
+edof,coord,dof,T,ed,bc,eq,es,et,eci = cfvv.import_mat('exv3',['edof','coord','dof','a','ed','bc','eq','es','et','eci'])
+
+nel = np.size(edof,0)
+nnode = np.size(coord,0)
+
+#print(bc)
+
+bcVal = bc[:,1]
+bc = bc[:,0]
+eq_el = np.array([[10],[149]])
 
 
+flux_tot = np.zeros((nel,1));
+for i in range(nel):
+    print('Flux at element in x-dir.',es[i,0])
+    #flux_y = np.average([es[:,1,i]])
+    #flow_y = calc*np.transpose([es[:,1,i]])
+    print('Flux at element in y-dir.',es[i,1])
+    #flux_z = np.average([es[:,2,i]])
+    #flow_z = calc*np.transpose([es[:,2,i]])
+    print('Flux at element in z-dir.',es[i,2])
+    #flux[i,:] = [np.average([es[:,0,i]]), np.average([es[:,1,i]]), np.average([es[:,2,i]])]
+    flux_tot[i] = np.sqrt(es[i,0]**2 + es[i,1]**2 + es[i,2]**2)
+
+ex,ey,ez = cfc.coordxtr(edof,coord,dof)
+
+'''
 
 
-
+#print(bc,bcVal)
 
 # For simple point coordinates of geometry
 #points = g.getPointCoords()
@@ -415,10 +448,11 @@ cfvv.draw_geometry(points,lines)
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
 #cfvv.show_and_wait()
 
-
+print('eq',eq)
 
 cfvv.figure(2)
-cfvv.draw_mesh(edof,coord,dof,3,alpha=1,scale=0.005,bc=bc)
+cfvv.draw_mesh(edof,coord,dof,3,alpha=1,scale=0.005,bcPrescr=bc, bc=bcVal, eq_els=eq_el, eq=eq[eq_el])
+#cfvv.draw_mesh(edof,coord,dof,3,alpha=1,scale=0.005,bcPrescr=bc, bc=bcVal, eq_els=[eq_el], eq=eq[eq_el,:])
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
 #cfvv.show_and_wait()
 
@@ -427,27 +461,35 @@ cfvv.draw_mesh(edof,coord,dof,3,alpha=1,scale=0.005,bc=bc)
 disp = np.zeros((nnode,1))
 
 cfvv.figure(3)
-print('flux',flux,flux.shape[0],flux.shape[1])
-cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,flux_tot,colormap='coolwarm')
+#print('flux',flux,flux.shape[0],flux.shape[1])
+mesh = cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,flux_tot,colormap='coolwarm')
+#cfvv.eliso(mesh)
+#cfvv.elcont(mesh)
 cfvv.add_scalar_bar('Heat flux [W/m^2]')
+cfvv.elflux(ex,ey,ez,flux,colormap='coolwarm',unit='W/m^2')
 #cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,ns,colormap='coolwarm')
 #cfvv.add_scalar_bar('Heat flow rate [W]')
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
 #cfvv.show_and_wait()
 
 cfvv.figure(4)
-print('T',T,T.shape[0],T.shape[1])
-cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,T,colormap='coolwarm')
+#print('T',T,T.shape[0],T.shape[1])
+cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,ed,colormap='coolwarm',colors=5)
 cfvv.add_scalar_bar('Temp. [C]')
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
+print(T[153],T[154])
 cfvv.show_and_wait()
 
-cfvv.figure(5)
+#cfvv.figure(5)
+#cfvv.eliso(mesh)
+#cfvv.show_and_wait()
+
+#cfvv.figure(5)
 #cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,T,alpha=0.5,scale=0.01)
-cfvv.add_vectors(edof,coord,dof,flux,3)
+#cfvv.add_vectors(edof,coord,dof,flux,3)
 #cfvv.add_scalar_bar('Temp. [C]')
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
-cfvv.show_and_wait()
+#cfvv.show_and_wait()
 
 
     #ns[:,:,i] = calc*np.transpose([es[:,0,i]])

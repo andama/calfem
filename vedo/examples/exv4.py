@@ -22,9 +22,36 @@ import vedo_utils as cfvu
 #from scipy.io import loadmat
 
 #edof,coord,dof,a,es,ns,lamb,eig = cfvv.import_mat('exv4',['edof','coord','dof','a','es','ns','lambda','eig'])
-edof,coord,dof,a,ed,vM_el,vM_n,lamb,eig = cfvv.import_mat('exv4',['edof','coord','dof','a','ed','vM_el','vM_n','lambda','eig'])
+edof,coord,dof,a,ed,bc,f_dofs,Stress_tensors,vM_el,vM_n,lamb,eig = cfvv.import_mat('exv4',['edof','coord','dof','a','ed','bc','force_dofs','Stress_tensors','vM_el','vM_n','lambda','eig'])
 
-#ex,ey,ez = cfc.coordxtr(edof,coord,dof)
+ex,ey,ez = cfc.coordxtr(edof,coord,dof)
+
+eigenmode = 0 # Choose what eigenmode to display in figure 4/5
+
+ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
+ncoord = np.size(coord, axis = 0)
+print('Number of CALFEM coordinates: ',ncoord)
+nel = np.size(edof, axis = 0)
+
+''' Principal stresses '''
+
+PS_val = np.zeros((nel,3))
+PS_vec = np.zeros((nel,3,3))
+for i in range(nel):
+    PS_val[i,:], PS_vec[i,:,:] = np.linalg.eig(Stress_tensors[:,:,i])
+
+
+#print('Principal stresses el. 1')
+#print(PS_val,PS_vec)
+#print('---')
+
+
+
+
+
+
+
+
 
 #print(data)
 
@@ -44,19 +71,7 @@ edof,coord,dof,a,ed,vM_el,vM_n,lamb,eig = cfvv.import_mat('exv4',['edof','coord'
 #X = solid_data['X']
 
 
-eigenmode = 0
 
-
-#print(L)
-
-#print(es)
-
-#print(edof)
-
-ndof = np.size(dof, axis = 0)*np.size(dof, axis = 1)
-ncoord = np.size(coord, axis = 0)
-print('Number of CALFEM coordinates: ',ncoord)
-nel = np.size(edof, axis = 0)
 
 
 
@@ -182,11 +197,17 @@ for i in range(0, nel):
 # First plot, undeformed mesh
 cfvv.figure(1)
 
-cfvv.draw_mesh(edof,coord,dof,4,scale=0.005)
-cfvv.add_text('Undeformed mesh')
+bcPrescr = bc
+bc = np.zeros((np.size(bc[:,0]),1))
+print('bc',bc[:,0])
+f = -5000*np.ones((np.size(f_dofs[:,0]),1))
+print('f',f[:,0])
+
+cfvv.draw_mesh(edof,coord,dof,4,scale=0.005,bcPrescr=bcPrescr[:,0],bc=bc[:,0],fPrescr=f_dofs[:,0],f=f[:,0])
+cfvv.add_text('Undeformed mesh + Forces & BCs for static analysis')
 #cfvv.add_rulers()
 cfvv.show_and_wait()
-
+#sys.exit()
 
 # Third plot, deformed mesh with element stresses
 cfvv.figure(2)
@@ -199,6 +220,9 @@ scalefact = 3 #deformation scale factor
 #mesh1 = cfvv.test(edof,ex,ey,ez,a,von_mises_elements/1000000,def_scale=scalefact)
 #mesh1 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_elements/1000000,def_scale=scalefact)
 mesh1 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,vM_el/1000000,def_scale=scalefact)
+#cfvv.add_vectors(ex,ey,ez)
+#cfvv.tensors(ex,ey,ez,ps)
+
 cfvv.add_text('Static analysis: self-weight & ecc. vertical load',pos='top-left')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
 cfvv.add_scalar_bar('von Mises [MPa]')
@@ -215,11 +239,12 @@ print(upd_ed[0])
 #mesh2 = cfvv.test(edof,ex,ey,ez,a,von_mises_nodes/1000000,def_scale=scalefact,merge=True)
 #mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_nodes/1000000,def_scale=scalefact,merge=True)
 #mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,vM_n/1000000,def_scale=scalefact,merge=True)
-mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,upd_ed,def_scale=scalefact,merge=True)
-cfvv.add_scalar_bar('von Mises [MPa]')
+mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,np.zeros((ncoord*3,1)),upd_ed*1000,merge=True)
+cfvv.elprinc(ex,ey,ez,PS_val/1000000,PS_vec,colormap='coolwarm',unit='MPa')
+cfvv.add_scalar_bar('Deformation [mm]')
+#cfvv.add_scalar_bar('Stress [MPa]',pos=[0.8,0.65],text_pos='top-right',on='vectors')
 cfvv.add_text('Static analysis: self-weight & ecc. vertical load',pos='top-left')
-cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
-
+#cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
 # Export the mesh to 'exv4a.vtk'
 cfvv.export_vtk('exv4a', mesh2)
 
@@ -228,7 +253,7 @@ cfvv.export_vtk('exv4a', mesh2)
 
 #Start Calfem-vedo visualization
 cfvv.show_and_wait()
-
+#sys.exit()
 
 # Second plot, first mode from eigenvalue analysis
 cfvv.figure(4)
@@ -252,7 +277,7 @@ cfvv.show_and_wait()
 
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 
-
+'''
 cfvv.figure(5)
 # Second plot, first mode from eigenvalue analysis
 #cfvv.add_text('Eigenvalue analysis: first mode',window=1)
@@ -267,7 +292,7 @@ cfvv.animation(edof,coord,dof,4,eig[:,eigenmode],10,mode_a*1000,def_scale=scalef
 
 #Start Calfem-vedo visualization
 cfvv.show_and_wait()
-
+'''
 '''
         #print(a)
 

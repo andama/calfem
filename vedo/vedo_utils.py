@@ -53,10 +53,13 @@ def get_a_from_coord(coord_row_num,num_of_deformations,a,scale=1):
     dz = a[coord_row_num*num_of_deformations+2]*scale
     return dx, dy, dz
 
-def get_node_elements(coord,scale,alpha,dof=None,bc=None,dofs_per_node=None,t=None):
+def get_node_elements(coord,scale,alpha,dof,bcPrescr=None,bc=None,bc_color='red',fPrescr=None,f=None,f_color='blue6',dofs_per_node=None,t=None):
     nnode = np.size(coord, axis = 0)
     ncoord = np.size(coord, axis = 1)
     nodes = []
+
+    print('bc dofs',bc)
+    print('force dofs',f)
 
     
     #bc_dict = {}
@@ -72,38 +75,118 @@ def get_node_elements(coord,scale,alpha,dof=None,bc=None,dofs_per_node=None,t=No
     #    print('3 dofs per node')
     #print('dict',bc_dict)
 
+    bc_dict = {}
+    indx = 0
+    if isinstance(fPrescr, np.ndarray):
+        for i in bcPrescr:
+            bc_dict[i] = bc[indx]
+            indx += 1
+
+    f_dict = {}
+    indx = 0
+    if isinstance(fPrescr, np.ndarray):
+        for i in fPrescr:
+            f_dict[i] = f[indx]
+            indx += 1
+
     print(dof)
+    print('bc_dict',bc_dict)
+    print('f_dict',f_dict)
 
     for i in range(nnode):
         #if np.where(bc == i+1)[0] == [i]:
+
         if ncoord == 3:
+            #print('test')
                 #node = v.Point((coord[i,0],coord[i,1],coord[i,2]),c='black',alpha=alpha).ps(10).renderPointsAsSpheres()
             #print('where',np.where(bc == i+1)[0])
-            if type(dof) is list:
-                if dofs_per_node == 1:
-                    dofs = dof[i]
+            #if type(dof) is list:
+            dofs = dof[i]
+            #print('degrees of freedom',dofs)
+            #if dofs_per_node == 1:
+            #    dofs = dof[i]
+            #else:
+                #print('degrees of freedom',dof)
+            #    dofs = dof[i,:]
+            #print('dofs',dofs)
+            #print(np.isin(bc, dofs, assume_unique=True))
+            if np.any(np.isin(bcPrescr, dofs, assume_unique=True)) == True:
+                #print('index bc:',bcPrescr)
+                color = bc_color
+                #print('bc ',dofs[0],' is in dofs')
+                #print('---')
+            elif np.any(np.isin(fPrescr, dofs, assume_unique=True)) == True:
+                
+                color = f_color
+        #print(np.any(dof == i+1)[0])
+        #b = bc[np.where(bc == i+1)[0]]
+        #print('dof',b)
+        #print('i',[i])
+        #if np.where(bc == i+1)[0] == [i]:
+        #    color = 'red'
+        #    print('red:',i+1)
+            else:
+                color = 'black'
+                #print('black:',i+1)
+            node = v.Sphere(c=color).scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
+            if dofs_per_node == 1:
+                if np.any(np.isin(bcPrescr, dofs, assume_unique=True)) == True:
+                    if dof[i,0] in bc_dict:
+                        bc_0 = ': ' + str(bc_dict[dof[i,0]])
+                    else:
+                        bc_0 = ''
+
+                    node.name = f"Node nr. {i+1}, DoF & BC: [{dof[i,0]}{bc_0}]"
+                elif np.any(np.isin(fPrescr, dofs, assume_unique=True)) == True:
+                    if dof[i,0] in f_dict:
+                        f_0 = ': ' + str(f_dict[dof[i,0]])
+                    else:
+                        f_0 = ''
+
+                    node.name = f"Node nr. {i+1}, DoF & Force: [{dof[i,0]}{f_0}]"
                 else:
-                    print(dof)
-                    dofs = dof[i,:]
-                #print('dofs',dofs)
-                #print(np.isin(bc, dofs, assume_unique=True))
-                if np.any(np.isin(bc, dofs, assume_unique=True)) == True:
-                    color = 'red'
-                    #print('bc ',dofs[0],' is in dofs')
-                    #print('---')
-            #print(np.any(dof == i+1)[0])
-            #b = bc[np.where(bc == i+1)[0]]
-            #print('dof',b)
-            #print('i',[i])
-            #if np.where(bc == i+1)[0] == [i]:
-            #    color = 'red'
-            #    print('red:',i+1)
+                    node.name = f"Node nr. {i+1}, DoF: {dof[i,0]}"
+
+
+
+            elif dofs_per_node == 3:
+                if np.any(np.isin(bcPrescr, dofs, assume_unique=True)) == True:
+                    if dof[i,0] in bc_dict:
+                        bc_0 = ': ' + str(bc_dict[dof[i,0]])
+                    else:
+                        bc_0 = ''
+
+                    if dof[i,1] in bc_dict:
+                        bc_1 = ': ' + str(bc_dict[dof[i,1]])
+                    else:
+                        bc_1 = ''
+
+                    if dof[i,2] in bc_dict:
+                        bc_2 = ': ' + str(bc_dict[dof[i,2]])
+                    else:
+                        bc_2 = ''
+
+                    node.name = f"Node nr. {i+1}, DoFs & BCs: [{dof[i,0]}{bc_0}, {dof[i,1]}{bc_1}, {dof[i,2]}{bc_2}]"
+                elif np.any(np.isin(fPrescr, dofs, assume_unique=True)) == True:
+                    if dof[i,0] in f_dict:
+                        f_0 = ': ' + str(f_dict[dof[i,0]])
+                    else:
+                        f_0 = ''
+
+                    if dof[i,1] in f_dict:
+                        f_1 = ': ' + str(f_dict[dof[i,1]])
+                    else:
+                        f_1 = ''
+
+                    if dof[i,2] in f_dict:
+                        f_2 = ': ' + str(f_dict[dof[i,2]])
+                    else:
+                        f_2 = ''
+
+                    node.name = f"Node nr. {i+1}, DoFs & Forces: [{dof[i,0]}{f_0}, {dof[i,1]}{f_1}, {dof[i,2]}{f_2}]"
                 else:
-                    color = 'black'
-                    #print('black:',i+1)
-                node = v.Sphere(c=color).scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
-                node.name = f"Node nr. {i+1}, DoFs: [{dof[i,0]}]"
-                nodes.append(node)
+                    node.name = f"Node nr. {i+1}, DoFs: [{dof[i,0]}, {dof[i,1]}, {dof[i,2]}]"
+            nodes.append(node)
             #print('Node nr.',i)
             #test = np.where(bc == i+1)[0]
             #print('test',test)
@@ -143,6 +226,80 @@ def get_node_elements(coord,scale,alpha,dof=None,bc=None,dofs_per_node=None,t=No
             nodes.append(node)
     '''
     return nodes
+
+def vectors(
+    points,
+    vectors,
+    c="k",
+    alpha=1,
+    shaftLength=0.8,
+    shaftWidth=0.05,
+    headLength=0.25,
+    headWidth=0.2,
+    fill=True,
+    text=None, vmax=None, vmin=None, cmap='jet', values = None):
+    """
+    Quiver Plot, display `vectors` at `points` locations.
+
+    Color can be specified as a colormap which maps the size of the arrows.
+
+    :param float shaftLength: fractional shaft length
+    :param float shaftWidth: fractional shaft width
+    :param float headLength: fractional head length
+    :param float headWidth: fractional head width
+    :param bool fill: if False only generate the outline
+
+    |quiver| |quiver.py|_
+    """
+    if isinstance(points, v.Points):
+        points = points.points()
+    else:
+        points = np.array(points)
+    vectors = np.array(vectors) / 2
+
+    spts = points - vectors
+    epts = points + vectors
+
+    npts = np.size(points,0)
+
+    cylinders = []
+    for i in range(npts):
+        cyl = v.Cylinder([spts[i],epts[i]],r=shaftWidth*0.01,res=4,c=c)
+        cyl.name = text[i]
+        cyl.cmap(cmap,input_array=values[i],vmin=vmin,vmax=vmax,on='cells')
+        cylinders.append(cyl)
+
+    '''
+    arrs2d = shapes.Arrows2D(
+        spts,
+        epts,
+        c=c,
+        shaftLength=shaftLength,
+        shaftWidth=shaftWidth,
+        headLength=headLength,
+        headWidth=headWidth,
+        fill=fill,
+        alpha=alpha,
+    )
+    '''
+    #arrs2d.pickable(False)
+    #arrs2d.name = "quiver"
+    return cylinders
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def check_input(edof,coord,dof,element_type,a=None,values=None,nseg=None):
     if element_type == 1 or element_type == 2 or element_type == 5:

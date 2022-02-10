@@ -1,4 +1,4 @@
-% CALFEM Vedo Visuaization example (exv4a & exv4b)
+% CALFEM Vedo Visuaization example (exv4)
 % Author: Andreas Åmand
 
 clear
@@ -246,17 +246,52 @@ for i=(1:nel)
     [es(:,:,i),et(:,:,i),eci(:,:,i)] = soli8s(ex(i,:),ey(i,:),ez(i,:),ep,D,ed(i,:));
 end
 
+% --- Calculating Principal stresses ---
+
+%ps = zeros(3,nel);
+%for i=(1:nel)
+%    sigma_11 = mean(es(:,1,i));
+%    sigma_22 = mean(es(:,2,i));
+%    sigma_33 = mean(es(:,3,i));
+%    sigma_12 = mean(es(:,4,i));
+%    sigma_13 = mean(es(:,5,i));
+%    sigma_23 = mean(es(:,6,i));
+
+%    ps(1,i) = sigma_11 + sigma_22 + sigma_33;
+%    ps(2,i) = sigma_11*sigma_22 + sigma_22*sigma_33 + sigma_11*sigma_33 - (sigma_12^2 + sigma_13^2 + sigma_23^2);
+%    ps(3,i) = sigma_11*sigma_22*sigma_33 + 2*(sigma_12+sigma_13+sigma_23) - (sigma_12^2)*sigma_33 - (sigma_13^2)*sigma_22 - (sigma_23^2)*sigma_11;
+%end
+
+% --- Calculating Stress Tensors ---
+
+Stress_tensors = zeros(3,3,nel);
+for i=(1:nel)
+    sigma_11 = mean(es(:,1,i));
+    sigma_22 = mean(es(:,2,i));
+    sigma_33 = mean(es(:,3,i));
+    sigma_12 = mean(es(:,4,i));
+    sigma_13 = mean(es(:,5,i));
+    sigma_23 = mean(es(:,6,i));
+
+    Stress_tensors(:,:,i) = [sigma_11 sigma_12 sigma_13; sigma_12 sigma_22 sigma_23; sigma_13 sigma_23 sigma_33];
+end
+
+% --- Calculating Principal stresses ---
+
+
+
 % --- Using element stresses to calculate von Mises ---
 
 vM_el = zeros(nel,1);
 for i=(1:nel)
-	vM_el(i) = sqrt( 0.5 * ( (mean(es(:,1,i))-mean(es(:,2,i))).^2 + (mean(es(:,2,i))-mean(es(:,3,i))).^2 + (mean(es(:,3,i))-mean(es(:,1,i))) ).^2 + 3 * ((mean(es(:,4,i))).^2 + (mean(es(:,5,i))).^2 + (mean(es(:,6,i))).^2) );
-    %mean(es[:,1,i]) sigma_xx
-	%mean(es[:,2,i]) sigma_yy
-	%mean(es[:,3,i]) sigma_zz
-	%mean(es[:,4,i]) sigma_xy
-	%mean(es[:,5,i]) sigma_xz
-	%mean(es[:,6,i]) sigma_yz
+	%vM_el(i) = sqrt( 0.5 * ( (mean(es(:,1,i))-mean(es(:,2,i)))^2 + (mean(es(:,2,i))-mean(es(:,3,i)))^2 + (mean(es(:,3,i))-mean(es(:,1,i))) )^2 + 3 * ((mean(es(:,4,i)))^2 + (mean(es(:,5,i)))^2 + (mean(es(:,6,i)))^2) );
+    s_xx = mean(es(:,1,i));
+	s_yy = mean(es(:,2,i));
+	s_zz = mean(es(:,3,i));
+	s_xy = mean(es(:,4,i));
+	s_xz = mean(es(:,5,i));
+	s_yz = mean(es(:,6,i));
+    vM_el(i) = sqrt( 0.5*((s_xx-s_yy)^2 + (s_yy-s_zz)^2 + (s_xx-s_yy)^2) + 3*(s_xy^2 + s_xz^2 + s_yz^2) );
 end
 
 % --- Nodal stresses for elements ---
@@ -885,6 +920,6 @@ end
 
 % --- Results from both analyses are saved in a .mat-file ---
 
-save('exv4.mat','coord','dof','edof','force_dofs','a','ed','vM_el','vM_n','lambda','eig')
+save('exv4.mat','coord','dof','edof','bc','force_dofs','a','ed','Stress_tensors','vM_el','vM_n','lambda','eig')
 
 

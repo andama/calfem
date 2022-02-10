@@ -292,6 +292,9 @@ class VedoMainWindow():
             for j in range(len(self.rulers[i])):
                 plt.add(self.rulers[i][j])
 
+            for j in range(len(self.vectors[i])):
+                plt.add(self.vectors[i][j])
+
             self.rendered += 1
 
         v.interactive()
@@ -308,9 +311,10 @@ class VedoMainWindow():
 def add_scalar_bar(
     label,
     pos=[0.8,0.05],
-    #pos="bottom-right",
+    text_pos="bottom-right",
     font_size=24,
     color='black',
+    on = 'mesh'
     #sx=1000,
     #sy=1000
     #size=(100, 50)
@@ -319,9 +323,12 @@ def add_scalar_bar(
     plot_window = VedoPlotWindow.instance().plot_window
 
     fig = plot_window.fig
-    plot_window.meshes[fig][0].addScalarBar(pos=pos, titleFontSize=font_size)
+    if on == 'mesh':
+        plot_window.meshes[fig][0].addScalarBar(pos=pos, titleFontSize=font_size)
+    elif on == 'vectors':
+        plot_window.vectors[fig][0].addScalarBar(pos=pos, titleFontSize=font_size)
 
-    msg = v.Text2D(label, pos='bottom-right', alpha=1, c=color)
+    msg = v.Text2D(label, pos=text_pos, alpha=1, c=color)
     plot_window.msg[plot_window.fig] += [msg]
 
 # Add text to a renderer
@@ -425,11 +432,221 @@ def add_rulers(xtitle='', ytitle='', ztitle='', xlabel='', ylabel='', zlabel='',
 
     plot_window.rulers[plot_window.fig] += [ruler]
 
-#Add vector field
-def add_vectors(edof,coord,dof,v,element_type):
+# Beam diagrams
+def eldia(ex,ey,ez,es,eci,dir='y',scale=1,thickness=5,alpha=1,label='y',invert=True):    
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
+    #print('ex',ex)
+    #print('ey',ey)
+    #print('ez',ez)
+    print('es',es)
+    #print('eci',eci)
+
+    nel = np.size(ex,0)
+    nseg = np.size(eci,1)
+    upd_scale = scale*(1/np.max(np.absolute(es)))
+
+    for i in range(nel):
+        #l = np.sqrt( (ex[i,1]-ex[i,0])**2 + (ey[i,1]-ey[i,0])**2 + (ez[i,1]-ez[i,0])**2 )
+        #print('l',l)
+        x = np.linspace(ex[i,0], ex[i,1], nseg)
+        if dir=='x':
+            if invert == True:
+                x = x - es[i]*upd_scale
+            else:
+                x = x + es[i]*upd_scale
+        y = np.linspace(ey[i,0], ey[i,1], nseg)
+        if dir=='y':
+            if invert == True:
+                y = y - es[i]*upd_scale
+            else:
+                y = y + es[i]*upd_scale
+        z = np.linspace(ez[i,0], ez[i,1], nseg)
+        if dir=='z':
+            if invert == True:
+                z = z - es[i]*upd_scale
+            else:
+                z = z + es[i]*upd_scale
+
+        pts = []
+        pts.append(v.Point(pos=[ex[i,0],ey[i,0],ez[i,0]], r=thickness*1.5, c='black', alpha=alpha))
+        
+        for j in range(nseg):
+            pts.append(v.Point(pos=[x[j],y[j],z[j]], r=thickness*1.5, c='black', alpha=alpha))
+        pts.append(v.Point(pos=[ex[i,1],ey[i,1],ez[i,1]], r=thickness*1.5, c='black', alpha=alpha))
+        
+        lines = []
+        for j in range(len(pts)-1):
+            lines.append(v.Lines(pts[j].points(), pts[j+1].points(), c='k4', alpha=alpha, res=2).lw(0.5*thickness))
+
+        plot_window.meshes[plot_window.fig].append(lines)
+
+        graph = v.merge(pts)
+        plot_window.meshes[plot_window.fig].append(graph)
+        
+        if invert == True:
+            ticks = -np.linspace(np.max(es[i])*upd_scale, np.min(es[i])*upd_scale, 10)
+            #ticks = np.flip(ticks)
+        else:
+            ticks = np.linspace(np.min(es[i])*upd_scale, np.max(es[i])*upd_scale, 10)
+        
+        labels = np.round(np.linspace(np.min(es[i]), np.max(es[i]), 10),3)
+
+        if dir=='x':
+            if invert == True:
+                axes = graph.buildAxes(xInverted=True, c='black', xTitleOffset=[(ticks[1]-ticks[0]),0,0], xtitle=label, xTitleRotation=270, xrange=[-np.min(es[i])*upd_scale+(ticks[1]-ticks[0]), -np.max(es[i])*upd_scale-(ticks[1]-ticks[0])], xValuesAndLabels=[(ticks[0], labels[0]), (ticks[1], labels[1]), (ticks[2], labels[2]), (ticks[3], labels[3]), (ticks[4], labels[4]), (ticks[5], labels[5]), (ticks[6], labels[6]), (ticks[7], labels[7]), (ticks[8], labels[8]), (ticks[9], labels[9])])
+            else:
+                axes = graph.buildAxes(c='black', xTitleOffset=[(ticks[1]-ticks[0]),0,0], xtitle=label, xTitleRotation=270, xrange=[np.min(es[i])*upd_scale, np.max(es[i])*upd_scale+(ticks[1]-ticks[0])], xValuesAndLabels=[(ticks[0], labels[0]), (ticks[1], labels[1]), (ticks[2], labels[2]), (ticks[3], labels[3]), (ticks[4], labels[4]), (ticks[5], labels[5]), (ticks[6], labels[6]), (ticks[7], labels[7]), (ticks[8], labels[8]), (ticks[9], labels[9])])
+        elif dir=='y':
+            if invert == True:
+                axes = graph.buildAxes(yInverted=True, c='black', yTitleOffset=[0,(ticks[1]-ticks[0]),0], ytitle=label, yTitleRotation=270, yrange=[-np.max(es[i])*upd_scale-(ticks[1]-ticks[0]), -np.min(es[i])*upd_scale+(ticks[1]-ticks[0])], yValuesAndLabels=[(ticks[0], labels[0]), (ticks[1], labels[1]), (ticks[2], labels[2]), (ticks[3], labels[3]), (ticks[4], labels[4]), (ticks[5], labels[5]), (ticks[6], labels[6]), (ticks[7], labels[7]), (ticks[8], labels[8]), (ticks[9], labels[9])])
+            else:
+                axes = graph.buildAxes(c='black', yTitleOffset=[0,(ticks[1]-ticks[0]),0], ytitle=label, yTitleRotation=270, yrange=[np.min(es[i])*upd_scale, np.max(es[i])*upd_scale+(ticks[1]-ticks[0])], yValuesAndLabels=[(ticks[0], labels[0]), (ticks[1], labels[1]), (ticks[2], labels[2]), (ticks[3], labels[3]), (ticks[4], labels[4]), (ticks[5], labels[5]), (ticks[6], labels[6]), (ticks[7], labels[7]), (ticks[8], labels[8]), (ticks[9], labels[9])])
+        elif dir=='z':
+            if invert == True:
+                axes = graph.buildAxes(zInverted=True, c='black', zTitleOffset=[0,0,(ticks[1]-ticks[0])], ztitle=label, zTitleRotation=270, zrange=[-np.min(es[i])*upd_scale+(ticks[1]-ticks[0]), -np.max(es[i])*upd_scale-(ticks[1]-ticks[0])], zValuesAndLabels=[(ticks[0], labels[0]), (ticks[1], labels[1]), (ticks[2], labels[2]), (ticks[3], labels[3]), (ticks[4], labels[4]), (ticks[5], labels[5]), (ticks[6], labels[6]), (ticks[7], labels[7]), (ticks[8], labels[8]), (ticks[9], labels[9])])
+            else:
+                axes = graph.buildAxes(c='black', zTitleOffset=[0,0,(ticks[1]-ticks[0])], ztitle=label, zTitleRotation=270, zrange=[np.min(es[i])*upd_scale, np.max(es[i])*upd_scale+(ticks[1]-ticks[0])], zValuesAndLabels=[(ticks[0], labels[0]), (ticks[1], labels[1]), (ticks[2], labels[2]), (ticks[3], labels[3]), (ticks[4], labels[4]), (ticks[5], labels[5]), (ticks[6], labels[6]), (ticks[7], labels[7]), (ticks[8], labels[8]), (ticks[9], labels[9])])
+
+
+
+
+
+
+        #axes.yrange(np.min(es[i]),np.max(es[i]))
+        #print(axes.unpack('yValuesAndLabels'))
+        #axes.unpack('yAxis').scale(.00005)
+        plot_window.meshes[plot_window.fig].append(axes)
+
+
+        #text = []
+
+        #for key,val in points.items():
+        #    pts.append(v.Point(pos=val[0], r=12, c='black', alpha=1))
+        #    text.append(v.Text3D(key, pos=val[0], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
+
+            
+            #plot_window.meshes[plot_window.fig].append(text)
+    
+    
+    #print('x',x)
+
+def elprinc(ex,ey,ez,val,vec,ed=None,scale=.1, colormap = 'jet', unit='Pa'):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    nel = np.size(ex,0)
+    n = int((np.size(val,0)*np.size(val,1))/np.size(ex,0))
+    print(n)
+
+    upd_scale = (1/np.max(val))*scale
+
+    #x_comp = eigenvectors[0, :]
+    #y_comp = eigenvectors[1, :]
+    #labels = ['$v_1$', '$v_2$']
+    #plot(x_comp, y_comp, ['r','b'], [-1,1], [-1,1], '$x_1$', '$x_2$', 'Plot of eigenvectors', labels, offsets)
+
+    #print('Eigenvalues el. 1')
+    #print(val[0,:])
+    #print('Eigenvectors el. 1')
+    #print(vec[0,:,:])
+    #print('---')
+    pts = []
+    points = []
+    vectors = []
+    text = []
+    vmin = np.min(val)
+    vmax = np.max(val)
+    values = []
+    for i in range(nel):
+        x = np.average(ex[i])
+        y = np.average(ey[i])
+        z = np.average(ez[i])
+        for j in range(n):
+            points.append([x,y,z])
+            text.append(f'Principal stress {j+1} at El. {i+1}: {np.round(val[i,j],3)} {unit}')
+            #value = val[i,j]
+            values.append([val[i,j],val[i,j],val[i,j],val[i,j],val[i,j],val[i,j]])
+            vector = vec[i, :, j]*val[i,j]*upd_scale
+            vectors.append(vector)
+
+        #point = v.Point([x,y,z])
+        #pts.append(point)
+
+        
+
+        #x_comp = vec[i, 0, :]
+        #y_comp = vec[i, 1, :]
+        #z_comp = vec[i, 2, :]
+
+        #print('components')
+        #print(x_comp)
+        #print(y_comp)
+        #print(z_comp)
+        #print('---')
+        #sys.exit()
+        '''
+        for j in range(n):
+            x_comp = vec[i, j, :]
+            x_comp = vec[i, :]
+        '''
+
+    #pointcloud = v.merge(pts)
+    #plot_window.meshes[plot_window.fig].append(pointcloud)
+
+    #quiver = v.pyplot.quiver(points, vectors, c='k', alpha=1, shaftLength=0.8, shaftWidth=0.05, headLength=0.25, headWidth=0.2, fill=True)
+
+    plot = vdu.vectors(points, vectors, c='k', alpha=1, shaftLength=0.8, shaftWidth=0.05, headLength=0.25, headWidth=0.2, fill=True, text=text, vmax=vmax, vmin=vmin, cmap=colormap, values=values)
+
+    plot_window.vectors[plot_window.fig].extend(plot)
+
+def elflux(ex,ey,ez,vec,ed=None,scale=.1, colormap = 'jet', unit='Pa'):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    nel = np.size(ex,0)
+    upd_scale = (1/np.max(vec))*scale
+
+    points = []
+    vectors = []
+    text = []
+    vmin = np.min(vec)
+    vmax = np.max(vec)
+    values = []
+    for i in range(nel):
+        flux_tot = np.sqrt(vec[i,0]**2 + vec[i,1]**2 + vec[i,2]**2)
+        points.append([np.average(ex[i]), np.average(ey[i]), np.average(ez[i])])
+        #text.append('')
+        text.append(f'Flux at El. {i+1}: {np.round(flux_tot,3)} {unit}')
+        #value = val[i,j]
+        values.append([flux_tot,flux_tot,flux_tot,flux_tot,flux_tot,flux_tot])
+        #vector = vec[i, :, j]*val[i,j]*upd_scale
+        vectors.append(vec[i]*upd_scale)
+
+    print('Points & vectors')
+    print(points[0])
+    print(vectors[0])
+    print('---')
+
+    plot = vdu.vectors(points, vectors, c='k', alpha=1, shaftLength=0.8, shaftWidth=0.05, headLength=0.25, headWidth=0.2, fill=True, text=text, vmax=vmax, vmin=vmin, cmap=colormap, values=values)
+
+    plot_window.vectors[plot_window.fig].extend(plot)
+
+#Add vector field
+#def add_vectors(edof,coord,dof,v,element_type):
+def add_vectors(ex,ey,ez):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    nel = np.size(ex,0)
+
+    #v.Tensors([ex,ey,ez],source='Arrow')
+
+    #for i in range(nel)
+
+
+    '''
     nel = np.size(edof, axis = 0)
     x = np.zeros((nel,1))
     y = np.zeros((nel,1))
@@ -455,93 +672,88 @@ def add_vectors(edof,coord,dof,v,element_type):
     #field = v.Glyph([x,y,z],arrow,orientationArray=vectors)
     #field = v.Tensors([x,y,z],source='Arrow')
     plot_window.vectors[plot_window.fig] += [field]
+    '''
 
-def eldia(ex,ey,ez,es,eci,dir='y',scale=1,thickness=5,alpha=1,label='y'):
+def tensors(ex,ey,ez,array, ed = None,scale=1):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
-    #print('ex',ex)
-    #print('ey',ey)
-    #print('ez',ez)
-    print('es',es)
-    #print('eci',eci)
-
     nel = np.size(ex,0)
-    nseg = np.size(eci,1)
-    upd_scale = scale*(1/np.max(np.absolute(es)))
 
+    x = np.zeros((nel,1))
+    y = np.zeros((nel,1))
+    z = np.zeros((nel,1))
+
+    pts = []
     for i in range(nel):
-        #l = np.sqrt( (ex[i,1]-ex[i,0])**2 + (ey[i,1]-ey[i,0])**2 + (ez[i,1]-ez[i,0])**2 )
-        #print('l',l)
-        x = np.linspace(ex[i,0], ex[i,1], nseg)
-        if dir=='x':
-            x = x + es[i]*upd_scale
-        #print('x',x)
-        y = np.linspace(ey[i,0], ey[i,1], nseg)
-        if dir=='y':
-            y = y + es[i]*upd_scale
-        #print('y',y)
-        z = np.linspace(ez[i,0], ez[i,1], nseg)
-        if dir=='z':
-            z = z + es[i]*upd_scale
-        #print('z',z)
+        x = np.average(ex[i])
+        y = np.average(ey[i])
+        z = np.average(ez[i])
+        point = v.Point([x,y,z])
+        #point.SetInputData(tensors[:,:,i])
+        #print(point.inputdata())
+        #point.inputdata().Tensors(tensor[i])
+        pts.append(point)
 
-        pts = []
-        pts.append(v.Point(pos=[ex[i,0],ey[i,0],ez[i,0]], r=thickness*1.5, c='black', alpha=alpha))
-        
-        for j in range(nseg):
-            pts.append(v.Point(pos=[x[j],y[j],z[j]], r=thickness*1.5, c='black', alpha=alpha))
-        pts.append(v.Point(pos=[ex[i,1],ey[i,1],ez[i,1]], r=thickness*1.5, c='black', alpha=alpha))
-        
-        #plot_window.meshes[plot_window.fig].append(pts)
+    pointcloud = v.merge(pts)
 
-        lines = []
-        #lines.append(v.Lines([ex[i,0],ey[i,0],ez[i,0]], [x[0],y[0],z[0]], c='k4', alpha=alpha, res=2).lw(thickness))
-        for j in range(len(pts)-1):
-            lines.append(v.Lines(pts[j].points(), pts[j+1].points(), c='k4', alpha=alpha, res=2).lw(0.5*thickness))
-        #lines.append(v.Lines([ex[i,-1],ey[i,-1],ez[i,-1]], [ex[i,1],ey[i,1],ez[i,1]], c='k4', alpha=alpha, res=2).lw(thickness))
+    upd_scale = (1/np.max(array))*scale
 
-        plot_window.meshes[plot_window.fig].append(lines)
+    arrow = v.Cone().scale(upd_scale)
 
-        graph = v.merge(pts)
-        #graph = v.merge(graph,lines)
-        plot_window.meshes[plot_window.fig].append(graph)
-        #axes = graph.buildAxes(c='black', numberOfDivisions=10, yrange=[ np.min(es[i]), np.max(es[i]) ]).scale(1/(np.max(es[i])))
-        
-        ticks = np.linspace(np.min(es[i])*upd_scale, np.max(es[i])*upd_scale, 10)
-        #print('ticks',ticks)
-        labels = np.round(np.linspace(np.min(es[i]), np.max(es[i]), 10),3)
-        #print('labels',labels)
-        #print('es',es[i])
-        if dir=='x':
-            axes = graph.buildAxes(c='black', xTitleOffset=[(ticks[1]-ticks[0]),0,0], xtitle=label, xTitleRotation=270, xrange=[np.min(es[i])*upd_scale, np.max(es[i])*upd_scale+(ticks[1]-ticks[0])], xValuesAndLabels=[(ticks[0], labels[0]), (ticks[1], labels[1]), (ticks[2], labels[2]), (ticks[3], labels[3]), (ticks[4], labels[4]), (ticks[5], labels[5]), (ticks[6], labels[6]), (ticks[7], labels[7]), (ticks[8], labels[8]), (ticks[9], labels[9])])
-        elif dir=='y':
-            axes = graph.buildAxes(c='black', yTitleOffset=[0,(ticks[1]-ticks[0]),0], ytitle=label, yTitleRotation=270, yrange=[np.min(es[i])*upd_scale, np.max(es[i])*upd_scale+(ticks[1]-ticks[0])], yValuesAndLabels=[(ticks[0], labels[0]), (ticks[1], labels[1]), (ticks[2], labels[2]), (ticks[3], labels[3]), (ticks[4], labels[4]), (ticks[5], labels[5]), (ticks[6], labels[6]), (ticks[7], labels[7]), (ticks[8], labels[8]), (ticks[9], labels[9])])
-        elif dir=='z':
-            axes = graph.buildAxes(c='black', zTitleOffset=[0,0,(ticks[1]-ticks[0])], ztitle=label, zTitleRotation=270, zrange=[np.min(es[i])*upd_scale, np.max(es[i])*upd_scale+(ticks[1]-ticks[0])], zValuesAndLabels=[(ticks[0], labels[0]), (ticks[1], labels[1]), (ticks[2], labels[2]), (ticks[3], labels[3]), (ticks[4], labels[4]), (ticks[5], labels[5]), (ticks[6], labels[6]), (ticks[7], labels[7]), (ticks[8], labels[8]), (ticks[9], labels[9])])
+    #print(array[:,0]*0.00000000000000001)
 
-
-
-
-
-
-        #axes.yrange(np.min(es[i]),np.max(es[i]))
-        #print(axes.unpack('yValuesAndLabels'))
-        #axes.unpack('yAxis').scale(.00005)
-        plot_window.meshes[plot_window.fig].append(axes)
-
-
-        #text = []
-
-        #for key,val in points.items():
-        #    pts.append(v.Point(pos=val[0], r=12, c='black', alpha=1))
-        #    text.append(v.Text3D(key, pos=val[0], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
-
-            
-            #plot_window.meshes[plot_window.fig].append(text)
     
-    
-    #print('x',x)
+
+    gl = v.Glyph(pointcloud,arrow,np.transpose(array),scaleByVectorSize=True, colorByVectorSize=True)
+
+    #ag = vtk.vtkRandomAttributeGenerator()
+    #ag.SetInputData(pointcloud.polydata())
+    #ag.GenerateAllDataOn()
+    #ag.Update()
+
+    #print(ag.GetOutput())
+
+    #ts = v.Tensors(ag.GetOutput(), source='cube', scale=0.1)
+
+    #v.show(pointcloud, ts, interactive=True).close()
+
+    #plot_window.meshes[plot_window.fig] += [pointcloud]
+    #plot_window.meshes[plot_window.fig] += [gl]
+    plot_window.meshes[plot_window.fig].append(gl)
+
+
+    #pointcloud.SetInputData(tensors)
+
+    #pts = v.pointcloud.Points([x,y,z])
+
+    #v.Tensors(pointcloud)
+
+
+
+
+
+
+
+def eliso(mesh):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    isol = mesh.isolines(n=10).color('b')
+
+    plot_window.meshes[plot_window.fig].append(isol)
+
+
+def elcont(mesh):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    isob = mesh.isobands(n=5)
+
+    plot_window.meshes[plot_window.fig].append(isob)
+
+
+
 
 
 
@@ -691,7 +903,14 @@ def draw_mesh(
     offset = [0, 0, 0],
     merge=False,
     t=None,
+
+    bcPrescr=None,
     bc=None,
+    bc_color='red',
+    fPrescr=None,
+    f=None,
+    f_color='blue6',
+    eq_els=None,
     eq=None
     ):
 
@@ -714,7 +933,7 @@ def draw_mesh(
             #print(coord[coord2,0])
             #spring = v.Spring([coord[coord1,0],0,0],[coord[coord2,0],0,0])
             spring = v.Spring([coord[coord1,0],0,0],[coord[coord2,0],0,0],r=1.5*scale).alpha(alpha)
-            spring.name = f"Element nr. {i}"
+            spring.name = f"Spring el. nr. {i}"
             elements.append(spring)
 
         #print(elements,nodes)
@@ -749,7 +968,8 @@ def draw_mesh(
 
 
             if el_values is not None:
-                bar.info = f"Bar nr. {i}, max el. value {el_values[i]}"
+                #bar.info = f"Bar el. nr. {i}, max el. value {el_values[i]}"
+                bar.name = f"Bar el. nr. {i}"
                 '''
                 el_values_array[1] = el_values[i]
                 el_values_array[3] = el_values[i]
@@ -772,7 +992,7 @@ def draw_mesh(
                 #bar.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
                 #bar.cmap(colormap, [el], on="cells", vmin=vmin, vmax=vmax)
             else:
-                bar.info = f"Bar nr. {i}"
+                bar.name = f"Bar el. nr. {i}"
         if render_nodes == True:
             nodes = vdu.get_node_elements(coord,scale,alpha,dof)
             #plot_window.add_geometry(elements,nodes)
@@ -789,15 +1009,37 @@ def draw_mesh(
         meshes = []
         nel = np.size(edof, axis = 0)
 
+        
+        
+
         vmin, vmax = np.min(el_values), np.max(el_values)
         #print(coord)
         for i in range(nel):
+            eq_dict = {}
+            indx = 0
+            if isinstance(eq_els, np.ndarray):
+                for i in eq_els:
+                    print(eq_dict)
+                    print(i)
+                    print(eq)
+                    print(indx)
+                    eq_dict[i] = eq[indx]
+                    indx += 1
+
             coords = vdu.get_coord_from_edof(edof[i,:],dof,4)
 
-
-            mesh = v.Mesh([coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
+            if np.any(np.isin(eq_els, i, assume_unique=True)) == True:
+                mesh = v.Mesh([coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha,c=f_color).lw(1)
+            else:
+                mesh = v.Mesh([coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
             #mesh.info = f"Mesh nr. {i}"
-            mesh.name = f"Mesh nr. {i+1}"
+            if element_type == 3:
+                if i in eq_dict:
+                    node.name = f"Flow el. nr. {i+1}, Force: [{eq_dict[i]}]"
+                else:
+                    mesh.name = f"Flow el. nr. {i+1}"
+            elif element_type == 4:
+                mesh.name = f"Solid el. nr. {i+1}"
             meshes.append(mesh)
 
             if el_values is not None and np.size(el_values, axis = 1) == 1:
@@ -831,9 +1073,9 @@ def draw_mesh(
 
         if render_nodes == True:
             if element_type == 3:
-                nodes = vdu.get_node_elements(coord,scale,alpha,dof,bc,dofs_per_node=1)
+                nodes = vdu.get_node_elements(coord,scale,alpha,dof,bcPrescr,bc,bc_color,fPrescr,f,f_color,dofs_per_node=1)
             elif element_type == 4:
-                nodes = vdu.get_node_elements(coord,scale,alpha,dof,bc,dofs_per_node=3)
+                nodes = vdu.get_node_elements(coord,scale,alpha,dof,bcPrescr,bc,bc_color,fPrescr,f,f_color,dofs_per_node=3)
             #plot_window.add_geometry(meshes,nodes)
             
             #plot_window.meshes = np.append(meshes, nodes, axis=0)
@@ -882,7 +1124,7 @@ def draw_mesh(
                     z2 = coord[coord1,2]+dz*(j+1)
 
                     beam = v.Cylinder([[x1,y1,z1],[x2,y2,z2]],r=scale,res=res,c=color).alpha(alpha)
-                    beam.info = f"Beam nr. {i}, seg. {j}"
+                    beam.name = f"Beam el. nr. {i}, seg. {j}"
                     elements.append(beam)
 
                     if el_values is not None:
@@ -911,7 +1153,7 @@ def draw_mesh(
 
             else:
                 beam = v.Cylinder([[coord[coord1,0],coord[coord1,1],coord[coord1,2]],[coord[coord2,0],coord[coord2,1],coord[coord2,2]]],r=scale,res=res,c=color).alpha(alpha)
-                beam.info = f"Beam nr. {i}"
+                beam.name = f"Beam el. nr. {i}"
                 elements.append(beam)
 
                 if el_values is not None:
@@ -1018,7 +1260,7 @@ def draw_mesh(
             #plate = v.Mesh([new_coord,[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
             #print(f'Element {i}: {coord[i]}')
             plate = v.Mesh([new_coord,[[0,1,2,3]]],alpha=alpha).lw(1)
-            plate.name = f"Element nr. {i}"
+            plate.name = f"Plate el. nr. {i}"
             meshes.append(plate)
 
             if el_values is not None and np.size(el_values, axis = 1) == 1:
@@ -1082,6 +1324,7 @@ def draw_displaced_mesh(
     nseg=2,
     render_nodes=False,
     color='white',
+    colors = 256,
     offset = [0, 0, 0],
     merge=False,
     t=None,
@@ -1162,7 +1405,7 @@ def draw_displaced_mesh(
             coord1,coord2 = vdu.get_coord_from_edof(edof[i,:],dof,element_type)
 
             spring = v.Spring([def_coord[coord1,0],def_coord[coord1,1],def_coord[coord1,2]],[def_coord[coord2,0],def_coord[coord2,1],def_coord[coord2,2]],r=scale*1.5).alpha(alpha)
-            spring.info = f"Spring nr. {i}"
+            spring.name = f"Spring el. nr. {i}"
             elements.append(spring)
 
         if only_ret == False:
@@ -1216,10 +1459,11 @@ def draw_displaced_mesh(
 
 
             bar = v.Cylinder([[def_coord[coord1,0],def_coord[coord1,1],def_coord[coord1,2]],[def_coord[coord2,0],def_coord[coord2,1],def_coord[coord2,2]]],r=scale,res=res,c=color).alpha(alpha)
-            bar.info = f"Bar nr. {i}, at [{def_coord[coord1,0]+0.5*(def_coord[coord2,0]-def_coord[coord1,0])},{def_coord[coord1,1]+0.5*(def_coord[coord2,1]-def_coord[coord1,1])},{def_coord[coord1,2]+0.5*(def_coord[coord2,2]-def_coord[coord1,2])}]"
+            #bar.info = f"Bar nr. {i}, at [{def_coord[coord1,0]+0.5*(def_coord[coord2,0]-def_coord[coord1,0])},{def_coord[coord1,1]+0.5*(def_coord[coord2,1]-def_coord[coord1,1])},{def_coord[coord1,2]+0.5*(def_coord[coord2,2]-def_coord[coord1,2])}]"
+            bar.name = f"Bar nr. {i}"
             def_elements.append(bar)
             if values is not None:
-                bar.info = bar.info + f", max el. value {values[i]}"
+                #bar.info = bar.info + f", max el. value {values[i]}"
                 el_values_array[1] = values[i]
                 el_values_array[3] = values[i]
                 el_values_array[5] = values[i]
@@ -1272,11 +1516,13 @@ def draw_displaced_mesh(
                 coord2, topo, node_dofs, a_node, node_scalars = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False,dofs_per_node=1)
             else:
                 coord2, topo, node_dofs, a_node, node_scalars = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,values,ignore_first=False,dofs_per_node=1)
+            def_coord = coord + a_node*def_scale
         elif element_type == 4:
             if val != 'nodal_values_by_el':
                 coord2, topo, node_dofs, a_node, node_scalars = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,ignore_first=False)
             else:
                 coord2, topo, node_dofs, a_node, node_scalars = vdu.convert_to_node_topo(edof,ex,ey,ez,ed,values,ignore_first=False)
+            def_coord = coord2 + a_node*def_scale
         #a_node = vdu.convert_a(coord,coord2,a,3)
 
         #def_coord = np.zeros([nnode,3])
@@ -1372,7 +1618,7 @@ def draw_displaced_mesh(
             el_values = vdu.convert_el_values(edof,values)
             mesh.celldata["val"] = el_values
 
-            mesh.cmap(colormap, "val", on="cells")
+            mesh.cmap(colormap, "val", on="cells", n=colors)
         
         elif val and val == 'nodal_values_by_el':
             #print(val)
@@ -1383,14 +1629,15 @@ def draw_displaced_mesh(
             #mesh.pointdata["val"] = node_scalars
             print(ug.celldata.keys())
             #nodal_values = vdu.convert_nodal_values(edof,dof,coord,coord2,values)
-            mesh.cmap(colormap, 'val', on="points")
+            mesh.cmap(colormap, 'val', on="points", n=colors)
 
 
         elif val and val == 'nodal_values':
             print(val)
+            #values = vdu.convert_nodal_values(edof,topo,dof,values)
             vmin, vmax = np.min(values), np.max(values)
             mesh.pointdata["val"] = values
-            mesh.cmap(colormap, 'val', on="points")
+            mesh.cmap(colormap, 'val', on="points", n=colors)
             #ug.pointdata["val"] = values
             #nodal_values = vdu.convert_nodal_values(edof,dof,coord,coord2,values)
             #mesh.cmap(colormap, values, on="points", vmin=vmin, vmax=vmax)
@@ -2080,6 +2327,7 @@ def figure(fig):
             plot_window.msg.append([])
             plot_window.proj.append([])
             plot_window.rulers.append([])
+            plot_window.vectors.append([])
 
             plot_window.keyframes.append([])
 
