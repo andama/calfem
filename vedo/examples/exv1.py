@@ -16,10 +16,10 @@ import calfem.core as cfc
 import vis_vedo_no_qt as cfvv
 
 coord = np.array([
-    [0,0,0],
-    [0.5,0,0],
-    [1,0,0],
-    [1.5,0,0]
+    [0],
+    [0.5],
+    [1],
+    [1.5]
 ])
 
 dof = np.array([
@@ -55,8 +55,20 @@ f[3,0] = 500 #Newton
 bcPrescr = np.array([1])
 a,r = cfc.solveq(K, f, bcPrescr)
 
+#ed = cfc.extractEldisp(edof,a)
+
+#es = np.zeros((3,1))
+#for i in range(nel):
+#    es[i] = cfc.spring1s(ep[i],ed[i])
+
+#print(es)
+
+print('coord',coord)
+
+cfvv.figure(1,flat=True)
 cfvv.draw_mesh(edof,coord,dof,1)
 cfvv.draw_displaced_mesh(edof,coord,dof,1,a,offset=[0,0.2,0],render_nodes=True)
+#cfvv.add_scalar_bar('Normal force [kN]')
 cfvv.add_text_3D('k=3 kN/m',[0.15,-0.1,0],size=0.03)
 cfvv.add_text_3D('k=1 kN/m',[0.65,-0.1,0],size=0.03)
 cfvv.add_text_3D('k=8 kN/m',[1.15,-0.1,0],size=0.03)

@@ -366,7 +366,7 @@ for i in range(nel_bars):
 # Send data of deformed geometry & normal stresses as element values
 #cfvv.beam3d.draw_displaced_geometry(edof,coord,dof,a,normal_stresses,'Max normal stress',def_scale=5,nseg=nseg)
 cfvv.draw_displaced_mesh(edof_beams,coord,dof,5,a,normal_stresses_beams/1000000,nseg=nseg,def_scale=1)
-cfvv.draw_mesh(edof_beams,coord,dof,5,nseg=nseg,alpha=0.2)
+cfvv.draw_mesh(edof_beams,coord,dof,5,nseg=nseg,alpha=1)
 
 
 #cfvv.draw_displaced_geometry(edof,coord,dof,5,el_values=normal_stresses,label='Max normal stress',alpha=0.3,nseg=nseg)
@@ -394,7 +394,7 @@ edof_bars = np.array([
     [37, 38, 39, 40, 41, 42, 79, 80, 81, 82, 83, 84]#[37, 38, 39, 79, 80, 81]
 ])
 
-cfvv.draw_mesh(edof_bars,coord,dof,2,alpha=0.2)
+cfvv.draw_mesh(edof_bars,coord,dof,2,alpha=1)
 #print('bar disp')
 vmin, vmax = np.min(normal_stresses_beams), np.max(normal_stresses_beams)
 cfvv.draw_displaced_mesh(edof_bars,coord,dof,2,a,normal_stresses_bars/1000000,def_scale=1,vmin=vmin,vmax=vmax)
@@ -407,8 +407,8 @@ eci_beams_upd = np.zeros((4,nseg))
 for i in range(nS_beams.shape[0]):
     nS_beams[i] = normal_stresses_beams[(18+i)*nseg:(18+i)*nseg+nseg]
     Mz_beams[i] = Mz[(18+i)*nseg:(18+i)*nseg+nseg]
-    print(eci_beams_upd[i])
-    print(eci_beams[(18+i)*nseg:(18+i)*nseg+nseg])
+    #print(eci_beams_upd[i])
+    #print(eci_beams[(18+i)*nseg:(18+i)*nseg+nseg])
     eci_beams_upd[i] = np.transpose(eci_beams[(18+i)*nseg:(18+i)*nseg+nseg])
 
 #cfvv.eldia(ex_beams[18:22],ey_beams[18:22],ez_beams[18:22],nS_beams,eci_beams_upd,scale=.0000001)

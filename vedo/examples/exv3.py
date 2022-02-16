@@ -206,9 +206,13 @@ print('eq',eq)
 
 #eq_el = 140
 
-eq_el = 66
+eq_els = np.array([[70],[89]])
 
-eq[eq_el] = 10000
+#eq_el1 = 66
+#eq_el2 = 93
+
+eq[eq_els[0]] = 30000
+eq[eq_els[1]] = -30000
 
 #print(edof[0,:])
 #Ke = cfc.flw3i8e(ex, ey, ez, ep, D)
@@ -257,10 +261,10 @@ np.append(bcVal, bc_50, axis=0)
 
 #sys.exit()
 # Nearly all surfaces are 20 deg
-bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_bottom, 20.0)
+#bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_bottom, 20.0)
 #bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_top, 20.0)
 bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_left, 20.0) # bottom is 0
-bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_back, 20.0)
+#bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_back, 20.0)
 bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_fixed_right, 20.0) # top is 20
 #bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, marker_front, 20.0)
 #bc, bcVal = cfu.apply_bc_3d(bdof, bc, bcVal, 50, 50.0)
@@ -451,7 +455,7 @@ cfvv.draw_geometry(points,lines)
 print('eq',eq)
 
 cfvv.figure(2)
-cfvv.draw_mesh(edof,coord,dof,3,alpha=1,scale=0.005,bcPrescr=bc, bc=bcVal, eq_els=eq_el, eq=eq[eq_el])
+cfvv.draw_mesh(edof,coord,dof,3,alpha=1,scale=0.005,bcPrescr=bc, bc=bcVal, eq_els=eq_els, eq=eq[eq_els])
 #cfvv.draw_mesh(edof,coord,dof,3,alpha=1,scale=0.005,bcPrescr=bc, bc=bcVal, eq_els=[eq_el], eq=eq[eq_el,:])
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
 #cfvv.show_and_wait()
@@ -462,7 +466,7 @@ disp = np.zeros((nnode,1))
 
 cfvv.figure(3)
 #print('flux',flux,flux.shape[0],flux.shape[1])
-mesh = cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,flux_tot,colormap='coolwarm')
+mesh = cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,flux_tot,colormap='coolwarm',wireframe=True)
 #cfvv.eliso(mesh)
 #cfvv.elcont(mesh)
 cfvv.add_scalar_bar('Heat flux [W/m^2]')

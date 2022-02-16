@@ -14,10 +14,10 @@ gp(:,3)=[-1;-1;-1;-1; 1; 1; 1; 1]*g1;
 
 xsi=gp(:,1);  eta=gp(:,2); zet=gp(:,3);
 
-N(:,1)=(1-xsi).*(1-eta).*(1-zet)/8;  N(:,5)=(1-xsi).*(1-eta).*(1+zet)/8;
-N(:,2)=(1+xsi).*(1-eta).*(1-zet)/8;  N(:,6)=(1+xsi).*(1-eta).*(1+zet)/8;
-N(:,3)=(1+xsi).*(1+eta).*(1-zet)/8;  N(:,7)=(1+xsi).*(1+eta).*(1+zet)/8;
-N(:,4)=(1-xsi).*(1+eta).*(1-zet)/8;  N(:,8)=(1-xsi).*(1+eta).*(1+zet)/8;
+%N(:,1)=(1-xsi).*(1-eta).*(1-zet)/8;  N(:,5)=(1-xsi).*(1-eta).*(1+zet)/8;
+%N(:,2)=(1+xsi).*(1-eta).*(1-zet)/8;  N(:,6)=(1+xsi).*(1-eta).*(1+zet)/8;
+%N(:,3)=(1+xsi).*(1+eta).*(1-zet)/8;  N(:,7)=(1+xsi).*(1+eta).*(1+zet)/8;
+%N(:,4)=(1-xsi).*(1+eta).*(1-zet)/8;  N(:,8)=(1-xsi).*(1+eta).*(1+zet)/8;
 
 % ---
 
@@ -296,31 +296,47 @@ end
 
 % --- Nodal stresses for elements ---
 
-calc = (transpose(N) * N) \ transpose(N); % saving for quicker calculation
+%calc = (transpose(N) * N) \ transpose(N); % saving for quicker calculation
 
-ns = zeros(8,6,nel);
-for i = (1:nel)
-    ns(:,1,i) = calc*es(:,1,i);
-    ns(:,2,i) = calc*es(:,2,i);
-    ns(:,3,i) = calc*es(:,3,i);
-    ns(:,4,i) = calc*es(:,4,i);
-    ns(:,5,i) = calc*es(:,5,i);
-    ns(:,6,i) = calc*es(:,6,i);
-end
+%ns = zeros(8,6,nel);
+%for i = (1:nel)
+%    ns(:,1,i) = calc*es(:,1,i);
+%    ns(:,2,i) = calc*es(:,2,i);
+%    ns(:,3,i) = calc*es(:,3,i);
+%    ns(:,4,i) = calc*es(:,4,i);
+%    ns(:,5,i) = calc*es(:,5,i);
+%    ns(:,6,i) = calc*es(:,6,i);
+%end
 
 % --- Using element stresses to calculate von Mises ---
 
-vM_n = zeros(nel,8);
-for i=(1:nel)
-    vM_n(i,1) = sqrt( 0.5 * ( (ns(1,1,i)-ns(1,2,i)).^2 + (ns(1,2,i)-ns(1,3,i)).^2 + (ns(1,3,i)-ns(1,1,i)).^2 ) + 3 * ((ns(1,4,i)).^2 + (ns(1,5,i)).^2 + (ns(1,6,i)).^2) );
-    vM_n(i,2) = sqrt( 0.5 * ( (ns(2,1,i)-ns(2,2,i)).^2 + (ns(2,2,i)-ns(2,3,i)).^2 + (ns(2,3,i)-ns(2,1,i)).^2 ) + 3 * ((ns(2,4,i)).^2 + (ns(2,5,i)).^2 + (ns(2,6,i)).^2) );
-    vM_n(i,3) = sqrt( 0.5 * ( (ns(3,1,i)-ns(3,2,i)).^2 + (ns(3,2,i)-ns(3,3,i)).^2 + (ns(3,3,i)-ns(3,1,i)).^2 ) + 3 * ((ns(3,4,i)).^2 + (ns(3,5,i)).^2 + (ns(3,6,i)).^2) );
-    vM_n(i,4) = sqrt( 0.5 * ( (ns(4,1,i)-ns(4,2,i)).^2 + (ns(4,2,i)-ns(4,3,i)).^2 + (ns(4,3,i)-ns(4,1,i)).^2 ) + 3 * ((ns(4,4,i)).^2 + (ns(4,5,i)).^2 + (ns(4,6,i)).^2) );
-    vM_n(i,5) = sqrt( 0.5 * ( (ns(5,1,i)-ns(5,2,i)).^2 + (ns(5,2,i)-ns(5,3,i)).^2 + (ns(5,3,i)-ns(5,1,i)).^2 ) + 3 * ((ns(5,4,i)).^2 + (ns(5,5,i)).^2 + (ns(5,6,i)).^2) );
-    vM_n(i,6) = sqrt( 0.5 * ( (ns(6,1,i)-ns(6,2,i)).^2 + (ns(6,2,i)-ns(6,3,i)).^2 + (ns(6,3,i)-ns(6,1,i)).^2 ) + 3 * ((ns(6,4,i)).^2 + (ns(6,5,i)).^2 + (ns(6,6,i)).^2) );
-    vM_n(i,7) = sqrt( 0.5 * ( (ns(7,1,i)-ns(7,2,i)).^2 + (ns(7,2,i)-ns(7,3,i)).^2 + (ns(7,3,i)-ns(7,1,i)).^2 ) + 3 * ((ns(7,4,i)).^2 + (ns(7,5,i)).^2 + (ns(7,6,i)).^2) );
-    vM_n(i,8) = sqrt( 0.5 * ( (ns(8,1,i)-ns(8,2,i)).^2 + (ns(8,2,i)-ns(8,3,i)).^2 + (ns(8,3,i)-ns(8,1,i)).^2 ) + 3 * ((ns(8,4,i)).^2 + (ns(8,5,i)).^2 + (ns(8,6,i)).^2) );
-end
+%vM_n = zeros(nel,8);
+%for i=(1:nel)
+%    s_xx = ns(:,1,i);
+%	s_yy = ns(:,1,i);
+%	s_zz = ns(:,1,i);
+%	s_xy = ns(:,1,i);
+%	s_xz = ns(:,1,i);
+%	s_yz = ns(:,1,i);
+
+%    vM_n(i,1) = sqrt(0.5 * ( (s_xx(1)-s_yy(1)).^2 + (s_yy(1)-s_zz(1)).^2 + (s_zz(1)-s_xx(1)).^2 ) + 3 * ((s_xy(1)).^2 + (s_xz(1)).^2 + (s_yz(1)).^2));
+%    vM_n(i,2) = sqrt(0.5 * ( (s_xx(2)-s_yy(2)).^2 + (s_yy(2)-s_zz(2)).^2 + (s_zz(2)-s_xx(2)).^2 ) + 3 * ((s_xy(2)).^2 + (s_xz(2)).^2 + (s_yz(2)).^2));
+%    vM_n(i,3) = sqrt(0.5 * ( (s_xx(3)-s_yy(3)).^2 + (s_yy(3)-s_zz(3)).^2 + (s_zz(3)-s_xx(3)).^2 ) + 3 * ((s_xy(3)).^2 + (s_xz(3)).^2 + (s_yz(3)).^2));
+%    vM_n(i,4) = sqrt(0.5 * ( (s_xx(4)-s_yy(4)).^2 + (s_yy(4)-s_zz(4)).^2 + (s_zz(4)-s_xx(4)).^2 ) + 3 * ((s_xy(4)).^2 + (s_xz(4)).^2 + (s_yz(4)).^2));
+%    vM_n(i,5) = sqrt(0.5 * ( (s_xx(5)-s_yy(5)).^2 + (s_yy(5)-s_zz(5)).^2 + (s_zz(5)-s_xx(5)).^2 ) + 3 * ((s_xy(5)).^2 + (s_xz(5)).^2 + (s_yz(5)).^2));
+%    vM_n(i,6) = sqrt(0.5 * ( (s_xx(6)-s_yy(6)).^2 + (s_yy(6)-s_zz(6)).^2 + (s_zz(6)-s_xx(6)).^2 ) + 3 * ((s_xy(6)).^2 + (s_xz(6)).^2 + (s_yz(6)).^2));
+%    vM_n(i,7) = sqrt(0.5 * ( (s_xx(7)-s_yy(7)).^2 + (s_yy(7)-s_zz(7)).^2 + (s_zz(7)-s_xx(7)).^2 ) + 3 * ((s_xy(7)).^2 + (s_xz(7)).^2 + (s_yz(7)).^2));
+%    vM_n(i,8) = sqrt(0.5 * ( (s_xx(8)-s_yy(8)).^2 + (s_yy(8)-s_zz(8)).^2 + (s_zz(8)-s_xx(8)).^2 ) + 3 * ((s_xy(8)).^2 + (s_xz(8)).^2 + (s_yz(8)).^2));
+
+    %vM_n(i,1) = sqrt( 0.5 * ( (ns(1,1,i)-ns(1,2,i)).^2 + (ns(1,2,i)-ns(1,3,i)).^2 + (ns(1,3,i)-ns(1,1,i)).^2 ) + 3 * ((ns(1,4,i)).^2 + (ns(1,5,i)).^2 + (ns(1,6,i)).^2) );
+    %vM_n(i,2) = sqrt( 0.5 * ( (ns(2,1,i)-ns(2,2,i)).^2 + (ns(2,2,i)-ns(2,3,i)).^2 + (ns(2,3,i)-ns(2,1,i)).^2 ) + 3 * ((ns(2,4,i)).^2 + (ns(2,5,i)).^2 + (ns(2,6,i)).^2) );
+    %vM_n(i,3) = sqrt( 0.5 * ( (ns(3,1,i)-ns(3,2,i)).^2 + (ns(3,2,i)-ns(3,3,i)).^2 + (ns(3,3,i)-ns(3,1,i)).^2 ) + 3 * ((ns(3,4,i)).^2 + (ns(3,5,i)).^2 + (ns(3,6,i)).^2) );
+    %vM_n(i,4) = sqrt( 0.5 * ( (ns(4,1,i)-ns(4,2,i)).^2 + (ns(4,2,i)-ns(4,3,i)).^2 + (ns(4,3,i)-ns(4,1,i)).^2 ) + 3 * ((ns(4,4,i)).^2 + (ns(4,5,i)).^2 + (ns(4,6,i)).^2) );
+    %vM_n(i,5) = sqrt( 0.5 * ( (ns(5,1,i)-ns(5,2,i)).^2 + (ns(5,2,i)-ns(5,3,i)).^2 + (ns(5,3,i)-ns(5,1,i)).^2 ) + 3 * ((ns(5,4,i)).^2 + (ns(5,5,i)).^2 + (ns(5,6,i)).^2) );
+    %vM_n(i,6) = sqrt( 0.5 * ( (ns(6,1,i)-ns(6,2,i)).^2 + (ns(6,2,i)-ns(6,3,i)).^2 + (ns(6,3,i)-ns(6,1,i)).^2 ) + 3 * ((ns(6,4,i)).^2 + (ns(6,5,i)).^2 + (ns(6,6,i)).^2) );
+    %vM_n(i,7) = sqrt( 0.5 * ( (ns(7,1,i)-ns(7,2,i)).^2 + (ns(7,2,i)-ns(7,3,i)).^2 + (ns(7,3,i)-ns(7,1,i)).^2 ) + 3 * ((ns(7,4,i)).^2 + (ns(7,5,i)).^2 + (ns(7,6,i)).^2) );
+    %vM_n(i,8) = sqrt( 0.5 * ( (ns(8,1,i)-ns(8,2,i)).^2 + (ns(8,2,i)-ns(8,3,i)).^2 + (ns(8,3,i)-ns(8,1,i)).^2 ) + 3 * ((ns(8,4,i)).^2 + (ns(8,5,i)).^2 + (ns(8,6,i)).^2) );
+%end
 
 % % The nodal stresses are interpolated through and averaged in order to
 % % avoid discontinuities in the visualization of the model
@@ -921,5 +937,3 @@ end
 % --- Results from both analyses are saved in a .mat-file ---
 
 save('exv4.mat','coord','dof','edof','bc','force_dofs','a','ed','Stress_tensors','vM_el','vM_n','lambda','eig')
-
-

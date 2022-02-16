@@ -228,6 +228,19 @@ cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
 cfvv.add_scalar_bar('von Mises [MPa]')
 cfvv.show_and_wait()
 
+
+
+
+
+
+#cfvv.figure(3)
+#mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,vM_n/1000000,def_scale=scalefact,lines=True)
+#cfvv.add_scalar_bar('von Mises [MPa]')
+#cfvv.add_text('Static analysis: self-weight & ecc. vertical load',pos='top-left')
+#cfvv.export_vtk('exv4a', mesh2)
+#cfvv.show_and_wait()
+
+
 # Fourth plot, deformed mesh with nodal stresses
 cfvv.figure(3)
 
@@ -239,14 +252,14 @@ print(upd_ed[0])
 #mesh2 = cfvv.test(edof,ex,ey,ez,a,von_mises_nodes/1000000,def_scale=scalefact,merge=True)
 #mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_nodes/1000000,def_scale=scalefact,merge=True)
 #mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,vM_n/1000000,def_scale=scalefact,merge=True)
-mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,np.zeros((ncoord*3,1)),upd_ed*1000,merge=True)
+mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,np.zeros((ncoord*3,1)),upd_ed*1000,wireframe=True)
 cfvv.elprinc(ex,ey,ez,PS_val/1000000,PS_vec,colormap='coolwarm',unit='MPa')
 cfvv.add_scalar_bar('Deformation [mm]')
 #cfvv.add_scalar_bar('Stress [MPa]',pos=[0.8,0.65],text_pos='top-right',on='vectors')
 cfvv.add_text('Static analysis: self-weight & ecc. vertical load',pos='top-left')
 #cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
 # Export the mesh to 'exv4a.vtk'
-cfvv.export_vtk('exv4a', mesh2)
+
 
 
 
@@ -265,7 +278,7 @@ cfvv.figure(4)
 scalefact = 100 #deformation scale factor
 #scalefact = 1 #deformation scale factor
 #cfvv.test(edof,ex,ey,ez,eigen[:,0],mode_a*1000,def_scale=scalefact)
-cfvv.draw_displaced_mesh(edof,coord,dof,4,eig[:,eigenmode],mode_a*1000,def_scale=scalefact)
+cfvv.draw_displaced_mesh(edof,coord,dof,4,eig[:,eigenmode],mode_a*1000,def_scale=scalefact,lines=True)
 cfvv.add_text(f'Modal analysis: {eigenmode+1}st mode',pos='top-left')
 cfvv.add_text(f'Frequency: {round(Freq[0],2)} Hz')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')

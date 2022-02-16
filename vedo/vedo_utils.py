@@ -58,26 +58,9 @@ def get_node_elements(coord,scale,alpha,dof,bcPrescr=None,bc=None,bc_color='red'
     ncoord = np.size(coord, axis = 1)
     nodes = []
 
-    print('bc dofs',bc)
-    print('force dofs',f)
-
-    
-    #bc_dict = {}
-    #if dofs_per_node == 1:
-    #    for i in range(nnode):
-            
-    #        print(np.where(bc == i+1)[0])
-    #        if np.where(bc == i+1)[0] == [i]:
-
-    #            bc_dict[i+1] = dof[i][0]
-        #bc_nodes = bc-1
-    #elif dofs_per_node == 3:
-    #    print('3 dofs per node')
-    #print('dict',bc_dict)
-
     bc_dict = {}
     indx = 0
-    if isinstance(fPrescr, np.ndarray):
+    if isinstance(bcPrescr, np.ndarray):
         for i in bcPrescr:
             bc_dict[i] = bc[indx]
             indx += 1
@@ -89,142 +72,54 @@ def get_node_elements(coord,scale,alpha,dof,bcPrescr=None,bc=None,bc_color='red'
             f_dict[i] = f[indx]
             indx += 1
 
-    print(dof)
-    print('bc_dict',bc_dict)
-    print('f_dict',f_dict)
-
     for i in range(nnode):
-        #if np.where(bc == i+1)[0] == [i]:
 
-        if ncoord == 3:
-            #print('test')
-                #node = v.Point((coord[i,0],coord[i,1],coord[i,2]),c='black',alpha=alpha).ps(10).renderPointsAsSpheres()
-            #print('where',np.where(bc == i+1)[0])
-            #if type(dof) is list:
-            dofs = dof[i]
-            #print('degrees of freedom',dofs)
-            #if dofs_per_node == 1:
-            #    dofs = dof[i]
-            #else:
-                #print('degrees of freedom',dof)
-            #    dofs = dof[i,:]
-            #print('dofs',dofs)
-            #print(np.isin(bc, dofs, assume_unique=True))
-            if np.any(np.isin(bcPrescr, dofs, assume_unique=True)) == True:
-                #print('index bc:',bcPrescr)
-                color = bc_color
-                #print('bc ',dofs[0],' is in dofs')
-                #print('---')
-            elif np.any(np.isin(fPrescr, dofs, assume_unique=True)) == True:
-                
-                color = f_color
-        #print(np.any(dof == i+1)[0])
-        #b = bc[np.where(bc == i+1)[0]]
-        #print('dof',b)
-        #print('i',[i])
-        #if np.where(bc == i+1)[0] == [i]:
-        #    color = 'red'
-        #    print('red:',i+1)
-            else:
-                color = 'black'
-                #print('black:',i+1)
-            node = v.Sphere(c=color).scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
-            if dofs_per_node == 1:
-                if np.any(np.isin(bcPrescr, dofs, assume_unique=True)) == True:
-                    if dof[i,0] in bc_dict:
-                        bc_0 = ': ' + str(bc_dict[dof[i,0]])
-                    else:
-                        bc_0 = ''
+    #if ncoord == 3:
+        dofs = dof[i]
 
-                    node.name = f"Node nr. {i+1}, DoF & BC: [{dof[i,0]}{bc_0}]"
-                elif np.any(np.isin(fPrescr, dofs, assume_unique=True)) == True:
-                    if dof[i,0] in f_dict:
-                        f_0 = ': ' + str(f_dict[dof[i,0]])
-                    else:
-                        f_0 = ''
+        if np.any(np.isin(bcPrescr, dofs, assume_unique=True)) == True:
+            color = bc_color
+        elif np.any(np.isin(fPrescr, dofs, assume_unique=True)) == True:
+            color = f_color
+        else:
+            color = 'black'
 
-                    node.name = f"Node nr. {i+1}, DoF & Force: [{dof[i,0]}{f_0}]"
+        node = v.Sphere(c=color).scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
+
+        if np.any(np.isin(bcPrescr, dofs, assume_unique=True)) == True:
+            node.name = f"Node nr. {i+1}, DoFs & BCs: ["
+            for j in range(dofs_per_node):
+                #print('j',j)
+                node.name += str(dof[i,j])
+                if dof[i,j] in bc_dict:
+                    node.name += (': ' + str(bc_dict[dof[i,j]]))
+                if j == dofs_per_node-1:
+                    node.name += ']'
                 else:
-                    node.name = f"Node nr. {i+1}, DoF: {dof[i,0]}"
+                    node.name += ', '
 
-
-
-            elif dofs_per_node == 3:
-                if np.any(np.isin(bcPrescr, dofs, assume_unique=True)) == True:
-                    if dof[i,0] in bc_dict:
-                        bc_0 = ': ' + str(bc_dict[dof[i,0]])
-                    else:
-                        bc_0 = ''
-
-                    if dof[i,1] in bc_dict:
-                        bc_1 = ': ' + str(bc_dict[dof[i,1]])
-                    else:
-                        bc_1 = ''
-
-                    if dof[i,2] in bc_dict:
-                        bc_2 = ': ' + str(bc_dict[dof[i,2]])
-                    else:
-                        bc_2 = ''
-
-                    node.name = f"Node nr. {i+1}, DoFs & BCs: [{dof[i,0]}{bc_0}, {dof[i,1]}{bc_1}, {dof[i,2]}{bc_2}]"
-                elif np.any(np.isin(fPrescr, dofs, assume_unique=True)) == True:
-                    if dof[i,0] in f_dict:
-                        f_0 = ': ' + str(f_dict[dof[i,0]])
-                    else:
-                        f_0 = ''
-
-                    if dof[i,1] in f_dict:
-                        f_1 = ': ' + str(f_dict[dof[i,1]])
-                    else:
-                        f_1 = ''
-
-                    if dof[i,2] in f_dict:
-                        f_2 = ': ' + str(f_dict[dof[i,2]])
-                    else:
-                        f_2 = ''
-
-                    node.name = f"Node nr. {i+1}, DoFs & Forces: [{dof[i,0]}{f_0}, {dof[i,1]}{f_1}, {dof[i,2]}{f_2}]"
+        elif np.any(np.isin(fPrescr, dofs, assume_unique=True)) == True:
+            node.name = f"Node nr. {i+1}, DoFs & Forces: ["
+            for j in range(dofs_per_node):
+                node.name += str(dof[i,j])
+                if dof[i,j] in f_dict:
+                    node.name += (': ' + str(f_dict[dof[i,j]]))
+                if j == dofs_per_node-1:
+                    node.name += ']'
                 else:
-                    node.name = f"Node nr. {i+1}, DoFs: [{dof[i,0]}, {dof[i,1]}, {dof[i,2]}]"
-            nodes.append(node)
-            #print('Node nr.',i)
-            #test = np.where(bc == i+1)[0]
-            #print('test',test)
-    '''
-    for i in range(nnode):
-        if ncoord == 3:
-            #node = v.Point((coord[i,0],coord[i,1],coord[i,2]),c='black',alpha=alpha).ps(10).renderPointsAsSpheres()
-            if i == bc[i]-1:
-                color = 'red'
-            else:
-                color = 'black'
-            node = v.Sphere(c=color).scale(1.5*scale).pos([coord[i,0],coord[i,1],coord[i,2]]).alpha(alpha)
-            node.name = f"Node nr. {i}"
-            nodes.append(node)
-        elif ncoord == 2:
-            #print((coord[i,0],coord[i,1],0))
-            if i == bc[i]-1:
-                color = 'red'
-            else:
-                color = 'black'
-            node = v.Sphere(c=color).scale(1.5*scale).pos([coord[i,0],coord[i,1],0]).alpha(alpha)
-            #node = v.Point((coord[i,0],coord[i,1],0),c='black',alpha=alpha).ps(10).renderPointsAsSpheres()
-            node.name = f"Node nr. {i}"
-            nodes.append(node)
-        #elif ncoord == 2 and t is not None:
-        #    node = v.Sphere(c='white').scale(1.5*scale).pos([coord[i,0],coord[i,1],0]).alpha(alpha)
-        #    node.info = f"Node nr. {i}"
-        #    nodes.append(node)
-        elif ncoord == 1:
-            if i == bc[i]-1:
-                color = 'red'
-            else:
-                color = 'black'
-            node = v.Sphere(c=color).scale(1.5*scale).pos([coord[i,0],0,0]).alpha(alpha)
-            #node = v.Point((coord[i,0],0,0),c='black',alpha=alpha).ps(10).renderPointsAsSpheres()
-            node.name = f"Node nr. {i}"
-            nodes.append(node)
-    '''
+                    node.name += ', '
+
+        else:
+            node.name = f"Node nr. {i+1}, DoFs: ["
+            for j in range(dofs_per_node):
+                node.name += str(dof[i,j])
+                if j == dofs_per_node-1:
+                    node.name += ']'
+                else:
+                    node.name += ', '
+
+        nodes.append(node)
+
     return nodes
 
 def vectors(
@@ -324,7 +219,7 @@ def check_input(edof,coord,dof,element_type,a=None,values=None,nseg=None):
     if values is not None:
         #print(values)
         if element_type == 1 or element_type == 2 or element_type == 5:
-            if element_type == 2:
+            if element_type == 1 or element_type == 2:
                 nseg = 1
             number_of_values = np.size(values, axis=0)
             #print(np.size(values, axis=0))
