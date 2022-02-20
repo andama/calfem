@@ -219,14 +219,43 @@ print(a)
 scalefact = 3 #deformation scale factor
 #mesh1 = cfvv.test(edof,ex,ey,ez,a,von_mises_elements/1000000,def_scale=scalefact)
 #mesh1 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_elements/1000000,def_scale=scalefact)
-mesh1 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,vM_el/1000000,def_scale=scalefact)
+mesh1 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,vM_el/1000000,def_scale=scalefact,scalar_title='von Mises [MPa]')
 #cfvv.add_vectors(ex,ey,ez)
 #cfvv.tensors(ex,ey,ez,ps)
 
-cfvv.add_text('Static analysis: self-weight & ecc. vertical load',pos='top-left')
+cfvv.add_text('Static analysis: self-weight & ecc. vertical load', pos='top-left')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
 cfvv.add_scalar_bar('von Mises [MPa]')
 cfvv.show_and_wait()
+
+
+
+
+
+
+
+cfvv.figure(3)
+# Second plot, first mode from eigenvalue analysis
+#cfvv.add_text('Eigenvalue analysis: first mode',window=1)
+scalefact = 3 #deformation scale factor
+#mode_mesh = cfvv.draw_displaced_geometry(edof,coord,dof,4,X[:,0],mode_a,def_scale=scalefact,scale=0.002,render_nodes=False,merge=True)
+#cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
+#cfvv.add_scalar_bar(mode_mesh,'Tot. el. displacement')
+
+#cfvv.animation(edof,coord,dof,4,eig[:,eigenmode],10,mode_a*1000,def_scale=scalefact,export=True,file='anim/exv4b')
+cfvv.animation(edof,coord,dof,4,a,vM_el/1000000,def_scale=scalefact)
+#cfvv.animate(edof,coord,dof,4,eig[:,0],10,def_scale=scalefact,export=True)
+cfvv.add_text('Static analysis: self-weight & ecc. vertical load', pos='top-left')
+cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
+#cfvv.add_text('Note: next fig. might take some time to render', pos='bottom-middle')
+
+cfvv.add_scalar_bar('von Mises [MPa]')
+
+#Start Calfem-vedo visualization
+cfvv.show_and_wait()
+
+
+
 
 
 
@@ -242,7 +271,7 @@ cfvv.show_and_wait()
 
 
 # Fourth plot, deformed mesh with nodal stresses
-cfvv.figure(3)
+cfvv.figure(4)
 
 print('Number of von Mises stresses at nodes: ',np.size(vM_n))
 print(vM_n[0])
@@ -269,7 +298,7 @@ cfvv.show_and_wait()
 #sys.exit()
 
 # Second plot, first mode from eigenvalue analysis
-cfvv.figure(4)
+cfvv.figure(5)
 
 #print(eig[:,0])
 #disp = np.zeros((ncoord*3,1))
@@ -290,22 +319,36 @@ cfvv.show_and_wait()
 
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 
-'''
-cfvv.figure(5)
+
+cfvv.figure(6)
 # Second plot, first mode from eigenvalue analysis
 #cfvv.add_text('Eigenvalue analysis: first mode',window=1)
 scalefact = 100 #deformation scale factor
 #mode_mesh = cfvv.draw_displaced_geometry(edof,coord,dof,4,X[:,0],mode_a,def_scale=scalefact,scale=0.002,render_nodes=False,merge=True)
-cfvv.add_text(f'Frequency: {Freq[0]} Hz',pos='top-right')
-cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
-#cfvv.add_scalar_bar(mode_mesh,'Tot. el. displacement',window=1)
+cfvv.add_text(f'Modal analysis: {eigenmode+1}st mode',pos='top-left')
+cfvv.add_text(f'Frequency: {round(Freq[0],2)} Hz')
+cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
+#cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-left')
+#cfvv.add_scalar_bar(mode_mesh,'Tot. el. displacement')
 
-cfvv.animation(edof,coord,dof,4,eig[:,eigenmode],10,mode_a*1000,def_scale=scalefact,export=True,file='anim/exv4b')
+#cfvv.animation(edof,coord,dof,4,eig[:,eigenmode],10,mode_a*1000,def_scale=scalefact,export=True,file='anim/exv4b')
+cfvv.animation(edof,coord,dof,4,eig[:,eigenmode],mode_a*1000,def_scale=scalefact,negative=True,scalar_title='Tot. el. displacement [mm]')
 #cfvv.animate(edof,coord,dof,4,eig[:,0],10,def_scale=scalefact,export=True)
+
+cfvv.add_scalar_bar('Tot. el. displacement [mm]')
 
 #Start Calfem-vedo visualization
 cfvv.show_and_wait()
-'''
+
+
+
+
+
+
+
+
+
+
 '''
         #print(a)
 

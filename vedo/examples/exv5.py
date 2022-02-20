@@ -371,7 +371,7 @@ cfvv.draw_mesh(edof,coord,dof,6,scale=0.005)
 #cfvv.show_and_wait()
 cfvv.figure(2)
 def_scale = 5
-cfvv.draw_displaced_mesh(edof,coord,dof,6,a,scale=0.002,def_scale=def_scale,values=vM/1000000)
+cfvv.draw_displaced_mesh(edof,coord,dof,6,a,scale=0.002,def_scale=def_scale,scalars=vM/1000000)
 cfvv.add_rulers()
 cfvv.add_scalar_bar('Max. von Mises [MPa]')
 cfvv.add_text(f'Defomation scale: {def_scale}')
@@ -380,9 +380,14 @@ cfvv.add_text(f'Defomation scale: {def_scale}')
 cfvv.show_and_wait()
 
 
+# Animation
 
+cfvv.figure(3)
 
+cfvv.animation(edof,coord,dof,6,a,vM/1000000,def_scale=def_scale,dt=250,steps=20)
 
+#Start Calfem-vedo visualization
+cfvv.show_and_wait()
 
 
 

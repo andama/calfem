@@ -132,6 +132,7 @@ class VedoMainWindow():
         self.bg = []
         self.mode_2D = []
         self.mode_hover = []
+        self.mode_anim = []
         self.rendered = 0
         self.plt = {}
 
@@ -151,6 +152,7 @@ class VedoMainWindow():
 
         # Variables for handeling animations
         self.keyframes = [[]]
+        self.keyframe_dict = [[]]
         self.loop = None
         self.dt = 500 #milliseconds
 
@@ -162,7 +164,9 @@ class VedoMainWindow():
 
         # Global settings
         v.settings.immediateRendering = False
-        v.settings.allowInteraction = True
+        
+        #v.settings.allowInteraction = True
+        v.settings.allowInteraction = False
         #v.settings.renderLinesAsTubes = True
         v.settings.allowInteraction = True
         v.settings.useFXAA = True
@@ -234,19 +238,22 @@ class VedoMainWindow():
             self.dia_axes.append([])
 
             self.keyframes.append([])
+            self.keyframe_dict.append([])
 
         while len(self.mode_2D) < self.fig + 1:
             self.bg.append('w')
             self.mode_2D.append(False)
             self.mode_hover.append(False)
+            self.mode_anim.append(False)
 
+        #print('keyframes',self.keyframes)
+        #print('keyframe_dict',self.keyframe_dict)
 
-
-
-        for i in range(self.rendered, self.fig+1):
-            print('2D',self.mode_2D)
+        for plot in range(self.rendered, self.fig+1):
+            print('anim',self.mode_anim)
+            #print('2D',self.mode_2D)
             #print(f'Figure {i}: 2D mode is {self.mode_2D[i]}')
-            if self.mode_2D[i] is True:
+            if self.mode_2D[plot] is True:
                 pp = True
                 #mode = 12
                 #mode = 6
@@ -256,29 +263,149 @@ class VedoMainWindow():
                 mode = 0
             
             #type(dof) is list
-            if self.keyframes[self.fig] != []:
-                print('animation',self.fig)
-                if self.bg[self.fig] != 'white':
-                    opts = dict(bg=self.bg[self.fig], mode=mode, axes=4, interactive=False, title=f'Figure {i+1} - CALFEM vedo visualization tool')
-                else:
-                    opts = dict(mode=mode, axes=4, interactive=False, title=f'Figure {i+1} - CALFEM vedo visualization tool')
+            #if self.keyframes[self.fig] != []:
+            if self.mode_anim[plot] == True:
+                v.settings.immediateRendering = True
+                print('animation',plot+1)
+                #if self.bg[self.fig] != 'white':
+                #    opts = dict(bg=self.bg[self.fig], axes=4, interactive=False, title=f'Figure {i+1} - CALFEM vedo visualization tool')
+                #else:
+                #    opts = dict(axes=4, interactive=False, title=f'Figure {i+1} - CALFEM vedo visualization tool')
+                opts = dict(axes=4, interactive=0, title=f'Figure {plot+1} - CALFEM vedo visualization tool')
                 keyframes = self.keyframes[self.fig]
-                print(keyframes)
-                plt = v.Plotter(**opts).show()
-                plt.parallelProjection(value=pp)
+                keyframe_dict = self.keyframe_dict[self.fig]
+                #print(keyframes)
+                #plt = v.Plotter(**opts).show()
+                plt = v.Plotter(**opts)
+                #plt.enableErase()
+                
+                #plt.parallelProjection(value=pp)
 
                 #plt.addCallback('mouse click', self.click)
                 #self.plt[f'Figure {i+1} - CALFEM vedo visualization tool'] = plt
 
-                plt += v.Text2D('Press ESC to exit', pos='bottom-left')
+                plt += v.Text2D('Press ESC to exit', pos='bottom-middle')
 
                 #msg = v.Text2D(text, pos=pos, alpha=1, c=color)
                 #plot_window.msg[plot_window.fig] += [msg]
 
+                #print(self.keyframes)
+                #print(keyframe_dict[0])
+                #print(keyframes[0][0])
+                #sys.exit()
+
+
+
+
+
+
+                for j in range(len(self.msg[plot])):
+                    if self.bg[self.fig] == 'black':
+                        self.msg[plot][j].c('w')
+                    plt.add(self.msg[plot][j])
+                        #plt += self.msg[i][j]
+                        #plt.add(self.click_msg)
+
+                #if self.proj[i]:
+                for j in range(len(self.proj[plot])):
+                    if self.bg[self.fig] == 'black':
+                        self.proj[plot][j].c('w')
+                    plt.add(self.proj[plot][j])
+
+                #if self.rulers[i]:
+                for j in range(len(self.rulers[plot])):
+                    if self.bg[self.fig] == 'black':
+                        self.rulers[plot][j].c('w')
+                    plt.add(self.rulers[plot][j])
+
+                for j in range(len(self.vectors[plot])):
+                    plt.add(self.vectors[plot][j])
+
+                for j in range(len(self.dia_lines[plot])):
+                    plt.add(self.dia_lines[plot][j])
+
+                for j in range(len(self.dia_points[plot])):
+                    if self.bg[self.fig] == 'black':
+                        self.dia_points[plot][j].c('w')
+                    plt.add(self.dia_points[plot][j])
+
+                for j in range(len(self.dia_axes[plot])):
+                    if self.bg[self.fig] == 'black':
+                        lst = self.dia_axes[plot][j].unpack()
+                        for k in lst:
+                            k.c('w')
+                    plt.add(self.dia_axes[plot][j])
+
+
+
+
+
+
+
+
+
+
+                plt += v.Text2D('Press ESC to exit', pos='bottom-middle')
+                plt += keyframes[0][keyframe_dict[0][1]]
+                plt.show(resetcam=True)
                 
-                
+                while True:
+                    
+                    #it = 0
+                    #plt += keyframes[0][keyframe_dict[0][1]]
+                    #plt.resetCamera()
+                    for key, val in keyframe_dict[0].items():
+                        #v.show(keyframes[0][val], **opts)
+                        #print(key,val,keyframes[0][val])
+                        #if key == 1:
+                            #plt.clear(keyframes[0][keyframe_dict[0][val]])
+                        #    time.sleep(self.dt/10000)
+                            #plt.clear()
+                        #    plt.pop()
+                            #plt.remove()
+                        #    plt += keyframes[0][val]
+                        #    plt.show(resetcam=False)
+                        #else:
+                        #    plt += keyframes[0][val]
+                        #    plt.show(resetcam=True)
+
+                        time.sleep(self.dt/1000)
+                        plt.pop()
+
+                        plt += keyframes[0][val]
+                        #if key == 1:
+                        #    plt.show(resetcam=True)
+                        #else:
+                        #    plt.show(resetcam=False)
+                        plt.show(resetcam=False)
+
+                        
+
+                        #plt.show(keyframes[0][val]).close()
+                        
+                        #plt.add(keyframes[0][val],resetcam=True)
+                        #plt.allowInteraction()
+                        #plt.enableRenderer(0)
+                        #plt.render(resetcam=True)
+                        #time.sleep(self.dt/1000)
+                        
+                        #it += 1
+
+
+
+                    #plt.show()
+                    if plt.escaped: break  # if ESC is hit during the loop
+
+                plt.close()
+                v.settings.immediateRendering = False
+
+                #sys.exit()
+                #plt.close()
+                '''
                 it = 0
                 for j in zip(keyframes):
+                    print(j)
+                    sys.exit()
                 #for j in range(1,len(self.keyframes[i])):
                     if it ==0:
                         #self.plt[f'Figure {i+1} - CALFEM vedo visualization tool'] += j
@@ -311,31 +438,32 @@ class VedoMainWindow():
                     it += 1
 
                     plt.close()
-
+                '''
                 #plt.show(mesh).interactive().close()
 
                 #plt.show(mesh, title='Animation - CALFEM vedo visualization tool')
             
             else:
+                print('non-animation',plot+1)
                 if self.bg[self.fig] != 'white':
-                    opts = dict(bg=self.bg[self.fig], mode=mode, axes=4, interactive=False, new=True, title=f'Figure {i+1} - CALFEM vedo visualization tool')
+                    opts = dict(bg=self.bg[self.fig], mode=mode, axes=4, interactive=False, new=True, title=f'Figure {plot+1} - CALFEM vedo visualization tool')
                     if self.bg[self.fig] == 'black':
                         self.click_msg.c('w')
                         #for j in range(len(self.nodes[i])):
                         #    if self.nodes[i][j].c('black'):
                         #        self.nodes[i][j].c('w')
-                        for j in range(len(self.geometries[i])):
-                            for k in range(len(self.geometries[i][j])):
+                        for j in range(len(self.geometries[plot])):
+                            for k in range(len(self.geometries[plot][j])):
                                 #print(self.geometries[i][j])
-                                self.geometries[i][j][k].c('w')
+                                self.geometries[plot][j][k].c('w')
                 else:
-                    opts = dict(mode=mode, axes=4, interactive=False, new=True, title=f'Figure {i+1} - CALFEM vedo visualization tool')
-                plt = v.show(self.geometries[i], self.meshes[i], self.nodes[i], self.click_msg, **opts)
+                    opts = dict(mode=mode, axes=4, interactive=False, new=True, title=f'Figure {plot+1} - CALFEM vedo visualization tool')
+                plt = v.show(self.geometries[plot], self.meshes[plot], self.nodes[plot], self.click_msg, **opts)
                 plt.parallelProjection(value=pp)
             #plt.addGlobalAxes(11)#
             #plt.addShadows()
             #plt.addScaleIndicator(pos=(0.7, 0.05), s=0.02, length=2, lw=4, c='k1', alpha=1, units='', gap=0.05)
-            if self.mode_hover[i] == True or self.mode_2D[i] == True:
+            if self.mode_hover[plot] == True or self.mode_2D[plot] == True:
                 plt.addCallback('MouseMove', self.click)
             else:
                 plt.addCallback('mouse click', self.click)
@@ -344,55 +472,55 @@ class VedoMainWindow():
             #print('Figure text: ',self.msg[i])
             #print('Projections: ',self.proj[i])
             #self.plt.append(plt)
-            self.plt[f'Figure {i+1} - CALFEM vedo visualization tool'] = plt
+            self.plt[f'Figure {plot+1} - CALFEM vedo visualization tool'] = plt
 
             #if self.msg[i]:
-            for j in range(len(self.msg[i])):
+            for j in range(len(self.msg[plot])):
                 if self.bg[self.fig] == 'black':
-                    self.msg[i][j].c('w')
-                plt.add(self.msg[i][j])
+                    self.msg[plot][j].c('w')
+                plt.add(self.msg[plot][j])
                     #plt += self.msg[i][j]
                     #plt.add(self.click_msg)
 
             #if self.proj[i]:
-            for j in range(len(self.proj[i])):
+            for j in range(len(self.proj[plot])):
                 if self.bg[self.fig] == 'black':
-                    self.proj[i][j].c('w')
-                plt.add(self.proj[i][j])
+                    self.proj[plot][j].c('w')
+                plt.add(self.proj[plot][j])
 
             #if self.rulers[i]:
-            for j in range(len(self.rulers[i])):
+            for j in range(len(self.rulers[plot])):
                 if self.bg[self.fig] == 'black':
-                    self.rulers[i][j].c('w')
-                plt.add(self.rulers[i][j])
+                    self.rulers[plot][j].c('w')
+                plt.add(self.rulers[plot][j])
 
-            for j in range(len(self.vectors[i])):
-                plt.add(self.vectors[i][j])
+            for j in range(len(self.vectors[plot])):
+                plt.add(self.vectors[plot][j])
 
-            for j in range(len(self.dia_lines[i])):
-                plt.add(self.dia_lines[i][j])
+            for j in range(len(self.dia_lines[plot])):
+                plt.add(self.dia_lines[plot][j])
 
-            for j in range(len(self.dia_points[i])):
+            for j in range(len(self.dia_points[plot])):
                 if self.bg[self.fig] == 'black':
-                    self.dia_points[i][j].c('w')
-                plt.add(self.dia_points[i][j])
+                    self.dia_points[plot][j].c('w')
+                plt.add(self.dia_points[plot][j])
 
-            for j in range(len(self.dia_axes[i])):
+            for j in range(len(self.dia_axes[plot])):
                 if self.bg[self.fig] == 'black':
-                    lst = self.dia_axes[i][j].unpack()
+                    lst = self.dia_axes[plot][j].unpack()
                     for k in lst:
                         k.c('w')
-                plt.add(self.dia_axes[i][j])
+                plt.add(self.dia_axes[plot][j])
 
             self.rendered += 1
 
         v.interactive()
-
+        '''
         def animate(self):
             for i in range(self.rendered, self.fig+1):
                 opts = dict(axes=4, interactive=False, new=True, title=f'Figure {i+1} - CALFEM vedo visualization tool')
                 plt = v.show(self.keyframes[i] **opts)
-
+        '''
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 # Plotting functions, for adding things to a rendering window
     
@@ -412,10 +540,18 @@ def add_scalar_bar(
     plot_window = VedoPlotWindow.instance().plot_window
 
     fig = plot_window.fig
-    if on == 'mesh':
-        plot_window.meshes[fig][0].addScalarBar(pos=pos, titleFontSize=font_size)
-    elif on == 'vectors':
-        plot_window.vectors[fig][0].addScalarBar(pos=pos, titleFontSize=font_size)
+
+    if plot_window.mode_anim[fig] == True:
+
+        for key in plot_window.keyframes[fig][0].keys():
+            plot_window.keyframes[fig][0][key].addScalarBar(pos=pos, titleFontSize=font_size)
+
+    else:
+
+        if on == 'mesh':
+            plot_window.meshes[fig][0].addScalarBar(pos=pos, titleFontSize=font_size)
+        elif on == 'vectors':
+            plot_window.vectors[fig][0].addScalarBar(pos=pos, titleFontSize=font_size)
 
     msg = v.Text2D(label, pos=text_pos, alpha=1, c=color)
     plot_window.msg[plot_window.fig] += [msg]
@@ -858,7 +994,7 @@ def draw_geometry(points=None,lines=None,surfaces=None,scale=0.05):
     plot_window = VedoPlotWindow.instance().plot_window
 
     if surfaces == None and lines == None and points == None:
-        print("Please input either points, lines or surfaces")
+        print("Please input either: (points), (points, lines) or (points, lines, surfaces) from geometry module")
         sys.exit()
     else:
         if surfaces is not None:
@@ -1218,7 +1354,7 @@ def draw_displaced_mesh(
     dof,
     element_type,
     a = None,
-    values = None,
+    scalars = None,
     
     # Other parameters
     scale = 0.02,
@@ -1236,6 +1372,7 @@ def draw_displaced_mesh(
     colors = 256,
     vmax = None,
     vmin = None,
+    scalar_title = '',
 
     # Element-specific input
     spring = True,
@@ -1244,6 +1381,8 @@ def draw_displaced_mesh(
 
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
+
+    values = scalars
 
     if np.size(coord, axis = 1) == 1:
         print('only x')
@@ -1350,13 +1489,16 @@ def draw_displaced_mesh(
                 element.name = f"Spring element {i+1}"
                 elements.append(element)
 
+                #if values is not None:
+                #    print('Colormapping not supported for springs')
                 
                 if values is not None:
                     el_values_array = []
                     for j in range(14):
                         el_values_array.append(values[i])
                 
-                    element.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax)
+                    element.cmap(colormap, el_values_array, arrayName=scalar_title, on="cells", vmin=vmin, vmax=vmax)
+                
             #if element_type == 1 and spring == False:
             #    element = v.Cylinder([[def_coord[coord1,0],def_coord[coord1,1],def_coord[coord1,2]],[def_coord[coord2,0],def_coord[coord2,1],def_coord[coord2,2]]],r=scale,res=4,c=color).alpha(alpha)
             #    element.name = f"Spring element {i+1}"
@@ -1396,7 +1538,7 @@ def draw_displaced_mesh(
                     for j in range(6):
                         el_values_array.append(values[i])
                     #element.cmap(colormap, [values[i],values[i],values[i],values[i],values[i],values[i]], on="cells", vmin=vmin, vmax=vmax)
-                    element.cmap(colormap, el_values_array, on="cells", vmin=vmin, vmax=vmax)
+                    element.cmap(colormap, el_values_array, arrayName=scalar_title, on="cells", n=colors, vmin=vmin, vmax=vmax)
 
 
             elif element_type == 5:
@@ -1447,7 +1589,7 @@ def draw_displaced_mesh(
                             el_values_array[10] = el_value2
                             el_values_array[11] = el_value2
                             
-                            element.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)
+                            element.cmap(colormap, el_values_array, arrayName=scalar_title, on="points", n=colors, vmin=vmin, vmax=vmax)
 
 
                 else:
@@ -1477,9 +1619,10 @@ def draw_displaced_mesh(
                         el_values_array[10] = el_value2
                         el_values_array[11] = el_value2
 
-                        element.cmap(colormap, el_values_array, on="points", vmin=vmin, vmax=vmax)        
+                        element.cmap(colormap, el_values_array, arrayName=scalar_title, on="points", n=colors, vmin=vmin, vmax=vmax)        
 
         if only_ret == False:
+
             if render_nodes == True:
                 if element_type == 1 and spring == False:
                     nodes = vdu.get_node_elements(def_coord,scale,alpha,dof,dofs_per_node=1)
@@ -1570,7 +1713,7 @@ def draw_displaced_mesh(
                 el_values = vdu.convert_el_values(edof,values)
                 mesh.celldata["val"] = el_values
 
-                mesh.cmap(colormap, "val", on="cells", n=colors)
+                mesh.cmap(colormap, "val", arrayName=scalar_title, on="cells", n=colors, vmax=vmax, vmin=vmin)
             
             elif val and val == 'nodal_values_by_el':
                 #print(val)
@@ -1581,7 +1724,7 @@ def draw_displaced_mesh(
                 #mesh.pointdata["val"] = node_scalars
                 print(ug.celldata.keys())
                 #nodal_values = vdu.convert_nodal_values(edof,dof,coord,coord2,values)
-                mesh.cmap(colormap, 'val', on="points", n=colors)
+                mesh.cmap(colormap, 'val', arrayName=scalar_title, on="points", n=colors, vmax=vmax, vmin=vmin)
 
 
             elif val and val == 'nodal_values':
@@ -1589,7 +1732,7 @@ def draw_displaced_mesh(
                 #values = vdu.convert_nodal_values(edof,topo,dof,values)
                 #vmin, vmax = np.min(values), np.max(values)
                 mesh.pointdata["val"] = values
-                mesh.cmap(colormap, 'val', on="points", n=colors)
+                mesh.cmap(colormap, 'val', arrayName=scalar_title, on="points", n=colors, vmax=vmax, vmin=vmin)
                 #ug.pointdata["val"] = values
                 #nodal_values = vdu.convert_nodal_values(edof,dof,coord,coord2,values)
                 #mesh.cmap(colormap, values, on="points", vmin=vmin, vmax=vmax)
@@ -1602,7 +1745,7 @@ def draw_displaced_mesh(
                 #el_values = vdu.convert_el_values(edof,values)
                 mesh.celldata["val"] = values
 
-                mesh.cmap(colormap, "val", on="cells")
+                mesh.cmap(colormap, "val", arrayName=scalar_title, on="cells", n=colors, vmax=vmax, vmin=vmin)
         
         '''
         print('Number of topo cells: ',np.size(topo, axis=0))
@@ -1617,9 +1760,16 @@ def draw_displaced_mesh(
         if only_ret == False:
 
             if render_nodes == True:
-                nodes = vdu.get_node_elements(def_coord,scale,alpha)
-                plot_window.meshes[plot_window.fig] += mesh
-                plot_window.nodes[plot_window.fig] += nodes
+                #nodes = vdu.get_node_elements(def_coord,scale,alpha)
+                if element_type == 3:
+                    nodes = vdu.get_node_elements(def_coord,scale,alpha,dof,dofs_per_node=1)
+                elif element_type == 4 or element_type == 6:
+                    nodes = vdu.get_node_elements(def_coord,scale,alpha,dof,dofs_per_node=3)
+                    #nodes.append(v.Sphere(c='white').scale(1.5*scale).pos([x,y,z]).alpha(alpha))
+                #plot_window.meshes[plot_window.fig] += mesh
+                #plot_window.nodes[plot_window.fig] += nodes
+                plot_window.meshes[plot_window.fig].extend(elements)
+                plot_window.nodes[plot_window.fig].extend(nodes)
                 #print("Meshes are ",np.size(plot_window.meshes, axis=0),"X",np.size(plot_window.meshes, axis=1))
                 #print("Adding mesh to figure ",plot_window.fig+1)
             else:
@@ -1788,13 +1938,14 @@ def animation(
     dof,
     element_type,
     a=None,
-    values=None,
+    scalars=None,
 
     # Animation parameters
     steps=10,
     loop=False,
     negative=False,
-    dt=500,
+    dt=50,
+    animate_colormap=True,
 
     # Other parameters
     scale=0.02,
@@ -1810,6 +1961,7 @@ def animation(
     colors = 256,
     vmax=None,
     vmin=None,
+    scalar_title = '',
 
     # Element-specific input
     spring = True,
@@ -1821,24 +1973,105 @@ def animation(
     plot_window.loop = loop
     plot_window.dt = dt
 
+    keyframe_dict = {}
 
+    keyframes = {}
+
+    plot_window.mode_anim[plot_window.fig] = True
+
+    nnode = np.size(coord,1)
+
+    values = scalars
+
+    if element_type == 1 or element_type == 3:
+        ndof_per_n = 1
+    elif element_type == 2 or element_type == 4 or element_type == 6:
+        ndof_per_n = 3
+    elif element_type == 5:
+        ndof_per_n = 6
+
+    if a is None:
+        a = np.zeros((nnode*ndof_per_n,1))
+    elif element_type == 3:
+        print('NOTE: Element type is flow, but deformation matrix given. Deformation was set to 0 for all DOFs')
+        a = np.zeros((nnode*ndof_per_n,1))
 
     #v.settings.immediateRendering = True
 
     #camera = dict(viewAngle=30)
-    if loop == True and negative == True:
+    if negative == True:
         timesteps = np.arange(0, 1+1/(steps), 1/(steps))
+        unique_timesteps = timesteps
         timesteps = np.append(timesteps, np.flip(np.arange(0, 1, 1/(steps))))
         timesteps = np.append(timesteps, np.flip(np.arange(-1, 0, 1/(steps))))
+        unique_timesteps = np.append(unique_timesteps, np.flip(np.arange(-1, 0, 1/(steps))))
         timesteps = np.append(timesteps, np.arange(-1+1/(steps), 0, 1/(steps)))
         #print('To be appended:',np.arange(-1+1/(steps), 0, 1/(steps)))
-        print('Looping, timesteps:',timesteps)
+        #print('Looping incl. negative deformation, timesteps:',timesteps)
         #sys.exit()
     elif loop == True:
         timesteps = np.arange(0, 1+1/(steps), 1/(steps))
-        print('No looping, timesteps:',timesteps)
-    
+        unique_timesteps = timesteps
+        timesteps = np.append(timesteps, np.flip(np.arange(0+1/(steps), 1, 1/(steps))))
+        #print('No looping, timesteps:',timesteps)
+    else:
+        timesteps = np.arange(0, 1+1/(steps), 1/(steps))
+        unique_timesteps = timesteps
 
+    indx = 1
+    for t in timesteps:
+        keyframe_dict[indx] = np.round(t,3)
+        indx += 1
+
+    if values is not None:
+        if vmax is None and vmin is None:
+            vmin, vmax = np.min(values), np.max(values)
+        elif vmax is None:
+            vmax = np.max(values)
+        elif vmin is None:
+            vmin = np.min(values)
+
+    it = 0
+    for t in unique_timesteps:
+        print('Creating keyframe', it+1)
+        print('t',t)
+        mesh = None
+        #mesh = draw_displaced_mesh(edof,coord,dof,element_type,a*t,values*t,scale=scale,alpha=alpha,def_scale=def_scale,colormap=colormap,colors=colors,vmax=vmax,vmin=vmin,only_ret=True)
+        
+        if values is not None and animate_colormap == True:
+            
+            if t >= 0:
+                #if element_type == 5:
+                #else:
+                mesh = draw_displaced_mesh(edof,coord,dof,element_type,a*t,values*t,scale=scale,alpha=alpha,def_scale=def_scale,colormap=colormap,colors=colors,vmax=vmax,vmin=vmin,scalar_title=scalar_title,nseg=nseg,spring=spring,only_ret=True)
+            
+            else:
+                #if element_type == 5:
+                #else:
+                mesh = draw_displaced_mesh(edof,coord,dof,element_type,a*t,-values*t,scale=scale,alpha=alpha,def_scale=def_scale,colormap=colormap,colors=colors,vmax=vmax,vmin=vmin,scalar_title=scalar_title,nseg=nseg,spring=spring,only_ret=True)
+        
+        elif values is not None and animate_colormap == False:
+            mesh = draw_displaced_mesh(edof,coord,dof,element_type,a*t,values,scale=scale,alpha=alpha,def_scale=def_scale,colormap=colormap,colors=colors,vmax=vmax,vmin=vmin,scalar_title=scalar_title,nseg=nseg,spring=spring,only_ret=True)
+        
+        else:
+            mesh = draw_displaced_mesh(edof,coord,dof,element_type,a*t,scale=scale,alpha=alpha,def_scale=def_scale,nseg=nseg,spring=spring,only_ret=True)
+        
+        if element_type == 1 or element_type == 2 or element_type == 5:
+            mesh = v.merge(mesh)
+        #print('mesh',mesh)
+        keyframes[np.round(t,3)] = mesh
+        
+        if export == True:
+            output = file+f'_{int(it)}'
+            export_vtk(output,mesh)
+        
+        it += 1
+    plot_window.keyframes[plot_window.fig].append(keyframes)
+    plot_window.keyframe_dict[plot_window.fig].append(keyframe_dict)
+    
+    #print('keyframe_dict',keyframe_dict)
+    #res = list(sorted({ele for val in keyframe_dict.values() for ele in val}))
+    #print(unique_timesteps)
     #print(timesteps)
     #print(start)
     #print(end)
@@ -1856,7 +2089,7 @@ def animation(
     #pb = v.ProgressBar(0, len(t), c="b")
 
     #nsteps = np.size(timesteps,0)
-
+    """
     it = 0
     if element_type == 4:
         #ncoord = np.size(coord, axis = 0)
@@ -1871,9 +2104,9 @@ def animation(
             elif vmin is None:
                 vmin = np.min(values)
 
-        keyframes = []
+        #keyframes = []
 
-        for t in timesteps:
+        for t in unique_timesteps:
             '''
             def draw_displaced_mesh(
                 # Main input
@@ -1907,7 +2140,8 @@ def animation(
             '''
 
             mesh = draw_displaced_mesh(edof,coord,dof,element_type,a*t,values*t,scale=scale,alpha=alpha,def_scale=def_scale,colormap=colormap,colors=colors,vmax=vmax,vmin=vmin,only_ret=True)
-            keyframes.append(mesh)
+            #keyframes.append(mesh)
+            keyframes[t] = mesh
 
             if export == True:
                 output = file+f'_{int(it)}'
@@ -1917,7 +2151,10 @@ def animation(
             it += 1
         plot_window.keyframes[plot_window.fig].extend(keyframes)
         
+        
 
+        #print('keyframes',keyframes)
+        
         #plot_window.
         
         #def_coord = np.zeros([ncoord,3])
@@ -1950,7 +2187,7 @@ def animation(
         #for t in timesteps:
 
             
-        """
+        
         for i in range(0, ncoord):
             a_dx, a_dy, a_dz = vdu.get_a_from_coord(i,3,a,def_scale)
 
@@ -1969,7 +2206,7 @@ def animation(
                 z = coord[i,2]+z_step*j
 
                 def_coord[i,:] = [x,y,z]
-        """
+        
 
         '''
         ex,ey,ez = cfc.coordxtr(edof,coord,dof)
@@ -1994,7 +2231,7 @@ def animation(
         mesh.cmap(colormap, "val", on="cells", vmin=vmin*t, vmax=vmax*t)
         #meshes = []
         '''
-        """
+        
         #vmin, vmax = np.min(el_values), np.max(el_values)
         for i in range(nel):
             coords = vdu.get_coord_from_edof(edof[i,:],dof,4)
@@ -2098,11 +2335,13 @@ def figure(fig,bg='white',flat=False,hover=False):
             plot_window.dia_axes.append([])
 
             plot_window.keyframes.append([])
+            plot_window.keyframe_dict.append([])
 
         while len(plot_window.mode_2D) < plot_window.fig + 1:
             plot_window.bg.append(bg)
             plot_window.mode_2D.append(False)
             plot_window.mode_hover.append(False)
+            plot_window.mode_anim.append(False)
 
             #print(plot_window.mode_2D)
             
@@ -2111,6 +2350,7 @@ def figure(fig,bg='white',flat=False,hover=False):
         plot_window.bg.append(bg)
         plot_window.mode_2D.append(False)
         plot_window.mode_hover.append(False)
+        plot_window.mode_anim.append(False)
 
     plot_window.bg[fig-1] = bg
 

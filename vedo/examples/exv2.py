@@ -401,11 +401,11 @@ cfvv.draw_displaced_mesh(edof_bars,coord,dof,2,a,normal_stresses_bars/1000000,de
 #cfvv.add_scalar_bar('Max normal stress bars',pos=[0.75,0.1])
 #cfvv.add_legend(def_bar_elements)
 
-nS_beams = np.zeros((4,nseg))
+#nS_beams = np.zeros((4,nseg))
 Mz_beams = np.zeros((4,nseg))
 eci_beams_upd = np.zeros((4,nseg))
-for i in range(nS_beams.shape[0]):
-    nS_beams[i] = normal_stresses_beams[(18+i)*nseg:(18+i)*nseg+nseg]
+for i in range(Mz_beams.shape[0]):
+    #nS_beams[i] = normal_stresses_beams[(18+i)*nseg:(18+i)*nseg+nseg]
     Mz_beams[i] = Mz[(18+i)*nseg:(18+i)*nseg+nseg]
     #print(eci_beams_upd[i])
     #print(eci_beams[(18+i)*nseg:(18+i)*nseg+nseg])
@@ -416,3 +416,22 @@ cfvv.eldia(ex_beams[18:22],ey_beams[18:22],ez_beams[18:22],Mz_beams/1000,eci_bea
 
 #Start Calfem-vedo visualization
 cfvv.show_and_wait()
+
+
+
+
+# Animation
+
+cfvv.figure(2)
+steps = 20
+cfvv.add_text(f'Looping bewteen undef. & def. state w/ {steps} steps',pos='top-middle')
+cfvv.animation(edof_beams,coord,dof,5,a,normal_stresses_beams/1000000,nseg=nseg,dt=250)
+#cfvv.animation(edof_bars,coord,dof,2,a,normal_stresses_bars/1000000,dt=250)
+
+#Start Calfem-vedo visualization
+cfvv.show_and_wait()
+
+
+
+
+

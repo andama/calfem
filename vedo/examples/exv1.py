@@ -80,6 +80,23 @@ cfvv.add_text_3D('F_x =500 N',[1.55,-0.02,0],size=0.03)
 cfvv.show_and_wait()
 
 
+# Animation
+
+cfvv.figure(2)
+steps = 20
+cfvv.add_text(f'Looping bewteen undef. & def. state w/ {steps} steps',pos='top-middle')
+cfvv.animation(edof,coord,dof,1,a,loop=True,steps=20,dt=0)
+
+#Start Calfem-vedo visualization
+cfvv.show_and_wait()
+
+
+
+
+
+
+
+
 
 
 

@@ -466,7 +466,7 @@ disp = np.zeros((nnode,1))
 
 cfvv.figure(3)
 #print('flux',flux,flux.shape[0],flux.shape[1])
-mesh = cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,flux_tot,colormap='coolwarm',wireframe=True)
+mesh = cfvv.draw_displaced_mesh(edof,coord,dof,3,scalars=flux_tot,colormap='coolwarm',wireframe=True)
 #cfvv.eliso(mesh)
 #cfvv.elcont(mesh)
 cfvv.add_scalar_bar('Heat flux [W/m^2]')
@@ -478,11 +478,29 @@ cfvv.elflux(ex,ey,ez,flux,colormap='coolwarm',unit='W/m^2')
 
 cfvv.figure(4)
 #print('T',T,T.shape[0],T.shape[1])
-cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,ed,colormap='coolwarm',colors=5)
+cfvv.draw_displaced_mesh(edof,coord,dof,3,scalars=ed,colormap='coolwarm',colors=5)
 cfvv.add_scalar_bar('Temp. [C]')
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
 print(T[153],T[154])
 cfvv.show_and_wait()
+
+
+
+# Animation
+
+cfvv.figure(5)
+
+cfvv.animation(edof,coord,dof,3,scalars=ed,dt=250,steps=20,colormap='coolwarm',colors=5)
+
+#Start Calfem-vedo visualization
+cfvv.show_and_wait()
+
+
+
+
+
+
+
 
 #cfvv.figure(5)
 #cfvv.eliso(mesh)

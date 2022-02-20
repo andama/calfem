@@ -280,7 +280,7 @@ def check_input(edof,coord,dof,element_type,a=None,values=None,nseg=None):
             degrees_of_freedom_per_node, \
             number_of_displacements
     else:
-        print('test')
+        #print('test')
         return number_of_elements, \
             number_of_degrees_of_freedom_per_element, \
             number_of_coordinates, \
