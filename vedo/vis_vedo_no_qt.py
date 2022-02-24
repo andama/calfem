@@ -274,9 +274,14 @@ class VedoMainWindow():
                 opts = dict(axes=4, interactive=0, title=f'Figure {plot+1} - CALFEM vedo visualization tool')
                 keyframes = self.keyframes[self.fig]
                 keyframe_dict = self.keyframe_dict[self.fig]
-                #print(keyframes)
+                print(keyframes)
+                print(keyframe_dict)
+                nmesh = len(keyframes)
+                #print(len(keyframes))
+                #print(len(keyframe_dict))
                 #plt = v.Plotter(**opts).show()
                 plt = v.Plotter(**opts)
+
                 #plt.enableErase()
                 
                 #plt.parallelProjection(value=pp)
@@ -370,9 +375,12 @@ class VedoMainWindow():
                         #    plt.show(resetcam=True)
 
                         time.sleep(self.dt/1000)
-                        plt.pop()
+                        for i in range(nmesh):
+                            plt.pop()
+                        
 
-                        plt += keyframes[0][val]
+                        for i in range(nmesh):
+                            plt += keyframes[i][val]
                         #if key == 1:
                         #    plt.show(resetcam=True)
                         #else:
@@ -460,6 +468,7 @@ class VedoMainWindow():
                     opts = dict(mode=mode, axes=4, interactive=False, new=True, title=f'Figure {plot+1} - CALFEM vedo visualization tool')
                 plt = v.show(self.geometries[plot], self.meshes[plot], self.nodes[plot], self.click_msg, **opts)
                 plt.parallelProjection(value=pp)
+
             #plt.addGlobalAxes(11)#
             #plt.addShadows()
             #plt.addScaleIndicator(pos=(0.7, 0.05), s=0.02, length=2, lw=4, c='k1', alpha=1, units='', gap=0.05)
@@ -556,7 +565,7 @@ def add_scalar_bar(
     msg = v.Text2D(label, pos=text_pos, alpha=1, c=color)
     plot_window.msg[plot_window.fig] += [msg]
 
-# Add text to a renderer
+# Add text to a render window
 def add_text(
     text,
     color='black',
@@ -574,12 +583,84 @@ def add_text(
     msg = v.Text2D(text, pos=pos, alpha=1, c=color)
     plot_window.msg[plot_window.fig] += [msg]
 
+# Add 3D text to a scene
 def add_text_3D(text,pos=(0,0,0),color='black',size=1,alpha=1):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
     msg = v.Text3D(text, pos=pos, s=size, font='', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c=color, alpha=alpha, literal=False)
     plot_window.msg[plot_window.fig] += [msg]
+
+# Add axes to a mesh
+def add_mesh_axes(mesh):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    axes = mesh.buildAxes()
+    plot_window.dia_axes[plot_window.fig].append(axes)
+
+# Add grid & axes
+#def add_axes(obj=None, xtitle=None, ytitle=None, ztitle=None, xrange=None, yrange=None, zrange=None, c=None, numberOfDivisions=None, digits=None, limitRatio=0.04, axesLineWidth=1, gridLineWidth=1, htitle='', hTitleSize=0.03, hTitleFont=None, hTitleItalic=True, hTitleColor=None, hTitleJustify='bottom-center', hTitleRotation=0, hTitleOffset=(0, 0.01, 0), titleDepth=0, titleFont='', textScale=1.0, xTitlePosition=0.95, yTitlePosition=0.95, zTitlePosition=0.95, xTitleOffset=0.025, yTitleOffset=0.0275, zTitleOffset=0.02, xTitleJustify=None, yTitleJustify=None, zTitleJustify=None, xTitleRotation=0, yTitleRotation=0, zTitleRotation=0, xTitleBox=False, yTitleBox=False, xTitleSize=0.025, yTitleSize=0.025, zTitleSize=0.025, xTitleColor=None, yTitleColor=None, zTitleColor=None, xTitleBackfaceColor=None, yTitleBackfaceColor=None, zTitleBackfaceColor=None, xTitleItalic=0, yTitleItalic=0, zTitleItalic=0, xyGrid=True, yzGrid=False, zxGrid=False, xyGrid2=False, yzGrid2=False, zxGrid2=False, xyGridTransparent=False, yzGridTransparent=False, zxGridTransparent=False, xyGrid2Transparent=False, yzGrid2Transparent=False, zxGrid2Transparent=False, xyPlaneColor=None, yzPlaneColor=None, zxPlaneColor=None, xyGridColor=None, yzGridColor=None, zxGridColor=None, xyAlpha=0.075, yzAlpha=0.075, zxAlpha=0.075, xyFrameLine=None, yzFrameLine=None, zxFrameLine=None, xyFrameColor=None, yzFrameColor=None, zxFrameColor=None, xLineColor=None, yLineColor=None, zLineColor=None, xHighlightZero=False, yHighlightZero=False, zHighlightZero=False, xHighlightZeroColor='r', yHighlightZeroColor='g', zHighlightZeroColor='b', showTicks=True, xTickLength=0.015, yTickLength=0.015, zTickLength=0.015, xTickThickness=0.0025, yTickThickness=0.0025, zTickThickness=0.0025, xMinorTicks=1, yMinorTicks=1, zMinorTicks=1, tipSize=None, labelFont='', xLabelColor=None, yLabelColor=None, zLabelColor=None, xLabelSize=0.016, yLabelSize=0.016, zLabelSize=0.016, xLabelOffset=0.8, yLabelOffset=0.8, zLabelOffset=0.8, xLabelJustify=None, yLabelJustify=None, zLabelJustify=None, xLabelRotation=0, yLabelRotation=0, zLabelRotation=0, xAxisRotation=0, yAxisRotation=0, zAxisRotation=0, xValuesAndLabels=None, yValuesAndLabels=None, zValuesAndLabels=None, xyShift=0, yzShift=0, zxShift=0, xShiftAlongY=0, xShiftAlongZ=0, yShiftAlongX=0, yShiftAlongZ=0, zShiftAlongX=0, zShiftAlongY=0, xUseBounds=True, yUseBounds=False, zUseBounds=False, xInverted=False, yInverted=False, zInverted=False, useGlobal=False, tol=0.0001):
+def add_axes(
+    # Ranges
+    xrange=[0,1],
+    yrange=[0,1],
+    zrange=[0,1],
+
+    # Titles
+    xtitle = 'x',
+    ytitle = 'y',
+    ztitle = 'z',
+    htitle = '',
+
+    # Grids
+    xyGrid=True, yzGrid=True, zxGrid=True, xyGrid2=False, yzGrid2=False, zxGrid2=False,
+
+    xyGridTransparent=True, yzGridTransparent=True, zxGridTransparent=True, xyGrid2Transparent=True, yzGrid2Transparent=True, zxGrid2Transparent=True,
+
+    # Other
+    numberOfDivisions=10
+    ):
+    app = init_app()
+    plot_window = VedoPlotWindow.instance().plot_window
+
+    axes = v.Axes(
+            numberOfDivisions=numberOfDivisions,
+            xtitle=xtitle,
+            ytitle=ytitle,
+            ztitle=ztitle,
+            htitle=htitle,
+            #hTitleFont='Kanopus',
+            #hTitleJustify='bottom-right',
+            #hTitleColor='red2',
+            #hTitleSize=0.035,
+            #hTitleOffset=(0,0.075,0),
+            #hTitleRotation=45,
+            #zHighlightZero=True,
+            #xyFrameLine=2, yzFrameLine=1, zxFrameLine=1,
+            #xyFrameColor='red3',
+            #xyShift=1.05, # move xy 5% above the top of z-range
+            xyGrid=xyGrid,
+            yzGrid=yzGrid,
+            zxGrid=zxGrid,
+            xyGrid2=xyGrid,
+            yzGrid2=yzGrid,
+            zxGrid2=zxGrid,
+            xyGridTransparent=xyGridTransparent, yzGridTransparent=yzGridTransparent, zxGridTransparent=zxGridTransparent, xyGrid2Transparent=xyGrid2Transparent, yzGrid2Transparent=yzGrid2Transparent, zxGrid2Transparent=zxGrid2Transparent,
+            #zxShift=1.0,
+            #xTitleJustify='bottom-right',
+            #xTitleOffset=-1.175,
+            #xLabelOffset=-1.75,
+            #yLabelRotation=90,
+            #zInverted=True,
+            #tipSize=0.25,
+            xrange=xrange,
+            yrange=yrange,
+            zrange=zrange
+          )
+
+    #axes = v.Axes(obj=obj, xtitle=xtitle, ytitle=ytitle, ztitle=ztitle, xrange=xrange, yrange=yrange, zrange=zrange, c=c, numberOfDivisions=numberOfDivisions, digits=digits, limitRatio=limitRatio, axesLineWidth=axesLineWidth, gridLineWidth=gridLineWidth, htitle=htitle, hTitleSize=hTitleSize, hTitleFont=hTitleFont, hTitleItalic=hTitleItalic, hTitleColor=hTitleColor, hTitleJustify=hTitleJustify, hTitleRotation=hTitleRotation, hTitleOffset=hTitleOffset, titleDepth=titleDepth, titleFont=titleFont, textScale=textScale, xTitlePosition=xTitlePosition, yTitlePosition=yTitlePosition, zTitlePosition=zTitlePosition, xTitleOffset=xTitleOffset, yTitleOffset=yTitleOffset, zTitleOffset=zTitleOffset, xTitleJustify=xTitleJustify, yTitleJustify=yTitleJustify, zTitleJustify=zTitleJustify, xTitleRotation=xTitleRotation, yTitleRotation=yTitleRotation, zTitleRotation=zTitleRotation, xTitleBox=xTitleBox, yTitleBox=yTitleBox, xTitleSize=xTitleSize, yTitleSize=yTitleSize, zTitleSize=zTitleSize, xTitleColor=xTitleColor, yTitleColor=yTitleColor, zTitleColor=zTitleColor, xTitleBackfaceColor=xTitleBackfaceColor, yTitleBackfaceColor=yTitleBackfaceColor, zTitleBackfaceColor=zTitleBackfaceColor, xTitleItalic=xTitleItalic, yTitleItalic=yTitleItalic, zTitleItalic=zTitleItalic, xyGrid=xyGrid, yzGrid=yzGrid, zxGrid=zxGrid, xyGrid2=xyGrid2, yzGrid2=yzGrid2, zxGrid2=zxGrid2, xyGridTransparent=xyGridTransparent, yzGridTransparent=yzGridTransparent, zxGridTransparent=zxGridTransparent, xyGrid2Transparent=xyGrid2Transparent, yzGrid2Transparent=yzGrid2Transparent, zxGrid2Transparent=zxGrid2Transparent, xyPlaneColor=xyPlaneColor, yzPlaneColor=yzPlaneColor, zxPlaneColor=zxPlaneColor, xyGridColor=xyGridColor, yzGridColor=yzGridColor, zxGridColor=zxGridColor, xyAlpha=xyAlpha, yzAlpha=yzAlpha, zxAlpha=zxAlpha, xyFrameLine=xyFrameLine, yzFrameLine=yzFrameLine, zxFrameLine=zxFrameLine, xyFrameColor=xyFrameColor, yzFrameColor=yzFrameColor, zxFrameColor=zxFrameColor, xLineColor=xLineColor, yLineColor=yLineColor, zLineColor=zLineColor, xHighlightZero=xHighlightZero, yHighlightZero=yHighlightZero, zHighlightZero=zHighlightZero, xHighlightZeroColor=xHighlightZeroColor, yHighlightZeroColor=yHighlightZeroColor, zHighlightZeroColor=zHighlightZeroColor, showTicks=showTicks, xTickLength=xTickLength, yTickLength=yTickLength, zTickLength=zTickLength, xTickThickness=xTickThickness, yTickThickness=yTickThickness, zTickThickness=zTickThickness, xMinorTicks=xMinorTicks, yMinorTicks=yMinorTicks, zMinorTicks=zMinorTicks, tipSize=tipSize, labelFont=labelFont, xLabelColor=xLabelColor, yLabelColor=yLabelColor, zLabelColor=zLabelColor, xLabelSize=xLabelSize, yLabelSize=yLabelSize, zLabelSize=zLabelSize, xLabelOffset=xLabelOffset, yLabelOffset=yLabelOffset, zLabelOffset=zLabelOffset, xLabelJustify=xLabelJustify, yLabelJustify=yLabelJustify, zLabelJustify=zLabelJustify, xLabelRotation=xLabelRotation, yLabelRotation=yLabelRotation, zLabelRotation=zLabelRotation, xAxisRotation=xAxisRotation, yAxisRotation=yAxisRotation, zAxisRotation=zAxisRotation, xValuesAndLabels=xValuesAndLabels, yValuesAndLabels=yValuesAndLabels, zValuesAndLabels=zValuesAndLabels, xyShift=xyShift, yzShift=yzShift, zxShift=zxShift, xShiftAlongY=xShiftAlongY, xShiftAlongZ=xShiftAlongZ, yShiftAlongX=yShiftAlongX, yShiftAlongZ=yShiftAlongZ, zShiftAlongX=zShiftAlongX, zShiftAlongY=zShiftAlongY, xUseBounds=xUseBounds, yUseBounds=yUseBounds, zUseBounds=zUseBounds, xInverted=xInverted, yInverted=yInverted, zInverted=zInverted, useGlobal=useGlobal, tol=tol)
+    plot_window.dia_axes[plot_window.fig].append(axes)
 
 # Add silhouette with or without measurements to a renderer
 def add_projection(color='black',plane='xy',offset=-1,rulers=False):
@@ -766,9 +847,13 @@ def elprinc(ex,ey,ez,val,vec,ed=None,scale=.1, colormap = 'jet', unit='Pa'):
 
     nel = np.size(ex,0)
     n = int((np.size(val,0)*np.size(val,1))/np.size(ex,0))
-    print(n)
+    #print(n)
 
     upd_scale = (1/np.max(val))*scale
+    #upd_scale = (1/np.max(vec))*scale
+
+    if ed is None:
+        ed = np.zeros((nel,3))
 
     #x_comp = eigenvectors[0, :]
     #y_comp = eigenvectors[1, :]
@@ -786,11 +871,13 @@ def elprinc(ex,ey,ez,val,vec,ed=None,scale=.1, colormap = 'jet', unit='Pa'):
     text = []
     vmin = np.min(val)
     vmax = np.max(val)
+    #vmin = np.min(vec)
+    #vmax = np.max(vec)
     values = []
     for i in range(nel):
-        x = np.average(ex[i])
-        y = np.average(ey[i])
-        z = np.average(ez[i])
+        x = np.average(ex[i])+ed[i,0]
+        y = np.average(ey[i])+ed[i,1]
+        z = np.average(ez[i])+ed[i,2]
         for j in range(n):
             points.append([x,y,z])
             text.append(f'Principal stress {j+1} at El. {i+1}: {np.round(val[i,j],3)} {unit}')
@@ -830,12 +917,15 @@ def elprinc(ex,ey,ez,val,vec,ed=None,scale=.1, colormap = 'jet', unit='Pa'):
     plot_window.vectors[plot_window.fig].extend(plot)
 
 # Flux (or other) vectors
-def elflux(ex,ey,ez,vec,ed=None,scale=.1, colormap = 'jet', unit='Pa'):
+def elflux(ex,ey,ez,vec,ed=None,scale=.1, colormap = 'jet', unit='W/m^2'):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
     nel = np.size(ex,0)
     upd_scale = (1/np.max(vec))*scale
+
+    if ed is None:
+        ed = np.zeros((nel,3))
 
     points = []
     vectors = []
@@ -845,7 +935,7 @@ def elflux(ex,ey,ez,vec,ed=None,scale=.1, colormap = 'jet', unit='Pa'):
     values = []
     for i in range(nel):
         flux_tot = np.sqrt(vec[i,0]**2 + vec[i,1]**2 + vec[i,2]**2)
-        points.append([np.average(ex[i]), np.average(ey[i]), np.average(ez[i])])
+        points.append([np.average(ex[i])+ed[i,0], np.average(ey[i])+ed[i,1], np.average(ez[i])+ed[i,2]])
         #text.append('')
         text.append(f'Flux at El. {i+1}: {np.round(flux_tot,3)} {unit}')
         #value = val[i,j]
@@ -861,6 +951,9 @@ def elflux(ex,ey,ez,vec,ed=None,scale=.1, colormap = 'jet', unit='Pa'):
     plot = vdu.vectors(points, vectors, c='k', alpha=1, shaftLength=0.8, shaftWidth=0.05, headLength=0.25, headWidth=0.2, fill=True, text=text, vmax=vmax, vmin=vmin, cmap=colormap, values=values)
 
     plot_window.vectors[plot_window.fig].extend(plot)
+
+
+
 
 """
 #def add_vectors(edof,coord,dof,v,element_type):
@@ -989,7 +1082,8 @@ def elcont(mesh):
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 # Main functions for plotting geometries, meshes & results from CALFEM calculations
 
-def draw_geometry(points=None,lines=None,surfaces=None,scale=0.05):
+# NOTE: Only rectangular surfaces supported
+def draw_geometry(points=None,lines=None,surfaces=None,scale=0.05,points_alpha=1,lines_alpha=1,surfaces_alpha=1):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 
@@ -998,15 +1092,20 @@ def draw_geometry(points=None,lines=None,surfaces=None,scale=0.05):
         sys.exit()
     else:
         if surfaces is not None:
+            print('-----------------')
             print('points',points)
+            print('-----------------')
             print('lines',lines)
+            print('-----------------')
             print('surfaces',surfaces)
+            print('-----------------')
+
 
             pts = []
             p_text = []
             for key,val in points.items():
-                pts.append(v.Point(pos=val[0], r=12, c='black', alpha=1))
-                p_text.append(v.Text3D(key, pos=val[0], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
+                pts.append(v.Point(pos=val[0], r=12, c='black', alpha=points_alpha))
+                p_text.append(v.Text3D(key, pos=val[0], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=points_alpha, literal=False))
 
             plot_window.geometries[plot_window.fig].append(pts)
             plot_window.geometries[plot_window.fig].append(p_text)
@@ -1016,15 +1115,152 @@ def draw_geometry(points=None,lines=None,surfaces=None,scale=0.05):
             for key,val in lines.items():
                 p1 = points[val[1][0]][0]
                 p2 = points[val[1][1]][0]
-                l.append(v.Lines([p1], [p2], c='k4', alpha=1, lw=1, res=2))
-                l_text.append(v.Text3D(key, pos=[(p1[0]+0.5*(p2[0]-p1[0])), (p1[1]+0.5*(p2[1]-p1[1])), (p1[2]+0.5*(p2[2]-p1[2]))], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
+                l.append(v.Lines([p1], [p2], c='k4', alpha=lines_alpha, lw=1, res=2))
+                l_text.append(v.Text3D(key, pos=[(p1[0]+0.5*(p2[0]-p1[0])), (p1[1]+0.5*(p2[1]-p1[1])), (p1[2]+0.5*(p2[2]-p1[2]))], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=lines_alpha, literal=False))
 
             plot_window.geometries[plot_window.fig].append(l)
             plot_window.geometries[plot_window.fig].append(l_text)
 
+            npts = len(val[1])
+
+            
+
             surf = []
-            s_text = []
+            #s_text = []
             for key,val in surfaces.items():
+                surface_lines = val[1]
+                
+
+                point_key_dict = {}
+                print(' ')
+                npts = len(val[1])
+                print('Surface lines:',surface_lines)
+                #print(f'Surface line {lns[i]}, points:',lines[i][1])
+                #sys.exit()
+                #print('-----------------')
+                #print('Surface lines:',val[1])
+                indx = 0
+                for line in surface_lines:
+                    #point_keys.append(lines[line][1])
+                    point_key_dict[indx] = lines[line][1]
+                    indx += 1
+
+                point_list = []
+                for i in range(npts):
+                    l0 = point_key_dict[i]
+                    if i == npts - 1:
+                        l1 = point_key_dict[0]
+                    else:
+                        l1 = point_key_dict[i+1]
+
+                    print(f'First point for line {i}',l0)
+                    print(f'Second point for line {i}',l1)
+
+                    if l0[1] == l1[0] or l0[1] == l1[1]:
+                        print('Ok, adding...')
+                        point_list.append(l0[0])
+                    elif l0[0] == l1[0] or l0[0] == l1[1]:
+                        print('Flipping, adding...')
+                        point_list.append(l0[1])
+                    else:
+                        print('ERROR')
+                        #point_list.append(l0[1])
+
+                    #print('-----------------')
+
+                '''
+                for line in range(len(point_keys)-1):
+                    print(point_keys[line])
+                    first_point = point_keys[line]
+                    second_point = point_keys[line+1]
+                    if first_point[]
+                '''
+
+
+                #sys.exit()
+
+                print('Point keys:',point_list)
+                print('-----------------')
+                print(' ')
+                #point_keys = list(dict.fromkeys(point_keys))
+                
+                
+                coords = []
+                for i in point_list:
+                    #print(f'Point {i}, coordinates:',points[i][0])
+                    coords.append(points[i][0])
+
+
+
+                #print('Point keys, dupl. removed:',point_keys)
+                print('Surface coordinates:',coords)
+
+                print(f'Surface {key} lines:',val[1])
+
+                pln = v.Mesh([coords, [[0,1,2,3]]], alpha=surfaces_alpha, c='grey6')
+                
+                #if key == 0 or key == 1 or key == 5:
+                    
+                #    pln = v.Mesh([coords, [[0,1,2,3]]], alpha=surfaces_alpha, c='grey6')
+                #elif key == 2 or key == 3 or key == 4:
+                #    pln = v.Mesh([coords, [[0,1,3,2]]], alpha=surfaces_alpha, c='grey6')
+                surf.append(pln)
+                pln.name = f"Surface {key}"
+
+                print('-----------------')
+
+                """
+                    if indx == 0:
+                        point_keys.append(lines[i][1][0])
+                        '''
+                    elif indx == npts - 1:
+                        #print('Last point should trigger')
+                        if point_keys[indx-1] != lines[i][1][0]:
+                            point_keys.append(lines[i][1][1])
+                        else:
+                            point_keys.append(lines[i][1][0])
+                        '''
+                    else:
+                        print('Index:',indx)
+                        #print(val[1])
+                        #print(point_keys)
+                        #print(point_keys[indx])
+                        #print(lines[i][1][0])
+                        #if point_keys[indx-1] != lines[i][1][0]:
+                        if lines[i][1][0] in point_keys:
+                            if lines[i][1][1] in point_keys:
+                                print('ERROR')
+                                print(lines[i][1][0])
+                                print(lines[i][1][1])
+                            else:
+                                point_keys.append(lines[i][1][1])
+                        else:
+                            point_keys.append(lines[i][1][0])
+
+                    #point_keys.append(lines[i][1][1])
+                    indx += 1
+                """
+                #print('Point keys:',point_keys)
+                #point_keys = list(dict.fromkeys(point_keys))
+                
+                '''
+                coords = []
+                for i in point_keys:
+                    #print(f'Point {i}, coordinates:',points[i][0])
+                    coords.append(points[i][0])
+
+
+
+                print('Point keys, dupl. removed:',point_keys)
+                print('Surface coordinates:',coords)
+                print('-----------------')
+
+
+                pln = v.Mesh([coords, [[0,1,2,3]]], alpha=surfaces_alpha, c='grey6')
+                surf.append(pln)
+                pln.name = f"Surface {key}"
+                '''
+                '''
                 ### NOTE: only 4 point surfaces implemented
                 l12 = lines[val[1][0]][1]
                 l34 = lines[val[1][2]][1]
@@ -1038,25 +1274,55 @@ def draw_geometry(points=None,lines=None,surfaces=None,scale=0.05):
                 y = np.average([p1[1],p2[1],p3[1],p4[1]])
                 z = np.average([p1[2],p2[2],p3[2],p4[2]])
 
-                print(x)
-                print(y)
-                print(z)
+                #print(p1)
+                normal = np.cross(np.asarray(p2) - np.asarray(p1), np.asarray(p3) - np.asarray(p2))
+
+                dx = np.asarray(p1) + 0.5 * (np.asarray(p2) - np.asarray(p1))
+                dy = np.asarray(p1) + 0.5 * (np.asarray(p3) - np.asarray(p1))
+
+
+
+                print('normal',normal)
+
+                print('dx',dx)
+                print('dy',dy)
+
+                print('------------')
+
+                if normal[0] != 0.0:
+                    sy = dx[1]*2
+                    sx = dy[2]*2
+                elif normal[1] != 0.0:
+                    sy = dx[0]*2
+                    sx = dy[2]*2
+                elif normal[2] != 0.0:
+                    sx = dx[0]*2
+                    sy = dy[1]*2
+
+
+                #print(x)
+                #print(y)
+                #print(z)
                 #print(p4)
+                '''
                 #sys.exit()
                 
-                surf.append(v.Plane(pos=(x, y, z), normal=(0, 0, 1), sx=1, sy=None, c='gray6', alpha=1))
-                s_text.append(v.Text3D(key, pos=[x, y, z], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
+                
+                #pln = v.Plane(pos=(x, y, z), normal=normal, sx=sx, sy=sy, c='gray6', alpha=1)
+                #surf.append(pln)
+                #pln.name = f"Surface {key}"
+                #s_text.append(v.Text3D(key, pos=[x, y, z], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
 
             plot_window.geometries[plot_window.fig].append(surf)
-            plot_window.geometries[plot_window.fig].append(s_text)
+            #plot_window.geometries[plot_window.fig].append(s_text)
 
             
         elif lines is not None and points is not None:
             pts = []
             p_text = []
             for key,val in points.items():
-                pts.append(v.Point(pos=val[0], r=12, c='black', alpha=1))
-                p_text.append(v.Text3D(key, pos=val[0], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
+                pts.append(v.Point(pos=val[0], r=12, c='black', alpha=points_alpha))
+                p_text.append(v.Text3D(key, pos=val[0], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=points_alpha, literal=False))
 
             plot_window.geometries[plot_window.fig].append(pts)
             plot_window.geometries[plot_window.fig].append(p_text)
@@ -1066,8 +1332,8 @@ def draw_geometry(points=None,lines=None,surfaces=None,scale=0.05):
             for key,val in lines.items():
                 p1 = points[val[1][0]][0]
                 p2 = points[val[1][1]][0]
-                l.append(v.Lines([p1], [p2], c='k4', alpha=1, lw=1, res=2))
-                l_text.append(v.Text3D(key, pos=[(p1[0]+0.5*(p2[0]-p1[0])), (p1[1]+0.5*(p2[1]-p1[1])), (p1[2]+0.5*(p2[2]-p1[2]))], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
+                l.append(v.Lines([p1], [p2], c='k4', alpha=lines_alpha, lw=1, res=2))
+                l_text.append(v.Text3D(key, pos=[(p1[0]+0.5*(p2[0]-p1[0])), (p1[1]+0.5*(p2[1]-p1[1])), (p1[2]+0.5*(p2[2]-p1[2]))], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=lines_alpha, literal=False))
 
             plot_window.geometries[plot_window.fig].append(l)
             plot_window.geometries[plot_window.fig].append(l_text)
@@ -1076,8 +1342,8 @@ def draw_geometry(points=None,lines=None,surfaces=None,scale=0.05):
             text = []
 
             for key,val in points.items():
-                pts.append(v.Point(pos=val[0], r=12, c='black', alpha=1))
-                text.append(v.Text3D(key, pos=val[0], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=1, literal=False))
+                pts.append(v.Point(pos=val[0], r=12, c='black', alpha=points_alpha))
+                text.append(v.Text3D(key, pos=val[0], s=scale, font='Normografo', hspacing=1.15, vspacing=2.15, depth=0, italic=False, justify='bottom-left', c='black', alpha=points_alpha, literal=False))
 
             plot_window.geometries[plot_window.fig].append(pts)
             plot_window.geometries[plot_window.fig].append(text)
@@ -1181,6 +1447,21 @@ def draw_mesh(
 
         coord[:] += offset
 
+        if element_type == 5:
+            for i in range(nel):
+                eq_dict = {}
+                indx = 0
+                if isinstance(eq_els, np.ndarray):
+                    for j in eq_els:
+                        #print(eq_dict)
+                        print('j',j)
+                        #print(eq)
+                        #print(indx)
+                        print(eq_els)
+                        print(eq[indx])
+                        eq_dict[j[0]] = eq[indx][0]
+                        indx += 1
+
         for i in range(nel):
             coord1,coord2 = vdu.get_coord_from_edof(edof[i,:],dof,element_type)
             '''
@@ -1219,12 +1500,31 @@ def draw_mesh(
                     y2 = coord[coord1,1]+dy*(j+1)
                     z2 = coord[coord1,2]+dz*(j+1)
 
-                    beam = v.Cylinder([[x1,y1,z1],[x2,y2,z2]],r=scale,res=4,c=color).alpha(alpha)
-                    beam.name = f"Beam el. nr. {i+1}, seg. {j+1}"
+                    if np.any(np.isin(eq_els, i, assume_unique=True)) == True:
+                        beam = v.Cylinder([[x1,y1,z1],[x2,y2,z2]],r=scale,res=4,c=f_color).alpha(alpha)
+                    else:
+                        beam = v.Cylinder([[x1,y1,z1],[x2,y2,z2]],r=scale,res=4,c=color).alpha(alpha)
+
+                    if i in eq_dict:
+                        beam.name = f"Beam element {i+1}, seg. {j+1}, Forces: [{eq_dict[i][0]}, {eq_dict[i][1]}, {eq_dict[i][2]}, {eq_dict[i][3]}]"
+                    else:
+                        beam.name = f"Beam element {i+1}, seg. {j+1}"
                     elements.append(beam)
             elif element_type == 5:
-                beam = v.Cylinder([[coord[coord1,0],coord[coord1,1],coord[coord1,2]],[coord[coord2,0],coord[coord2,1],coord[coord2,2]]],r=scale,res=4,c=color).alpha(alpha)
-                beam.name = f"Beam el. nr. {i+1}"
+                #if element_type == 3 or element_type == 4:
+                if np.any(np.isin(eq_els, i, assume_unique=True)) == True:
+                    beam = v.Cylinder([[coord[coord1,0],coord[coord1,1],coord[coord1,2]],[coord[coord2,0],coord[coord2,1],coord[coord2,2]]],r=scale,res=4,c=f_color).alpha(alpha)
+                    #mesh = v.Mesh([coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha,c=f_color).lw(1)
+                else:
+                    #mesh = v.Mesh([coord[coords,:],[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[2,3,7,6]]],alpha=alpha).lw(1)
+                    beam = v.Cylinder([[coord[coord1,0],coord[coord1,1],coord[coord1,2]],[coord[coord2,0],coord[coord2,1],coord[coord2,2]]],r=scale,res=4,c=color).alpha(alpha)
+                
+                if i in eq_dict:
+                    beam.name = f"Beam element {i+1}, Forces: [{eq_dict[i][0]}, {eq_dict[i][1]}, {eq_dict[i][2]}, {eq_dict[i][3]}]"
+                else:
+                    beam.name = f"Beam element {i+1}"
+
+
                 elements.append(beam)
 
         if render_nodes == True:
@@ -1372,7 +1672,7 @@ def draw_displaced_mesh(
     colors = 256,
     vmax = None,
     vmin = None,
-    scalar_title = '',
+    scalar_title = 'scalar',
 
     # Element-specific input
     spring = True,
@@ -1397,10 +1697,12 @@ def draw_displaced_mesh(
     if 1 <= element_type <= 6:
         if a is None and values is None:
             nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n = vdu.check_input(edof,coord,dof,element_type,nseg=nseg)
+            val = None
         elif a is None:
             nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n, val = vdu.check_input(edof,coord,dof,element_type,values=values,nseg=nseg)
         elif values is None:
             nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n, ndisp = vdu.check_input(edof,coord,dof,element_type,a,nseg=nseg)
+            val = None
         else:
             nel, ndof_per_el, nnode, ndim, ndof, ndof_per_n, ndisp, val = vdu.check_input(edof,coord,dof,element_type,a,values,nseg=nseg)
     else:
@@ -1413,8 +1715,8 @@ def draw_displaced_mesh(
         print('NOTE: Element type is flow, but deformation matrix given. Deformation was set to 0 for all DOFs')
         a = np.zeros((nnode*ndof_per_n,1))
 
-    if element_type == 1 and values is not None:
-        print('NOTE: Colormapping for spring elements is not supported')
+    #if element_type == 1 and values is not None:
+    #    print('NOTE: Colormapping for spring elements is not supported')
 
     # Number of elements:                       nel
     # Number of degrees of freedom per element: ndof_per_el
@@ -1496,8 +1798,8 @@ def draw_displaced_mesh(
                     el_values_array = []
                     for j in range(14):
                         el_values_array.append(values[i])
-                
-                    element.cmap(colormap, el_values_array, arrayName=scalar_title, on="cells", vmin=vmin, vmax=vmax)
+                    element.celldata[scalar_title] = el_values_array
+                    element.cmap(colormap, scalar_title, on="cells", vmin=vmin, vmax=vmax)
                 
             #if element_type == 1 and spring == False:
             #    element = v.Cylinder([[def_coord[coord1,0],def_coord[coord1,1],def_coord[coord1,2]],[def_coord[coord2,0],def_coord[coord2,1],def_coord[coord2,2]]],r=scale,res=4,c=color).alpha(alpha)
@@ -1537,8 +1839,9 @@ def draw_displaced_mesh(
                     el_values_array = []
                     for j in range(6):
                         el_values_array.append(values[i])
+                    element.celldata[scalar_title] = el_values_array
                     #element.cmap(colormap, [values[i],values[i],values[i],values[i],values[i],values[i]], on="cells", vmin=vmin, vmax=vmax)
-                    element.cmap(colormap, el_values_array, arrayName=scalar_title, on="cells", n=colors, vmin=vmin, vmax=vmax)
+                    element.cmap(colormap, scalar_title, on="cells", n=colors, vmin=vmin, vmax=vmax)
 
 
             elif element_type == 5:
@@ -1564,12 +1867,13 @@ def draw_displaced_mesh(
                         elements.append(element)
 
                         if values is not None:
+                            #print('Beam: scalars',values)
                             el_value1 = values[nseg*i+j]
                             #beam.name = f"Beam nr. {i}, seg. {j}, element value: {np.round(values[nseg*i],2)}"
                             #beam.celldata["val"] = [values[nseg*i],values[nseg*i],values[nseg*i],values[nseg*i],values[nseg*i],values[nseg*i]]
                             el_value2 = values[nseg*i+j+1]
 
-                            print('beam',i+1,'segment',j+1,f'val {el_value1} and {el_value2}')
+                            #print('beam',i+1,'segment',j+1,f'val {el_value1} and {el_value2}')
                             
                             el_values_array[1] = el_value1
                             el_values_array[3] = el_value1
@@ -1588,8 +1892,10 @@ def draw_displaced_mesh(
                             el_values_array[9] = el_value2
                             el_values_array[10] = el_value2
                             el_values_array[11] = el_value2
+
+                            element.pointdata[scalar_title] = el_values_array
                             
-                            element.cmap(colormap, el_values_array, arrayName=scalar_title, on="points", n=colors, vmin=vmin, vmax=vmax)
+                            element.cmap(colormap, scalar_title, on="points", n=colors, vmin=vmin, vmax=vmax)
 
 
                 else:
@@ -1619,7 +1925,9 @@ def draw_displaced_mesh(
                         el_values_array[10] = el_value2
                         el_values_array[11] = el_value2
 
-                        element.cmap(colormap, el_values_array, arrayName=scalar_title, on="points", n=colors, vmin=vmin, vmax=vmax)        
+                        element.pointdata[scalar_title] = el_values_array
+
+                        element.cmap(colormap, scalar_title, on="points", n=colors, vmin=vmin, vmax=vmax)        
 
         if only_ret == False:
 
@@ -1711,28 +2019,28 @@ def draw_displaced_mesh(
                 #vmin, vmax = np.min(values), np.max(values)
                 
                 el_values = vdu.convert_el_values(edof,values)
-                mesh.celldata["val"] = el_values
+                mesh.celldata[scalar_title] = el_values
 
-                mesh.cmap(colormap, "val", arrayName=scalar_title, on="cells", n=colors, vmax=vmax, vmin=vmin)
+                mesh.cmap(colormap, scalar_title, on="cells", n=colors, vmax=vmax, vmin=vmin)
             
             elif val and val == 'nodal_values_by_el':
                 #print(val)
                 #vmin, vmax = np.min(values), np.max(values)
                 nodal_values = vdu.convert_nodal_values(edof,topo,dof,values)
                 #nodal_values = vdu.convert_a(coord2,coord,nodal_values,1)
-                mesh.pointdata["val"] = nodal_values
+                mesh.pointdata[scalar_title] = nodal_values
                 #mesh.pointdata["val"] = node_scalars
                 print(ug.celldata.keys())
                 #nodal_values = vdu.convert_nodal_values(edof,dof,coord,coord2,values)
-                mesh.cmap(colormap, 'val', arrayName=scalar_title, on="points", n=colors, vmax=vmax, vmin=vmin)
+                mesh.cmap(colormap, scalar_title, on="points", n=colors, vmax=vmax, vmin=vmin)
 
 
             elif val and val == 'nodal_values':
                 print(val)
                 #values = vdu.convert_nodal_values(edof,topo,dof,values)
                 #vmin, vmax = np.min(values), np.max(values)
-                mesh.pointdata["val"] = values
-                mesh.cmap(colormap, 'val', arrayName=scalar_title, on="points", n=colors, vmax=vmax, vmin=vmin)
+                mesh.pointdata[scalar_title] = values
+                mesh.cmap(colormap, scalar_title, on="points", n=colors, vmax=vmax, vmin=vmin)
                 #ug.pointdata["val"] = values
                 #nodal_values = vdu.convert_nodal_values(edof,dof,coord,coord2,values)
                 #mesh.cmap(colormap, values, on="points", vmin=vmin, vmax=vmax)
@@ -1743,9 +2051,9 @@ def draw_displaced_mesh(
                 #vmin, vmax = np.min(values), np.max(values)
                 
                 #el_values = vdu.convert_el_values(edof,values)
-                mesh.celldata["val"] = values
+                mesh.celldata[scalar_title] = values
 
-                mesh.cmap(colormap, "val", arrayName=scalar_title, on="cells", n=colors, vmax=vmax, vmin=vmin)
+                mesh.cmap(colormap, scalar_title, on="cells", n=colors, vmax=vmax, vmin=vmin)
         
         '''
         print('Number of topo cells: ',np.size(topo, axis=0))
@@ -1951,6 +2259,7 @@ def animation(
     scale=0.02,
     alpha=1,
     def_scale=1,
+    only_export = False,
 
     # Export
     export=False,
@@ -1961,7 +2270,7 @@ def animation(
     colors = 256,
     vmax=None,
     vmin=None,
-    scalar_title = '',
+    scalar_title = 'scalar',
 
     # Element-specific input
     spring = True,
@@ -1982,6 +2291,8 @@ def animation(
     nnode = np.size(coord,1)
 
     values = scalars
+
+    print(values)
 
     if element_type == 1 or element_type == 3:
         ndof_per_n = 1
@@ -2041,33 +2352,41 @@ def animation(
         if values is not None and animate_colormap == True:
             
             if t >= 0:
-                #if element_type == 5:
-                #else:
+                print('animate_colormap & t>=0')
                 mesh = draw_displaced_mesh(edof,coord,dof,element_type,a*t,values*t,scale=scale,alpha=alpha,def_scale=def_scale,colormap=colormap,colors=colors,vmax=vmax,vmin=vmin,scalar_title=scalar_title,nseg=nseg,spring=spring,only_ret=True)
             
             else:
-                #if element_type == 5:
-                #else:
+                print('animate_colormap & t<0')
                 mesh = draw_displaced_mesh(edof,coord,dof,element_type,a*t,-values*t,scale=scale,alpha=alpha,def_scale=def_scale,colormap=colormap,colors=colors,vmax=vmax,vmin=vmin,scalar_title=scalar_title,nseg=nseg,spring=spring,only_ret=True)
         
         elif values is not None and animate_colormap == False:
+            print('no animate_colormap')
             mesh = draw_displaced_mesh(edof,coord,dof,element_type,a*t,values,scale=scale,alpha=alpha,def_scale=def_scale,colormap=colormap,colors=colors,vmax=vmax,vmin=vmin,scalar_title=scalar_title,nseg=nseg,spring=spring,only_ret=True)
         
         else:
+            print('no scalars')
             mesh = draw_displaced_mesh(edof,coord,dof,element_type,a*t,scale=scale,alpha=alpha,def_scale=def_scale,nseg=nseg,spring=spring,only_ret=True)
         
         if element_type == 1 or element_type == 2 or element_type == 5:
+            
             mesh = v.merge(mesh)
-        #print('mesh',mesh)
+            #mesh = v.Assembly(mesh)
+
         keyframes[np.round(t,3)] = mesh
         
-        if export == True:
-            output = file+f'_{int(it)}'
-            export_vtk(output,mesh)
-        
         it += 1
-    plot_window.keyframes[plot_window.fig].append(keyframes)
-    plot_window.keyframe_dict[plot_window.fig].append(keyframe_dict)
+    if only_export == False:
+        plot_window.keyframes[plot_window.fig].append(keyframes)
+        plot_window.keyframe_dict[plot_window.fig].append(keyframe_dict)
+
+    if export == True:
+        for key, val in keyframe_dict.items():
+            #if element_type == 1 or element_type == 2 or element_type == 5:
+            #    mesh = keyframes[val].unpack()
+            #else:
+            mesh = keyframes[val]
+            output = file+f'_{int(key)}'
+            export_vtk(output,mesh)
     
     #print('keyframe_dict',keyframe_dict)
     #res = list(sorted({ele for val in keyframe_dict.values() for ele in val}))
@@ -2296,7 +2615,17 @@ def import_mat(file,list=None):
             yield x # returns the data one-by-one, ordering by user
 
 def export_vtk(file, meshes):
-    mesh = v.merge(meshes)
+    
+    if isinstance(meshes, list):
+        mesh = v.merge(meshes)
+    else:
+        mesh = meshes
+    
+    #print('meshes')
+    #print(meshes)
+    #print('mesh')
+    #print(mesh)
+    #mesh = v.merge(meshes)
     #for i in range(len(meshes)):
     v.io.write(mesh, file+".vtk")
 
@@ -2305,7 +2634,7 @@ def export_vtk(file, meshes):
 
 
 #def figure(fig=None):
-def figure(fig,bg='white',flat=False,hover=False):
+def figure(fig,bg='white',flat=False,hover=False,axes=False):
     app = init_app()
     plot_window = VedoPlotWindow.instance().plot_window
 

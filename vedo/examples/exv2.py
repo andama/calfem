@@ -176,9 +176,7 @@ for i in range(nel_beams):
         Ke, fe = cfc.beam3e(ex_beams[i], ey_beams[i], ez_beams[i], eo[i], ep_beams,eq1)
         #print(fe)
         K, f = cfc.assem(edof_beams[i],K,Ke,f,fe)
-# FRÅGA JONAS OM NEDAN
-#f = -np.absolute(f)
-#print(f)
+
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 
 edof_bars = np.array([
@@ -255,6 +253,7 @@ for i in range(nel_bars):
 #f[79,0] = -3000
 
 bcPrescr = np.array([1, 2, 3, 4, 5, 6, 19, 22, 23, 24, 37, 40, 41, 42, 43, 44, 45, 46, 47, 48, 61, 64, 65, 66, 79, 82, 83, 84])
+bcVal = np.zeros([1,28])
 #bcPrescr = np.array([1, 2, 3, 19, 37, 43, 44, 45, 61, 79])
 a,r = cfc.solveq(K, f, bcPrescr)
 print(a)
@@ -363,15 +362,52 @@ for i in range(nel_bars):
 # Normal stresses are sent by default, but comment it out and uncomment 
 # shear_stresses_y/shear_stresses_z to visualize them
 
+eq_els = np.array([[18],[19],[20],[21]])
+
+eq = np.zeros([nel_beams,4])
+
+eq[eq_els[0,:]] = eq1
+eq[eq_els[1,:]] = eq1
+eq[eq_els[2,:]] = eq1
+eq[eq_els[3,:]] = eq1
+
+bcPrescr = np.transpose(bcPrescr)
+#bcVal = np.transpose(bcVal)
+
+
+'''
+q1 = 25*1000*0.2*3 #N/m
+eq1 = [0,-q1,0,0]
+
+
+
+
+
+eq_els = np.array([[18],[19],[20],[21]])
+
+eq[eq_els[0]] = 30000
+eq[eq_els[1]] = -30000
+'''
+
+
+print('bcP',bcPrescr)
+print('bcVal',bcVal[0])
+#sys.exit()
+
+cfvv.draw_mesh(edof_beams,coord,dof,5,nseg=nseg,alpha=0.2, eq_els=eq_els, eq=eq[eq_els])
 # Send data of deformed geometry & normal stresses as element values
 #cfvv.beam3d.draw_displaced_geometry(edof,coord,dof,a,normal_stresses,'Max normal stress',def_scale=5,nseg=nseg)
-cfvv.draw_displaced_mesh(edof_beams,coord,dof,5,a,normal_stresses_beams/1000000,nseg=nseg,def_scale=1)
-cfvv.draw_mesh(edof_beams,coord,dof,5,nseg=nseg,alpha=1)
+beams = cfvv.draw_displaced_mesh(edof_beams,coord,dof,5,a,normal_stresses_beams/1000000,nseg=nseg,scalar_title='Max normal stress [MPa]')
+#beams = cfvv.draw_displaced_mesh(edof_beams,coord,dof,5,a,nseg=nseg)
+#cfvv.draw_mesh(edof_beams,coord,dof,5,nseg=nseg,alpha=1,bcPrescr=bcPrescr, bc=bcVal[0], eq_els=eq_els, eq=eq[eq_els])
+
+
+
 
 
 #cfvv.draw_displaced_geometry(edof,coord,dof,5,el_values=normal_stresses,label='Max normal stress',alpha=0.3,nseg=nseg)
 
-cfvv.add_scalar_bar('Max normal stress [MPa]')
+
 #cfvv.add_legend(def_beam_elements)
 # Send data of deformed geometry & normal stresses as element values
 #cfvv.draw_displaced_geometry(edof,coord,dof,a,shear_stresses_y,1,label='Shear stress y',def_scale=5,nseg=nseg)
@@ -382,8 +418,10 @@ cfvv.add_scalar_bar('Max normal stress [MPa]')
 
 #cfvv.beam3d(edof,coord,dof,a,normal_stresses,'Max normal stress',nseg=nseg)
 
-### IMPORTANT: Keep 12 dofs here, otherwise visualization breaks
+### IMPORTANT: Update to 12 dofs here, otherwise visualization breaks
 ### In reality, 3D-bars only have 6 dofs
+### Alternative solution is to have separate dof-matrices (dof_beams & dof_bars)
+
 edof_bars = np.array([
     [13, 14, 15, 16, 17, 18, 25, 26, 27, 28, 29, 30],#[13, 14, 15, 25, 26, 27],
     [19, 20, 21, 22, 23, 24, 31, 32, 33, 34, 35, 36],#[19, 20, 21, 31, 32, 33],
@@ -394,10 +432,10 @@ edof_bars = np.array([
     [37, 38, 39, 40, 41, 42, 79, 80, 81, 82, 83, 84]#[37, 38, 39, 79, 80, 81]
 ])
 
-cfvv.draw_mesh(edof_bars,coord,dof,2,alpha=1)
+cfvv.draw_mesh(edof_bars,coord,dof,2,alpha=0.2)
 #print('bar disp')
 vmin, vmax = np.min(normal_stresses_beams), np.max(normal_stresses_beams)
-cfvv.draw_displaced_mesh(edof_bars,coord,dof,2,a,normal_stresses_bars/1000000,def_scale=1,vmin=vmin,vmax=vmax)
+bars = cfvv.draw_displaced_mesh(edof_bars,coord,dof,2,a,normal_stresses_bars/1000000,vmin=vmin,vmax=vmax,scalar_title='Max normal stress [MPa]')
 #cfvv.add_scalar_bar('Max normal stress bars',pos=[0.75,0.1])
 #cfvv.add_legend(def_bar_elements)
 
@@ -413,9 +451,10 @@ for i in range(Mz_beams.shape[0]):
 
 #cfvv.eldia(ex_beams[18:22],ey_beams[18:22],ez_beams[18:22],nS_beams,eci_beams_upd,scale=.0000001)
 cfvv.eldia(ex_beams[18:22],ey_beams[18:22],ez_beams[18:22],Mz_beams/1000,eci_beams_upd,label='M_x [kNm]')
+cfvv.add_rulers()
 
 #Start Calfem-vedo visualization
-cfvv.show_and_wait()
+#cfvv.show_and_wait()
 
 
 
@@ -424,14 +463,23 @@ cfvv.show_and_wait()
 
 cfvv.figure(2)
 steps = 20
-cfvv.add_text(f'Looping bewteen undef. & def. state w/ {steps} steps',pos='top-middle')
-cfvv.animation(edof_beams,coord,dof,5,a,normal_stresses_beams/1000000,nseg=nseg,dt=250)
+cfvv.add_text(f'Looping from undef. to def. state w/ {steps} steps',pos='top-middle')
+cfvv.animation(edof_beams,coord,dof,5,a,normal_stresses_beams/1000000,nseg=nseg,dt=125,steps=20,export=True,file='export/exv2/anim/exv2_beams',scalar_title='Max normal stress [MPa]')
+cfvv.animation(edof_bars,coord,dof,2,a,normal_stresses_bars/1000000,nseg=nseg,dt=125,steps=20,export=True,file='export/exv2/anim/exv2_bars',scalar_title='Max normal stress [MPa]',vmax=vmax,vmin=vmin)
+#cfvv.animation(edof_bars,coord,dof,2,a,normal_stresses_bars/1000000,nseg=nseg,dt=125,steps=20,export=True,file='export/exv2/anim/exv2_bars',scalar_title='Max normal stress [MPa]',only_export=True)
+
+#cfvv.animation(edof_beams,coord,dof,5,a,nseg=nseg,dt=125,steps=20,export=True,file='export/exv2/anim/exv2_beams')
+#cfvv.animation(edof_bars,coord,dof,2,a,dt=125,steps=20,export=True,file='export/exv2/anim/exv2_bars',vmax=vmax,vmin=vmin)
+
+
 #cfvv.animation(edof_bars,coord,dof,2,a,normal_stresses_bars/1000000,dt=250)
+cfvv.add_scalar_bar('Max normal stress [MPa]')
 
 #Start Calfem-vedo visualization
 cfvv.show_and_wait()
 
 
-
+cfvv.export_vtk('export/exv2/exv2_beams', beams)
+cfvv.export_vtk('export/exv2/exv2_bars', bars)
 
 

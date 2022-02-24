@@ -446,16 +446,18 @@ points = g.points
 lines = g.curves
 
 # For surfaces with line connectivity
-#surfaces = g.surfaces
+surfaces = g.surfaces
 
-cfvv.draw_geometry(points,lines)
+cfvv.draw_geometry(points,lines,surfaces)
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
 #cfvv.show_and_wait()
+#sys.exit()
 
 print('eq',eq)
 
 cfvv.figure(2)
 cfvv.draw_mesh(edof,coord,dof,3,alpha=1,scale=0.005,bcPrescr=bc, bc=bcVal, eq_els=eq_els, eq=eq[eq_els])
+#cfvv.add_axes()
 #cfvv.draw_mesh(edof,coord,dof,3,alpha=1,scale=0.005,bcPrescr=bc, bc=bcVal, eq_els=[eq_el], eq=eq[eq_el,:])
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
 #cfvv.show_and_wait()
@@ -466,11 +468,15 @@ disp = np.zeros((nnode,1))
 
 cfvv.figure(3)
 #print('flux',flux,flux.shape[0],flux.shape[1])
-mesh = cfvv.draw_displaced_mesh(edof,coord,dof,3,scalars=flux_tot,colormap='coolwarm',wireframe=True)
+cfvv.draw_displaced_mesh(edof,coord,dof,3,scalars=flux_tot,colormap='coolwarm',wireframe=True)
+#cfvv.add_axes(xrange=1,yrange=1,zrange=1)
+cfvv.add_axes(xrange=[-0.2,0.6], yrange=[-0.2,1.2], zrange=[-0.2,0.6])
+#cfvv.add_axes()
+
 #cfvv.eliso(mesh)
 #cfvv.elcont(mesh)
 cfvv.add_scalar_bar('Heat flux [W/m^2]')
-cfvv.elflux(ex,ey,ez,flux,colormap='coolwarm',unit='W/m^2')
+cfvv.elflux(ex,ey,ez,flux,colormap='coolwarm')
 #cfvv.draw_displaced_mesh(edof,coord,dof,3,disp,ns,colormap='coolwarm')
 #cfvv.add_scalar_bar('Heat flow rate [W]')
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
@@ -478,11 +484,12 @@ cfvv.elflux(ex,ey,ez,flux,colormap='coolwarm',unit='W/m^2')
 
 cfvv.figure(4)
 #print('T',T,T.shape[0],T.shape[1])
-cfvv.draw_displaced_mesh(edof,coord,dof,3,scalars=ed,colormap='coolwarm',colors=5)
+mesh = cfvv.draw_displaced_mesh(edof,coord,dof,3,scalars=ed,colormap='coolwarm',colors=5,scalar_title='Temp. [C]')
+cfvv.add_mesh_axes(mesh)
 cfvv.add_scalar_bar('Temp. [C]')
 #cfvv.draw_mesh(edof,coord,dof,3,scale=0.002)
-print(T[153],T[154])
-cfvv.show_and_wait()
+#print(T[153],T[154])
+#cfvv.show_and_wait()
 
 
 
@@ -490,7 +497,8 @@ cfvv.show_and_wait()
 
 cfvv.figure(5)
 
-cfvv.animation(edof,coord,dof,3,scalars=ed,dt=250,steps=20,colormap='coolwarm',colors=5)
+cfvv.animation(edof,coord,dof,3,scalars=ed,dt=250,steps=20,colormap='coolwarm',colors=5,export=True,file='export/exv3/anim/exv3',scalar_title='Temp. [C]')
+cfvv.add_scalar_bar('Temp. [C]')
 
 #Start Calfem-vedo visualization
 cfvv.show_and_wait()
@@ -498,7 +506,7 @@ cfvv.show_and_wait()
 
 
 
-
+cfvv.export_vtk('export/exv3/exv3', mesh)
 
 
 

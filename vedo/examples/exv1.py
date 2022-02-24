@@ -67,7 +67,7 @@ print('coord',coord)
 
 cfvv.figure(1,flat=True)
 cfvv.draw_mesh(edof,coord,dof,1)
-cfvv.draw_displaced_mesh(edof,coord,dof,1,a,offset=[0,0.2,0],render_nodes=True)
+mesh = cfvv.draw_displaced_mesh(edof,coord,dof,1,a,offset=[0,0.2,0],render_nodes=True)
 #cfvv.add_scalar_bar('Normal force [kN]')
 cfvv.add_text_3D('k=3 kN/m',[0.15,-0.1,0],size=0.03)
 cfvv.add_text_3D('k=1 kN/m',[0.65,-0.1,0],size=0.03)
@@ -77,7 +77,7 @@ cfvv.add_text_3D('F_x =500 N',[1.55,-0.02,0],size=0.03)
 #cfvv.draw_displaced_geometry(edof,coord,dof,5,a,scale=0.5,alpha=0.5)
 
 #Start Calfem-vedo visualization
-cfvv.show_and_wait()
+#cfvv.show_and_wait()
 
 
 # Animation
@@ -85,7 +85,7 @@ cfvv.show_and_wait()
 cfvv.figure(2)
 steps = 20
 cfvv.add_text(f'Looping bewteen undef. & def. state w/ {steps} steps',pos='top-middle')
-cfvv.animation(edof,coord,dof,1,a,loop=True,steps=20,dt=0)
+cfvv.animation(edof,coord,dof,1,a,loop=True,steps=20,dt=0,export=True,file='export/exv1/anim/exv1')
 
 #Start Calfem-vedo visualization
 cfvv.show_and_wait()
@@ -93,7 +93,7 @@ cfvv.show_and_wait()
 
 
 
-
+cfvv.export_vtk('export/exv1/exv1', mesh)
 
 
 

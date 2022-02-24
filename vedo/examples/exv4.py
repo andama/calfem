@@ -35,10 +35,11 @@ nel = np.size(edof, axis = 0)
 
 ''' Principal stresses '''
 
-PS_val = np.zeros((nel,3))
-PS_vec = np.zeros((nel,3,3))
+ps_val = np.zeros((nel,3))
+ps_vec = np.zeros((nel,3,3))
 for i in range(nel):
-    PS_val[i,:], PS_vec[i,:,:] = np.linalg.eig(Stress_tensors[:,:,i])
+    ps_val[i,:], ps_vec[i,:,:] = np.linalg.eig(Stress_tensors[:,:,i])
+
 
 
 #print('Principal stresses el. 1')
@@ -190,8 +191,6 @@ for i in range(0, nel):
 #print(von_mises_nodes)
 
 
-
-
 ### ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ###
 
 # First plot, undeformed mesh
@@ -202,6 +201,10 @@ bc = np.zeros((np.size(bc[:,0]),1))
 print('bc',bc[:,0])
 f = -5000*np.ones((np.size(f_dofs[:,0]),1))
 print('f',f[:,0])
+
+print('bcP',bcPrescr[:,0])
+print('bc',bc[:,0])
+#sys.exit()
 
 cfvv.draw_mesh(edof,coord,dof,4,scale=0.005,bcPrescr=bcPrescr[:,0],bc=bc[:,0],fPrescr=f_dofs[:,0],f=f[:,0])
 cfvv.add_text('Undeformed mesh + Forces & BCs for static analysis')
@@ -219,7 +222,7 @@ print(a)
 scalefact = 3 #deformation scale factor
 #mesh1 = cfvv.test(edof,ex,ey,ez,a,von_mises_elements/1000000,def_scale=scalefact)
 #mesh1 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_elements/1000000,def_scale=scalefact)
-mesh1 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,vM_el/1000000,def_scale=scalefact,scalar_title='von Mises [MPa]')
+static = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,vM_el/1000000,def_scale=scalefact,scalar_title='von Mises [MPa]')
 #cfvv.add_vectors(ex,ey,ez)
 #cfvv.tensors(ex,ey,ez,ps)
 
@@ -243,7 +246,15 @@ scalefact = 3 #deformation scale factor
 #cfvv.add_scalar_bar(mode_mesh,'Tot. el. displacement')
 
 #cfvv.animation(edof,coord,dof,4,eig[:,eigenmode],10,mode_a*1000,def_scale=scalefact,export=True,file='anim/exv4b')
-cfvv.animation(edof,coord,dof,4,a,vM_el/1000000,def_scale=scalefact)
+
+
+
+cfvv.animation(edof,coord,dof,4,a,vM_el/1000000,def_scale=scalefact,export=True,file='export/exv4/anim/exv4_static',scalar_title='von Mises [MPa]')
+#cfvv.animation(edof,coord,dof,4,a,def_scale=scalefact,export=True,file='export/exv4/anim/exv4_static')
+
+
+
+
 #cfvv.animate(edof,coord,dof,4,eig[:,0],10,def_scale=scalefact,export=True)
 cfvv.add_text('Static analysis: self-weight & ecc. vertical load', pos='top-left')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
@@ -281,11 +292,13 @@ print(upd_ed[0])
 #mesh2 = cfvv.test(edof,ex,ey,ez,a,von_mises_nodes/1000000,def_scale=scalefact,merge=True)
 #mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,von_mises_nodes/1000000,def_scale=scalefact,merge=True)
 #mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,a,vM_n/1000000,def_scale=scalefact,merge=True)
-mesh2 = cfvv.draw_displaced_mesh(edof,coord,dof,4,np.zeros((ncoord*3,1)),upd_ed*1000,wireframe=True)
-cfvv.elprinc(ex,ey,ez,PS_val/1000000,PS_vec,colormap='coolwarm',unit='MPa')
+cfvv.draw_displaced_mesh(edof,coord,dof,4,a,upd_ed*1000,wireframe=True)
+cfvv.elprinc(ex,ey,ez,ps_val/1000000,ps_vec,ed,colormap='coolwarm',unit='MPa')
 cfvv.add_scalar_bar('Deformation [mm]')
 #cfvv.add_scalar_bar('Stress [MPa]',pos=[0.8,0.65],text_pos='top-right',on='vectors')
-cfvv.add_text('Static analysis: self-weight & ecc. vertical load',pos='top-left')
+cfvv.add_text('Static analysis',pos='top-left')
+cfvv.add_text('Deformation scalefactor: 1',pos='top-right')
+cfvv.add_text('Princ. stress vectors',pos='top-middle')
 #cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
 # Export the mesh to 'exv4a.vtk'
 
@@ -307,7 +320,7 @@ cfvv.figure(5)
 scalefact = 100 #deformation scale factor
 #scalefact = 1 #deformation scale factor
 #cfvv.test(edof,ex,ey,ez,eigen[:,0],mode_a*1000,def_scale=scalefact)
-cfvv.draw_displaced_mesh(edof,coord,dof,4,eig[:,eigenmode],mode_a*1000,def_scale=scalefact,lines=True)
+modal = cfvv.draw_displaced_mesh(edof,coord,dof,4,eig[:,eigenmode],mode_a*1000,def_scale=scalefact,lines=True,scalar_title='Tot. el. displacement [mm]')
 cfvv.add_text(f'Modal analysis: {eigenmode+1}st mode',pos='top-left')
 cfvv.add_text(f'Frequency: {round(Freq[0],2)} Hz')
 cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
@@ -332,7 +345,7 @@ cfvv.add_text(f'Deformation scalefactor: {scalefact}',pos='top-right')
 #cfvv.add_scalar_bar(mode_mesh,'Tot. el. displacement')
 
 #cfvv.animation(edof,coord,dof,4,eig[:,eigenmode],10,mode_a*1000,def_scale=scalefact,export=True,file='anim/exv4b')
-cfvv.animation(edof,coord,dof,4,eig[:,eigenmode],mode_a*1000,def_scale=scalefact,negative=True,scalar_title='Tot. el. displacement [mm]')
+cfvv.animation(edof,coord,dof,4,eig[:,eigenmode],mode_a*1000,def_scale=scalefact,negative=True,scalar_title='Tot. el. displacement [mm]',export=True,file='export/exv4/anim/exv4_modal')
 #cfvv.animate(edof,coord,dof,4,eig[:,0],10,def_scale=scalefact,export=True)
 
 cfvv.add_scalar_bar('Tot. el. displacement [mm]')
@@ -341,7 +354,8 @@ cfvv.add_scalar_bar('Tot. el. displacement [mm]')
 cfvv.show_and_wait()
 
 
-
+cfvv.export_vtk('export/exv4/exv4_static', static)
+cfvv.export_vtk('export/exv4/exv4_modal', modal)
 
 
 
